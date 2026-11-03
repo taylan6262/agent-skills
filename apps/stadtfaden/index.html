@@ -395,7 +395,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
     </div>
     <nav class="mast-nav" aria-label="Schnellzugriff">
       <button class="btn small" type="button" id="newTripBtn" hidden>Neuer Ausflug</button>
-      <button class="btn small" type="button" id="savedJump" hidden>Meine Pläne (<span class="mono" id="savedCount">0</span>)</button>
+      <button class="btn small" type="button" id="savedJump" hidden>Meine Pläne <span class="mono">(<span id="savedCount">0</span>)</span></button>
     </nav>
   </header>
 
@@ -971,6 +971,7 @@ function markNow() {
   document.querySelectorAll("#timeline .stop").forEach((li) => { const on = !!sit.cur && li.id === "stop-" + sit.cur.id; li.classList.toggle("now", on); on ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current"); });
 }
 
+function elbow(x1, y1, x2, y2) { const dx = x2 - x1, dy = y2 - y1, d = Math.min(Math.abs(dx), Math.abs(dy)); return [x1 + Math.sign(dx) * d, y1 + Math.sign(dy) * d]; }
 function renderMap() {
   const svg = $("#map"); svg.textContent = "";
   const legend = $("#legend"); legend.textContent = "";
@@ -1003,8 +1004,8 @@ function renderMap() {
     const a = st[i], b = st[i + 1]; if (a.lat == null || b.lat == null) continue;
     const mode = mainMode(legsFrom(a.id)); used.add(mode);
     const [x1, y1] = proj(a), [x2, y2] = proj(b);
-    const dx = x2 - x1, dy = y2 - y1, d = Math.min(Math.abs(dx), Math.abs(dy));
-    const path = `M${x1},${y1} L${x1 + Math.sign(dx) * d},${y1 + Math.sign(dy) * d} L${x2},${y2}`;   // octilinear elbow
+    const [ex, ey] = elbow(x1, y1, x2, y2);
+    const path = `M${x1},${y1} L${ex},${ey} L${x2},${y2}`;   // octilinear elbow
     lines.append(s("path", { d: path, fill: "none", stroke: "var(--card)", "stroke-width": 11, "stroke-linecap": "round", "stroke-linejoin": "round" }));
     lines.append(s("path", { d: path, fill: "none", stroke: modeVar(mode), "stroke-width": mode === "walk" ? 4 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": mode === "walk" ? "2 8" : null }));
   }
@@ -1012,7 +1013,11 @@ function renderMap() {
   const t = boardTime(), cur = st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
   let pos = null;
   if (!cur) for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
-    if (t >= a.leave && t < b.arrive && a.lat != null && b.lat != null) { const f = (t - a.leave) / Math.max(1, b.arrive - a.leave); const [x1, y1] = proj(a), [x2, y2] = proj(b); pos = [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f]; } }
+    if (t >= a.leave && t < b.arrive && a.lat != null && b.lat != null) {
+      const f = (t - a.leave) / Math.max(1, b.arrive - a.leave), [x1, y1] = proj(a), [x2, y2] = proj(b), [ex, ey] = elbow(x1, y1, x2, y2);
+      const l1 = Math.hypot(ex - x1, ey - y1), l2 = Math.hypot(x2 - ex, y2 - ey), at = f * (l1 + l2);
+      pos = at <= l1 ? [x1 + (ex - x1) * (at / (l1 || 1)), y1 + (ey - y1) * (at / (l1 || 1))] : [ex + (x2 - ex) * ((at - l1) / (l2 || 1)), ey + (y2 - ey) * ((at - l1) / (l2 || 1))];
+    } }
   // labels that avoid stations, each other and the edges
   const R = 13, CW = 6.9, LH = 15, boxes = [];
   const centers = st.filter((x) => x.lat != null).map((x) => proj(x));
