@@ -151,7 +151,7 @@ details.more[open] > summary::before { content: "–"; }
 /* Results */
 .results { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px 36px; align-items: start; }
 .col-main, .col-side { display: grid; gap: 18px; min-width: 0; }
-.col-side { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 3px; margin: -3px; scrollbar-width: thin; }
+.col-side.fits { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); }
 .plan-head { grid-column: 1 / -1; display: grid; gap: 12px; min-width: 0; }
 .plan-title { font-size: clamp(1.9rem, 4.2vw, 2.6rem); line-height: 1.05; font-stretch: 125%; font-weight: 800; max-width: 26ch; }
 .plan-title:focus { outline: none; }
@@ -313,13 +313,14 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
   body:not(.has-plan) #formCancel { display: none; }
   body:not(.has-search) #bookSec { display: none; }
   body:not(.can-save) #savedSec { display: none; }
+  body.start-home #savedSec { order: -1; }
 }
 
 @media (max-width: 900px) {
   .results { display: flex; flex-direction: column; align-items: stretch; gap: 18px; }
   .col-main, .col-side { display: contents; }
   .plan-head { order: 1; } .board { order: 2; } .col-main > * { order: 3; } .refine-panel { order: 4; } .map-panel { order: 5; }
-  .col-side { position: static; max-height: none; overflow: visible; }
+  .col-side.fits { position: static; }
 }
 
 @media (max-width: 760px) {
@@ -376,6 +377,47 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
   .appbar .add::after { display: none; }
   .appbar .count { position: absolute; top: 2px; left: calc(50% + 6px); background: var(--inverse); color: var(--inverse-ink); font-family: var(--mono); font-size: .6rem; border-radius: 999px; padding: 0 5px; line-height: 1.5; }
 }
+/* Account, sheet (dialog), welcome, on-the-go, trips, bookings */
+.acct-chip { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: .84rem; }
+.acct-chip img { width: 26px; height: 26px; border-radius: 50%; }
+.acct-chip.off { color: var(--muted); font-weight: 400; }
+.sheet-wrap { position: fixed; inset: 0; z-index: 40; background: rgba(8, 14, 12, .55); display: grid; place-items: center; padding: 16px; }
+.sheet { background: var(--card); color: var(--ink); border-radius: var(--r-lg); width: min(560px, 100%); max-height: calc(100dvh - 32px); overflow: auto; padding: 18px 20px 20px; display: grid; gap: 14px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+.sheet-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.sheet-head h2 { font-size: 1.3rem; font-weight: 800; font-stretch: 115%; }
+.sheet .x { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--field-border); background: var(--card); flex: 0 0 auto; font-size: 1.1rem; }
+.sheet .sub, .perm-list .sub { display: block; color: var(--muted); font-size: .84rem; }
+.perm-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.perm-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.perm-list li:last-child { border-bottom: 0; }
+.perm-list .state.granted { background: var(--accent-soft); color: var(--accent); }
+.perm-list .state.denied { background: var(--warn-bg); color: var(--warn); }
+.choice { display: flex; flex-wrap: wrap; gap: 8px; }
+.choice button[aria-pressed="true"] { background: var(--inverse); border-color: var(--inverse); color: var(--inverse-ink); }
+.preview { border-left: 3px solid var(--signal); padding: 8px 12px; background: var(--paper); border-radius: 0 var(--r-md) var(--r-md) 0; display: grid; gap: 4px; font-size: .9rem; }
+.sheet-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.sheet-grid .c6 { grid-column: span 6; } .sheet-grid .c3 { grid-column: span 3; } .sheet-grid .c2 { grid-column: span 2; } .sheet-grid .c4 { grid-column: span 4; }
+.sheet textarea { font: inherit; font-size: .92rem; color: var(--ink); background: var(--card); border: 1px solid var(--field-border); border-radius: var(--r-md); padding: 10px 12px; min-height: 110px; width: 100%; resize: vertical; }
+.sheet textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); outline: none; }
+.board-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.board-actions .bb { background: var(--board-ink); color: #141000; border: 0; border-radius: 999px; padding: 7px 14px; min-height: 36px; font-family: var(--body); font-weight: 700; font-size: .84rem; }
+.board-actions .bb.ghost { background: transparent; color: var(--board-ink); border: 1px solid var(--board-dim); }
+.board-link { color: var(--board-text); font-family: var(--body); font-size: .8rem; font-weight: 700; text-decoration-color: var(--board-ink); min-height: 32px; display: inline-flex; align-items: center; }
+.board-link:hover { color: var(--board-ink); }
+.board.due { box-shadow: 0 0 0 3px var(--signal); }
+.board .due-tag { background: var(--board-ink); color: #141000; border-radius: var(--r-sm); padding: 1px 6px; font-size: .7rem; font-weight: 600; }
+.visited { font-size: .84rem; color: var(--accent); font-weight: 700; }
+.save-state { font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+.trip-group { display: grid; gap: 4px; }
+.trip-group h3 { font-family: var(--mono); font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; font-stretch: 100%; margin-top: 8px; }
+.saved-list .meta { color: var(--muted); font-size: .82rem; display: block; font-weight: 400; }
+.row.booked { background: var(--paper); border: 1.5px solid var(--accent); border-radius: var(--r-md); margin-bottom: 8px; }
+@media (max-width: 760px) {
+  .sheet-wrap { place-items: end center; padding: 0; }
+  .sheet { border-radius: var(--r-lg) var(--r-lg) 0 0; width: 100%; max-height: 88dvh; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+  .sheet-grid .c3, .sheet-grid .c2, .sheet-grid .c4 { grid-column: span 3; }
+  .board:not(.open) .board-actions { display: flex; }
+}
 @media (prefers-reduced-motion: reduce) {
   .step[data-state="run"] .dot, #map .now-ring { animation: none; }
   .stop .body { transition: none; }
@@ -394,8 +436,9 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
       <div><h1>Stadtfaden</h1><p>Dein Tag als Linie durch die Stadt.</p></div>
     </div>
     <nav class="mast-nav" aria-label="Schnellzugriff">
-      <button class="btn small" type="button" id="newTripBtn" hidden>Neuer Ausflug</button>
-      <button class="btn small" type="button" id="savedJump" hidden>Meine Pläne <span class="mono">(<span id="savedCount">0</span>)</span></button>
+      <button class="btn small" type="button" id="newTripBtn" hidden>Neue Reise</button>
+      <button class="btn small" type="button" id="savedJump" hidden>Meine Reisen <span class="mono">(<span id="savedCount">0</span>)</span></button>
+      <button class="btn small" type="button" id="acctBtn" aria-label="Konto und Erlaubnisse"><span id="acctChip" class="acct-chip off">Konto</span></button>
     </nav>
   </header>
 
@@ -440,6 +483,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
                 <label class="f"><span class="lab">Max. € pro Nacht</span><input type="number" id="fBudget" min="0" step="10" placeholder="optional"></label>
                 <label class="switch"><input type="checkbox" id="fCheckin"> Ich checke am ersten Tag ein</label>
               </div>
+              <div class="stay-box" style="margin-top:10px"><button class="btn small" type="button" id="formBookedBtn">Schon gebucht? Buchung eintragen</button><span class="more-sum" id="formBooked"></span></div>
             </fieldset>
           </div>
         </details>
@@ -491,7 +535,8 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
 
     <section class="section" id="bookSec" data-views="buchen" aria-labelledby="bookTitle">
       <div class="section-head">
-        <div><span class="eyebrow">Buchen · live via Booking.com</span><h2 id="bookTitle">Unterkünfte &amp; Tickets</h2></div>
+        <div><span class="eyebrow">Buchen · live via Booking.com</span><h2 id="bookTitle">Unterkünfte &amp; Tickets</h2>
+          <button class="btn small" type="button" id="addBookedBtn" style="margin-top:8px">Schon gebucht? Buchung eintragen</button></div>
         <div class="switch-row">
           <button class="sw" type="button" id="swStays" aria-current="true" aria-controls="stayPane">Unterkünfte <span class="mono" id="stayCount"></span></button>
           <button class="sw" type="button" id="swExp" aria-controls="expPane">Tickets &amp; Touren <span class="mono" id="expCount"></span></button>
@@ -508,8 +553,9 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
     </section>
 
     <section class="section" id="savedSec" data-views="plaene" aria-labelledby="savedTitle">
-      <div class="section-head"><div><span class="eyebrow">Nur für dich sichtbar</span><h2 id="savedTitle">Meine Pläne</h2></div></div>
-      <ul class="saved-list" id="savedList"></ul>
+      <div class="section-head"><div><span class="eyebrow">Nur für dich sichtbar · speichert automatisch</span><h2 id="savedTitle">Meine Reisen</h2></div>
+        <button class="btn small primary" type="button" id="newTripBtn2">Neue Reise planen</button></div>
+      <div id="savedList"></div>
     </section>
   </main>
 
@@ -529,10 +575,16 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
 <nav class="appbar" id="appbar" aria-label="Bereiche">
   <button type="button" data-go="plan"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M11 5h9M11 12h9M11 19h6"/></svg>Plan</button>
   <button type="button" data-go="karte"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z"/><path d="M9 4v14M15 6v14"/></svg>Karte</button>
-  <button type="button" data-go="ausflug" class="add"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Ausflug</button>
+  <button type="button" data-go="ausflug" class="add"><span class="ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span>Neue Reise</button>
   <button type="button" data-go="buchen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18V8M3 14h18v4M21 14v-2a3 3 0 0 0-3-3h-7v5"/><circle cx="7" cy="11" r="2"/></svg>Buchen<span class="count" id="bookBadge" hidden></span></button>
-  <button type="button" data-go="plaene"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Pläne<span class="count" id="planBadge" hidden></span></button>
+  <button type="button" data-go="plaene"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Reisen<span class="count" id="planBadge" hidden></span></button>
 </nav>
+<div class="sheet-wrap" id="sheetWrap" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <div class="sheet-head"><h2 id="sheetTitle"></h2><button class="x" type="button" id="sheetClose" aria-label="Schließen">×</button></div>
+    <div id="sheetBody"></div>
+  </div>
+</div>
 <div class="toast" id="toast" hidden aria-hidden="true"></div>
 <div class="sr-only" id="sr" role="status" aria-live="polite"></div>
 
@@ -689,7 +741,7 @@ const S = {
 const F = () => (S.example ? EXAMPLE.form : S.form), PL = () => (S.example ? EXAMPLE.place : S.place);
 const D = () => (S.example ? EXAMPLE.form.date : S.days[S.dayIdx]?.date || S.form.date);   // date of the open day
 function setDay(i) { if (!S.days[i]) return; S.dayIdx = i; S.plan = S.days[i].plan; S.simT = null; S.forcedStay = null; renderAll(); }
-function chosenStay() { const id = S.forcedStay ?? S.days[0]?.plan.stay_id; return id == null ? null : S.hotels.find((x) => String(x.id) === String(id)) || null; }
+function chosenStay() { return stayById(S.forcedStay ?? S.days[0]?.plan.stay_id); }
 const avoidNames = (except) => S.days.flatMap((d, i) => (i === except || !d ? [] : d.plan.stops.filter((x) => x.kind !== "hotel").map((x) => x.name))).slice(0, 40);
 const caps = { mcp: null, sample: null, db: null, user: null }; let userId = null; let servers = new Set();
 
@@ -849,9 +901,10 @@ function renderPlanHead() {
   if (notes.length) el.append(h("div", { class: "notes", role: "note", "aria-label": "Hinweise" }, notes));
   if (!S.example) {
     el.append(h("div", { class: "toolbar" },
-      h("button", { class: "btn small", type: "button", id: "saveBtn", onclick: saveTrip, hidden: !(caps.db && userId) }, S.savedId ? "Gespeichert ✓" : "Plan speichern"),
+      h("button", { class: "btn small primary", type: "button", id: "remindBtn", onclick: setReminders, hidden: !caps.mcp, "aria-disabled": remindBusy ? "true" : null }, remindLabel()),
       h("button", { class: "btn small", type: "button", id: "calBtn", onclick: addToCalendar, hidden: !caps.mcp }, calLabel()),
-      h("button", { class: "btn small", type: "button", id: "replanBtn", onclick: () => runPlanOnly(null, true) }, S.daysTotal > 1 ? `Tag ${S.dayIdx + 1} neu planen` : "Neu planen")));
+      h("button", { class: "btn small", type: "button", id: "replanBtn", onclick: () => runPlanOnly(null, true) }, S.daysTotal > 1 ? `Tag ${S.dayIdx + 1} neu planen` : "Neu planen"),
+      caps.db && userId ? h("span", { class: "save-state", id: "saveState" }, { pending: "Speichert …", ok: "Gespeichert ✓", err: "Nicht gespeichert" }[S.saveState] || "") : null));
   }
   $("#refinePanel").hidden = S.example;
   $("#refineLab").textContent = S.daysTotal > 1 && !S.example ? `Tag ${S.dayIdx + 1} anpassen` : "Plan anpassen";
@@ -874,6 +927,7 @@ function renderTimeline() {
         h("span", {}, "Aufenthalt ", h("b", {}, minsLabel(st.leave - st.arrive)))),
       warns.map((w) => h("div", { class: "warning" }, h("span", { "aria-hidden": "true" }, "⚠"), h("span", {}, w))),
       st.tip ? h("p", { class: "tip" }, st.tip) : null,
+      visitedLine(st),
       h("div", { class: "links" },
         ext(gmapsPlace(placeQuery(st)), "Maps ↗", `${st.name}, Weg und aktuelle Öffnungszeiten`),
         booked && booked.url ? ext(booked.url, `Tickets ${booked.priceLabel} ↗`, st.name) : null));
@@ -885,6 +939,11 @@ function renderTimeline() {
   });
 }
 
+function visitedLine(st) {
+  const pr = S.days[S.dayIdx]?.progress; if (!pr) return null;
+  const a = pr.arrived[st.id], l = pr.left[st.id]; if (a == null && l == null) return null;
+  return h("p", { class: "visited" }, "✓ Du warst hier ", h("span", { class: "mono" }, [a != null ? fmt(a) : "", l != null ? fmt(l) : ""].filter(Boolean).join("–")));
+}
 function renderLeg(g, from, to) {
   const transit = !["walk", "taxi"].includes(g.mode);
   const body = h("div", { class: "body" },
@@ -933,6 +992,7 @@ function renderBoard() {
   el.append(
     h("div", { class: "board-top" }, h("span", { class: "lbl", id: "boardMode" }), h("span", { class: "clock", id: "boardClock" }), toggle),
     h("div", { class: "board-mini", id: "boardMini" }),
+    h("div", { class: "board-actions", id: "boardActions" }),
     h("div", { class: "board-cells", id: "boardInfo" }),
     h("div", { class: "board-scrub" }, h("div", { class: "scrub-row" }, h("span", { class: "lbl" }, "Zeit vorspulen"),
       h("button", { class: "board-btn", type: "button", id: "liveBtn", hidden: true, onclick: () => { S.simT = null; renderLive(); } }, "Zurück zu live")), range));
@@ -951,7 +1011,12 @@ function updateBoard() {
   else if (sit.leg) { const to = byId.get(sit.leg.to); nowTxt = sit.leg.mode === "walk" ? `Zu Fuß zu ${to.name}` : `${sit.leg.line || MODES[sit.leg.mode]} Richtung ${sit.leg.direction || to.name}`;
     nowSub = sit.leg.alight ? `Aussteigen: ${sit.leg.alight} um ${fmt(sit.leg.arrive)}` : `Ankunft ${fmt(sit.leg.arrive)}`; }
   else nowTxt = "Kurzer Puffer";
-  el.append(h("div", { class: "board-cell" }, h("span", { class: "lbl" }, "Jetzt"), h("span", { class: "big" }, nowTxt), nowSub ? h("span", { class: "sub" }, nowSub) : null));
+  const ls = liveState(), pr = S.days[S.dayIdx]?.progress;
+  if (ls && ls.at) { nowTxt = ls.at.name; nowSub = `eingecheckt ${fmt(pr.arrived[ls.at.id] ?? ls.at.arrive)} · geplant bis ${fmt(ls.at.leave)}`; }
+  else if (ls && ls.to) { nowTxt = `Unterwegs zu ${ls.to.name}`; nowSub = `losgegangen ${fmt(pr.left[ls.from.id])} · Ankunft geplant ${fmt(ls.to.arrive)}`; }
+  else if (ls && !ls.to) { nowTxt = "Dein Tag ist geschafft."; nowSub = p.evening || ""; }
+  const due = dueStop(); $("#board").classList.toggle("due", !!due);
+  el.append(h("div", { class: "board-cell" }, h("span", { class: "lbl" }, "Jetzt", due ? " " : "", due ? h("span", { class: "due-tag" }, `in ${due.left} Min. weiter`) : null), h("span", { class: "big" }, nowTxt), nowSub ? h("span", { class: "sub" }, nowSub) : null));
   const nx = sit.next; let mini = nowTxt;
   if (nx && !sit.after) {
     const line = `${fmt(nx.depart)} · ${nx.line || MODES[nx.mode]}${nx.direction ? " → " + nx.direction : ""}`;
@@ -962,20 +1027,42 @@ function updateBoard() {
   } else if (sit.nextAny && !sit.after) {
     el.append(h("div", { class: "board-cell" }, h("span", { class: "lbl" }, "Danach"), h("span", { class: "big" }, `${fmt(sit.nextAny.depart)} · zu Fuß zu ${byId.get(sit.nextAny.to).name}`)));
   }
-  $("#boardMini").textContent = mini;
+  $("#boardMini").textContent = (due ? `In ${due.left} Min. weiter · ` : "") + (ls ? nowTxt : mini);
+  renderBoardActions();
   const r = $("#boardRange"); if (r) { if (S.simT == null) r.value = String(Math.min(+r.max, Math.max(+r.min, t))); r.setAttribute("aria-valuetext", fmt(+r.value) + " Uhr"); }
   const lb = $("#liveBtn"); if (lb) lb.hidden = !(D() === todayStr() && S.simT != null);
 }
+function renderBoardActions() {
+  const el = $("#boardActions"); if (!el) return; el.textContent = "";
+  if (S.example) return;
+  if (!canLive() || S.simT != null) { el.append(h("span", { class: "sub" }, S.simT != null ? "Vorschau. „Zurück zu live“ zeigt deine Knöpfe." : "„Bin da“ und „Weiter“ erscheinen am Reisetag.")); return; }
+  const st = S.plan.stops, ls = liveState(), t = nowMin();
+  let at = null, next = null;
+  if (ls) { if (ls.at) at = ls.at; else next = ls.to; }
+  else { const sit = situation(t); if (sit.cur) at = sit.cur; else if (sit.before) next = st[0]; else if (!sit.after) { const leg = sit.leg || sit.nextAny; next = leg ? st.find((x) => x.id === leg.to) : null; } }
+  const bb = (txt, fn, ghost) => h("button", { class: `bb${ghost ? " ghost" : ""}`, type: "button", onclick: fn }, txt);
+  if (at) {
+    const nxt = st[st.indexOf(at) + 1];
+    el.append(bb(nxt ? "Weiter" : "Fertig", () => checkOut(at)), nxt ? bb("Länger bleiben", () => stayLonger(at), true) : null);
+    if (nxt) el.append(ext(gmapsFromHere(nxt), "Route zum nächsten Stopp ↗", nxt.name, "board-link"));
+  } else if (next) {
+    el.append(bb(`Bin da: ${next.name.length > 22 ? next.name.slice(0, 21) + "…" : next.name}`, () => checkIn(next)), ext(gmapsFromHere(next), "Route ab meinem Standort ↗", next.name, "board-link"));
+  }
+  el.append(ext("https://www.google.com/maps/@?api=1&map_action=map", "Wo bin ich? ↗", "Google Maps", "board-link"));
+}
 function markNow() {
-  const sit = situation(boardTime());
-  document.querySelectorAll("#timeline .stop").forEach((li) => { const on = !!sit.cur && li.id === "stop-" + sit.cur.id; li.classList.toggle("now", on); on ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current"); });
+  const sit = situation(boardTime()), ls = liveState(), cur = ls ? ls.at : sit.cur;
+  document.querySelectorAll("#timeline .stop").forEach((li) => { const on = !!cur && li.id === "stop-" + cur.id; li.classList.toggle("now", on); on ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current"); });
 }
 
 function elbow(x1, y1, x2, y2) { const dx = x2 - x1, dy = y2 - y1, d = Math.min(Math.abs(dx), Math.abs(dy)); return [x1 + Math.sign(dx) * d, y1 + Math.sign(dy) * d]; }
 function renderMap() {
   const svg = $("#map"); svg.textContent = "";
   const legend = $("#legend"); legend.textContent = "";
-  const st = S.plan.stops, pts = st.filter((x) => x.lat != null);
+  const st = S.plan.stops;
+  const c0 = st.find((x) => x.lat != null), stopNames = new Set(st.map((x) => x.name.toLowerCase()));
+  const bookedPts = S.booked.filter((b) => b.lat != null && !stopNames.has(b.name.toLowerCase()) && (!c0 || haversine(c0, b) < 30));
+  const pts = [...st.filter((x) => x.lat != null), ...bookedPts];
   $("#mapLink").href = st.length > 1 ? `https://www.google.com/maps/dir/${st.map((x) => encodeURIComponent(x.lat != null ? `${x.lat},${x.lng}` : placeQuery(x))).join("/")}` : gmapsPlace(placeQuery(st[0]));
   const W = Math.max(280, Math.round(svg.parentElement.clientWidth || 460));
   if (pts.length < 2) { const H0 = Math.round(W * 0.5); svg.setAttribute("viewBox", `0 0 ${W} ${H0}`); svg.setAttribute("height", H0); svg.append(s("text", { x: W / 2, y: H0 / 2, "text-anchor": "middle", class: "lbl" }, "Für die Karte fehlen Koordinaten.")); return; }
@@ -1010,9 +1097,11 @@ function renderMap() {
     lines.append(s("path", { d: path, fill: "none", stroke: modeVar(mode), "stroke-width": mode === "walk" ? 4 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": mode === "walk" ? "2 8" : null }));
   }
   // live position: highlight the station you are at, or a dot on the line between two stations
-  const t = boardTime(), cur = st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
+  const t = boardTime(), ls = liveState();
+  const cur = ls ? (ls.at && ls.at.lat != null ? ls.at : null) : st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
   let pos = null;
-  if (!cur) for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
+  if (ls && ls.to && ls.from.lat != null && ls.to.lat != null) { const [x1, y1] = proj(ls.from), [x2, y2] = proj(ls.to), [ex, ey] = elbow(x1, y1, x2, y2); pos = [ex, ey]; }
+  else if (!ls && !cur) for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
     if (t >= a.leave && t < b.arrive && a.lat != null && b.lat != null) {
       const f = (t - a.leave) / Math.max(1, b.arrive - a.leave), [x1, y1] = proj(a), [x2, y2] = proj(b), [ex, ey] = elbow(x1, y1, x2, y2);
       const l1 = Math.hypot(ex - x1, ey - y1), l2 = Math.hypot(x2 - ex, y2 - ey), at = f * (l1 + l2);
@@ -1054,10 +1143,20 @@ function renderMap() {
     g.addEventListener("click", goStop); g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); goStop(); } });
     stations.append(g);
   });
+  bookedPts.forEach((b) => {
+    const [cx, cy] = proj(b);
+    const g = s("g", { class: "st", tabindex: "0", role: "button", "aria-label": `Gebucht: ${b.name}` });
+    g.append(s("rect", { x: cx - R, y: cy - R, width: 2 * R, height: 2 * R, rx: 6, fill: "var(--accent-soft)", stroke: "var(--accent)", "stroke-width": 3 }), s("text", { x: cx, y: cy + 4, "text-anchor": "middle", class: "num", "aria-hidden": "true" }, "H"));
+    const right = cx < W * 0.6, label = b.name.length > 20 ? b.name.slice(0, 19) + "…" : b.name;
+    g.append(s("text", { x: right ? cx + R + 6 : cx - R - 6, y: cy + 4.5, "text-anchor": right ? "start" : "end", class: "lbl", "aria-hidden": "true" }, label));
+    const open = () => go("buchen"); g.addEventListener("click", open); g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); open(); } });
+    stations.append(g);
+  });
   svg.append(lines, stations);
   if (pos) { if (!S.pulsed) svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 8, class: "now-ring", "aria-hidden": "true" })); svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 7, class: "now-dot", "aria-hidden": "true" })); S.pulsed = true; }
   [...used].forEach((m) => legend.append(h("span", {}, h("i", { class: m === "walk" ? "dash" : "", style: `--c:${modeVar(m)}` }), MODES[m])));
-  legend.append(h("span", {}, h("i", { class: "dot" }), "Deine Position"));
+  legend.append(h("span", {}, h("i", { class: "dot" }), ls ? "Deine Position (eingecheckt)" : "Deine Position"));
+  if (bookedPts.length) legend.append(h("span", {}, h("i", { style: "--c:var(--accent);width:12px;height:12px;border-radius:3px" }), "Gebucht"));
 }
 
 function renderHours() {
@@ -1078,13 +1177,29 @@ function renderHours() {
 function planCenter() { const p = S.plan.stops.filter((x) => x.lat != null && x.kind !== "hotel"); if (!p.length) return null; return { lat: p.reduce((a, x) => a + x.lat, 0) / p.length, lng: p.reduce((a, x) => a + x.lng, 0) / p.length }; }
 const cell = (label, ...kids) => h("div", {}, h("span", { class: "cl" }, label), ...kids);
 function updateCounts() {
-  $("#stayCount").textContent = S.hotels.length ? String(S.hotels.length) : "";
+  $("#stayCount").textContent = S.hotels.length + S.booked.length ? String(S.hotels.length + S.booked.length) : "";
   $("#expCount").textContent = S.attractions.length ? String(S.attractions.length) : "";
   const n = S.hotels.length + S.attractions.length, b = $("#bookBadge"); b.hidden = !n; b.textContent = String(n);
-  document.body.classList.toggle("has-search", S.staysState !== "idle" || S.expState !== "idle");
+  document.body.classList.toggle("has-search", S.staysState !== "idle" || S.expState !== "idle" || S.booked.length > 0);
+}
+function bookedRows(g) {
+  S.booked.forEach((b) => {
+    let confirm = false;
+    const del = h("button", { class: "btn small", type: "button" }, "Entfernen");
+    del.addEventListener("click", () => { if (!confirm) { confirm = true; del.textContent = "Wirklich entfernen?"; setTimeout(() => { confirm = false; del.textContent = "Entfernen"; }, 4000); return; } removeBooked(b.id); });
+    const isChosen = String(S.plan.stay_id) === "b_" + b.id;
+    g.append(h("article", { class: "row booked", "aria-label": `Gebucht: ${b.name}` },
+      h("div", {}, h("h3", {}, b.name), h("p", { class: "sub" }, h("span", { class: "badge ok" }, "Gebucht"), b.address || ""), b.ref ? h("p", { class: "sub" }, `Buchungsnr. ${b.ref}${b.phone ? " · " + b.phone : ""}`) : null),
+      cell("Zeitraum", h("span", { class: "mono" }, [b.inDate ? shortDate(b.inDate) : "", b.outDate ? shortDate(b.outDate) : ""].filter(Boolean).join(" – ") || "–")),
+      cell("Zur Route", h("span", { class: "mono" }, (() => { const c = planCenter(); return c && b.lat != null ? (haversine(c, b) < 1 ? `${Math.round(haversine(c, b) * 1000)} m` : `${haversine(c, b).toFixed(1).replace(".", ",")} km`) : "–"; })())),
+      cell("Check-in / -out", h("div", { class: "ci" }, h("div", {}, "ein ", b.inTime ? `ab ${b.inTime}` : "–"), h("div", {}, "aus ", b.outTime ? `bis ${b.outTime}` : "–"))),
+      cell("Status", h("span", { class: "mono" }, isChosen ? "Start im Plan" : "eingetragen")),
+      h("div", { class: "acts" }, ext(gmapsPlace(`${b.name}, ${b.address || PL().local || ""}`), "Maps ↗", b.name, "btn small"),
+        caps.sample && !isChosen && !S.example ? h("button", { class: "btn small", type: "button", onclick: () => { S.forcedStay = "b_" + b.id; runPlanOnly(null); if (appMode.matches) go("plan"); } }, "Tag ab hier planen") : null, del)));
+  });
 }
 function renderStays() {
-  const g = $("#stayGrid"); g.textContent = ""; updateCounts();
+  const g = $("#stayGrid"); g.textContent = ""; updateCounts(); bookedRows(g);
   if (S.staysState === "run") { g.append(h("p", { class: "empty" }, "Unterkünfte werden bei Booking.com gesucht …")); return; }
   if (S.staysState === "err") { g.append(h("p", { class: "empty" }, S.staysErr)); return; }
   if (!S.hotels.length) { g.append(h("p", { class: "empty" }, S.staysState === "ok" ? "Booking.com hat für diese Suche nichts Freies gefunden. Versuche ein anderes Datum oder ein höheres Budget." : S.staysState === "skip" ? "Unterkunftssuche ist ausgeschaltet." : "Lege einen Ausflug mit „Unterkunft suchen“ an. Hier erscheinen dann freie Hotels und Ferienwohnungen mit Preis, Bewertung und Check-in-Zeit.")); return; }
@@ -1123,12 +1238,13 @@ function renderExp() {
 
 const shown = (sel) => { const el = $(sel); return !!el && el.getClientRects().length > 0; };
 let panesRaf = 0;
-function renderPanes() { if (shown("#mapPane")) renderMap(); if (shown("#hoursPane")) renderHours(); }
+function renderPanes() { if (shown("#mapPane")) renderMap(); if (shown("#hoursPane")) renderHours(); fitSide(); }
 function schedulePanes() { if (!panesRaf) panesRaf = requestAnimationFrame(() => { panesRaf = 0; renderPanes(); }); }
-function renderAll() { S.pulsed = false; renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); if (!S.example) renderStub(); }
-function renderLive() { updateBoard(); markNow(); renderPanes(); }
+function fitSide() { const el = $(".col-side"); if (el) el.classList.toggle("fits", !appMode.matches && el.getBoundingClientRect().height + 32 <= innerHeight); }
+function renderAll() { S.pulsed = false; renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); if (!S.example) renderStub(); fitSide(); }
+function renderLive() { updateBoard(); markNow(); renderPanes(); maybeNudge(); }
 setInterval(() => { if (isLive()) renderLive(); }, 30000);
-let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (shown("#mapPane")) renderMap(); }, 150); });
+let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (shown("#mapPane")) renderMap(); fitSide(); }, 150); });
 
 /* ================= Progress steps ================= */
 const STEP_LABELS = { locate: "Ort erkennen", attr: "Erlebnisse bei Booking.com suchen", stay: "Unterkünfte bei Booking.com suchen", checkin: "Check-in-Zeiten bei Booking.com abfragen", plan: "Route, Linien und Zeiten berechnen" };
@@ -1224,6 +1340,7 @@ async function locate(f) {
     lat: num(r.lat, -90, 90), lng: num(r.lng, -180, 180), cc: /^[a-z]{2}$/.test(r.country_code || "") ? r.country_code : null };
 }
 
+const PLAN_JSON_FORMAT = `{"title":"…","summary":"…","transit_tip":"Welches Ticket lohnt sich","stay_id":null,"stay_reason":"","stops":[{"id":"s1","name":"…","kind":"sight|museum|food|cafe|shop|park|viewpoint|nightlife|hotel|station|experience","arrive":"10:00","leave":"10:45","lat":0,"lng":0,"address":"…","why":"…","tip":"…","hours":"…","opens":"10:00","closes":"18:00","price":"…","booking_id":null}],"legs":[{"from":"s1","to":"s2","mode":"ubahn","line":"U3","direction":"…","board":"…","alight":"…","stations":["…"],"depart":"10:50","arrive":"10:58","minutes":8,"note":"…"}],"shops":[{"name":"…","kind":"…","hours":"…","opens":"10:00","closes":"20:00","near":"s2"}],"evening":null,"warnings":[]}`;
 function planPrompt(f, place, opts) {
   const end = toMin(f.start) + Math.round(f.hours * 60);
   const maxStops = f.hours <= 3 ? 4 : f.hours <= 5 ? 5 : f.hours <= 8 ? 7 : 8;
@@ -1271,7 +1388,7 @@ function planPrompt(f, place, opts) {
     `- Koordinaten (lat/lng) für jeden Stopp, so genau du kannst. Alle Texte auf Deutsch, kurz und konkret.`,
     ``,
     `Antworte nur mit JSON in genau dieser Form:`,
-    `{"title":"…","summary":"…","transit_tip":"Welches Ticket lohnt sich","stay_id":null,"stay_reason":"","stops":[{"id":"s1","name":"…","kind":"sight|museum|food|cafe|shop|park|viewpoint|nightlife|hotel|station|experience","arrive":"10:00","leave":"10:45","lat":0,"lng":0,"address":"…","why":"…","tip":"…","hours":"…","opens":"10:00","closes":"18:00","price":"…","booking_id":null}],"legs":[{"from":"s1","to":"s2","mode":"ubahn","line":"U3","direction":"…","board":"…","alight":"…","stations":["…"],"depart":"10:50","arrive":"10:58","minutes":8,"note":"…"}],"shops":[{"name":"…","kind":"…","hours":"…","opens":"10:00","closes":"20:00","near":"s2"}],"evening":null,"warnings":[]}`);
+    PLAN_JSON_FORMAT);
   return lines.filter((x) => x != null).join("\n");
 }
 
@@ -1350,7 +1467,7 @@ async function planTrip(f) {
 
 /* After the first plan (or opening a saved one): stub instead of form, show the plan, focus its title */
 function onPlanReady(plan, opened) {
-  collapseForm();
+  collapseForm(); document.body.classList.remove("start-home");
   go("plan");   // all widths: keeps body[data-view] right if the window later narrows
   setTimeout(() => $("#planTitle")?.focus({ preventScroll: true }), 80);
   announce(`${opened ? "Plan geöffnet" : "Plan fertig"}: ${plan.title || "dein Tag"}, ${plan.stops.length} Stopps.`);
@@ -1362,14 +1479,15 @@ async function planDays(from) {
   for (let d = from; d < total; d++) {
     const date = addDays(f.date, d), day = { n: d + 1, total };
     setStep("plan", "run", total > 1 ? `Tag ${d + 1} von ${total}: Claude plant Wege, Linien und Zeiten …` : "Claude plant Wege, Linien und Zeiten …");
-    const stay = d === 0 ? null : chosenStay();
+    const bk = bookedStay(date), stay = bk || (d === 0 ? null : chosenStay());
     try {
-      const plan = await makePlan({ ...f, date, checkinToday: f.checkinToday && d === 0 }, S.place, { stay, pickStay: d === 0, day, avoid: avoidNames(d) });
-      if (d > 0 && stay) plan.stay_id = String(stay.id);
-      S.days[d] = { date, plan }; markSrc("claude", "ok");
+      const plan = await makePlan({ ...f, date, checkinToday: bk ? bk.booked.inDate === date : f.checkinToday && d === 0 }, S.place, { stay, pickStay: !bk && d === 0, day, avoid: avoidNames(d) });
+      if (stay) plan.stay_id = String(stay.id);
+      S.days[d] = { date, plan, progress: { arrived: {}, left: {} } }; markSrc("claude", "ok");
       if (d === 0 || S.example) {
         S.example = false; S.dayIdx = d; S.plan = plan; S.simT = null; renderAll(); onPlanReady(plan);
       } else renderPlanHead();
+      persistTrip();
     } catch (e) {
       const msg = e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`;
       setStep("plan", "err", total > 1 ? `Tag ${d + 1}: ${msg}` : msg, { label: d > 0 ? `Ab Tag ${d + 1} weiterplanen` : "Nochmal", fn: () => resumeDays(d) });
@@ -1398,8 +1516,11 @@ async function runPlanOnly(change, variant) {
   if (!S.steps.length) S.steps = [{ id: "plan", state: "idle" }];
   const wasExample = S.example, multi = S.daysTotal > 1, idx = wasExample ? 0 : S.dayIdx;
   const f = { ...S.form, date: wasExample ? S.form.date : D(), checkinToday: S.form.checkinToday && idx === 0 };
-  const keepStay = multi && idx === 0 && S.forcedStay == null ? chosenStay() : null;   // other days already start there
-  const stay = S.forcedStay != null || idx > 0 ? chosenStay() : keepStay && f.checkinToday ? keepStay : null;
+  const bk = S.forcedStay == null ? bookedStay(f.date) : null;
+  if (bk) f.checkinToday = bk.booked.inDate === f.date;
+  const keepStay = !bk && multi && idx === 0 && S.forcedStay == null ? chosenStay() : null;   // other days already start there
+  const stay = bk || (S.forcedStay != null || idx > 0 ? chosenStay() : keepStay && f.checkinToday ? keepStay : null);
+  if (stay && stay.booked) f.checkinToday = stay.booked.inDate === f.date;
   const prevStayId = S.days[0]?.plan.stay_id ?? null;
   setStep("plan", "run", (multi ? `Tag ${idx + 1}: ` : "") + (S.forcedStay != null && stay ? `Neu ab ${stay.name} …` : change ? `Passe an: „${change}“ …` : "Plane neu …"));
   try {
@@ -1409,7 +1530,7 @@ async function runPlanOnly(change, variant) {
     if (stay) plan.stay_id = String(stay.id); else if (keepStay) plan.stay_id = String(keepStay.id);
     const movedStay = multi && idx === 0 && !wasExample && prevStayId != null && String(plan.stay_id) !== String(prevStayId);
     if (wasExample) S.days = [];
-    S.days[idx] = { date: f.date, plan }; S.dayIdx = idx; S.plan = plan; S.example = false; S.savedId = null;
+    S.days[idx] = { date: f.date, plan, progress: { arrived: {}, left: {} } }; S.dayIdx = idx; S.plan = plan; S.example = false; markStale(); persistTrip();
     setStep("plan", "ok", (multi ? `Tag ${idx + 1}: ` : "") + `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
     renderAll(); if (wasExample) onPlanReady(plan); else toast(movedStay ? "Tag 1 startet an der neuen Unterkunft. Die anderen Tage starten noch an der alten. Plane sie bei Bedarf mit „Neu planen“ neu." : change ? "Plan angepasst." : "Neuer Plan ist da.");
     if (wasExample && multi) await planDays(1);
@@ -1453,42 +1574,149 @@ async function addToCalendar() {
   }
 }
 
-/* ================= Saving (private per person) ================= */
-async function saveTrip() {
-  const btn = $("#saveBtn"); if (!caps.db || !userId || !btn) return;
-  btn.disabled = true;
-  const id = "t" + Date.now();
-  const multi = S.days.length > 1;
-  const data = { title: multi ? `${S.days.length} Tage in ${S.place.local}` : S.plan.title || `Tag in ${S.place.local}`, city: S.place.local, date: S.form.date, savedAt: Date.now(),
-    json: JSON.stringify({ v: 2, form: S.form, place: S.place, days: S.days, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins }) };
-  try { await caps.db.collection("data/users/" + userId).doc(id).set(data); S.savedId = id; btn.textContent = "Gespeichert ✓"; toast("Plan gespeichert. Du findest ihn unten unter „Meine Pläne“."); }
-  catch { btn.disabled = false; toast("Speichern hat nicht geklappt. Versuche es noch einmal."); }
+/* ================= Per-viewer preferences (browser only) ================= */
+const pref = {
+  get(k, d) { try { const v = localStorage.getItem("sf." + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("sf." + k, JSON.stringify(v)); } catch {} },
+};
+
+/* ================= Sheet (dialog) ================= */
+let sheetReturn = null, sheetOnClose = null;
+function openSheet(title, body, onClose) {
+  if (!$("#sheetWrap").hidden) closeSheet(true);
+  sheetReturn = document.activeElement; sheetOnClose = onClose || null;
+  $("#sheetTitle").textContent = title; const b = $("#sheetBody"); b.textContent = ""; b.append(body);
+  $("#sheetWrap").hidden = false;
+  const first = b.querySelector("button:not([disabled]), input, textarea, select, a[href]"); (first || $("#sheetClose")).focus();
 }
-let savedDocs = [];
+function closeSheet(silent) {
+  if ($("#sheetWrap").hidden) return;
+  $("#sheetWrap").hidden = true; const cb = sheetOnClose; sheetOnClose = null; if (cb) cb();
+  if (!silent && sheetReturn && sheetReturn.isConnected) sheetReturn.focus({ preventScroll: true });
+}
+$("#sheetClose").addEventListener("click", () => closeSheet());
+$("#sheetWrap").addEventListener("click", (e) => { if (e.target.id === "sheetWrap") closeSheet(); });
+addEventListener("keydown", (e) => {
+  if ($("#sheetWrap").hidden) return;
+  if (e.key === "Escape") { e.preventDefault(); closeSheet(); return; }
+  if (e.key !== "Tab") return;
+  const items = [...document.querySelectorAll(".sheet button:not([disabled]), .sheet input, .sheet textarea, .sheet select, .sheet a[href]")].filter((x) => x.offsetParent !== null);
+  if (!items.length) return;
+  const first = items[0], last = items[items.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+const field = (label, input, cls = "c6") => h("label", { class: `f ${cls}` }, h("span", { class: "lab" }, label), input);
+
+/* ================= Account, permissions, welcome ================= */
+let perms = null, me = null, imagesOK = false;
+const PERM_ITEMS = [
+  { name: "sample", label: "Claude", what: "plant Routen, Linien und Zeiten und liest Buchungsbestätigungen" },
+  { name: "mcp:Booking.com", label: "Booking.com", what: "Unterkünfte, Check-in-Zeiten und Tickets" },
+  { name: "mcp:Google Calendar", label: "Google Kalender", what: "Erinnerungen aufs Handy, bevor du weiter musst" },
+];
+const PERM_TXT = { granted: "erlaubt", prompt: "fragt beim ersten Mal", denied: "abgelehnt", unavailable: "nicht verfügbar" };
+function renderAccount() {
+  const chip = $("#acctChip"); chip.textContent = "";
+  if (me && me.id) { chip.className = "acct-chip"; chip.append(h("img", { src: me.avatarUrl, alt: "" }), h("span", {}, me.name || "Angemeldet")); }
+  else { chip.className = "acct-chip off"; chip.append("Nicht angemeldet"); }
+}
+async function showWelcome() {
+  const st = perms ? await perms.state().catch(() => ({})) : {};
+  const chips = {};
+  const list = h("ul", { class: "perm-list" },
+    PERM_ITEMS.map((it) => { const v = st[it.name] || "unavailable"; chips[it.name] = h("span", { class: `state ${v === "granted" || v === "denied" ? v : "unknown"}` }, PERM_TXT[v]);
+      return h("li", {}, h("div", {}, h("b", {}, it.label), h("span", { class: "sub" }, it.what)), chips[it.name]); }),
+    h("li", {}, h("div", {}, h("b", {}, "Standort"), h("span", { class: "sub" }, "Live-GPS ist in claude.ai-Apps noch nicht verfügbar. Unterwegs tippst du „Bin da“, und „Route ab meinem Standort“ öffnet Google Maps mit deinem echten Standort.")), h("span", { class: "state unknown" }, "über Google Maps")),
+    h("li", {}, h("div", {}, h("b", {}, "Mitteilungen"), h("span", { class: "sub" }, "Erinnerungen kommen über Google Kalender auf dein Handy, 10 Min. vor jedem Aufbruch. Solange die App offen ist, meldet sich die Tafel.")),
+      h("label", { class: "switch" }, h("input", { type: "checkbox", id: "soundPref", checked: pref.get("sound", true), onchange: (e) => pref.set("sound", e.target.checked) }), "Ton")));
+  const allow = h("button", { class: "btn primary", type: "button", disabled: !perms }, perms ? "Alles erlauben" : "Erlaubnisse gibt es nur in claude.ai");
+  allow.addEventListener("click", async () => {
+    const r = await perms.request(PERM_ITEMS.map((i) => i.name)).catch(() => ({}));
+    PERM_ITEMS.forEach((it) => { const v = r[it.name] || "unavailable"; chips[it.name].className = `state ${v === "granted" || v === "denied" ? v : "unknown"}`; chips[it.name].textContent = PERM_TXT[v]; });
+    announce("Erlaubnisse aktualisiert.");
+  });
+  const manage = h("button", { class: "btn", type: "button", hidden: !perms }, "Erlaubnisse verwalten");
+  manage.addEventListener("click", () => perms.manage().then(() => { closeSheet(true); showWelcome(); }).catch(() => toast("Öffne das Menü „Berechtigungen“ dieses Artifacts in claude.ai.")));
+  const who = me && me.id ? h("p", {}, h("span", { class: "acct-chip" }, h("img", { src: me.avatarUrl, alt: "" }), h("span", {}, me.name || "Angemeldet")),
+      h("span", { class: "sub" }, "Angemeldet über dein claude.ai-Konto. Deine Reisen und Buchungen sind nur für dich sichtbar."))
+    : h("p", {}, h("b", {}, "Nicht angemeldet. "), "Melde dich bei claude.ai an, dann speichert Stadtfaden deine Reisen automatisch und nur für dich.");
+  openSheet("Willkommen bei Stadtfaden", h("div", { style: "display:grid;gap:12px" }, who,
+    h("p", { class: "sub" }, "Damit die App unterwegs hilft, braucht sie ein paar Erlaubnisse. Du kannst sie jederzeit hier ändern."),
+    list, h("div", { class: "toolbar" }, allow, manage, h("button", { class: "btn", type: "button", onclick: () => closeSheet() }, "Los geht's"))),
+    () => pref.set("welcomed", true));
+}
+$("#acctBtn").addEventListener("click", showWelcome);
+
+/* ================= Trips: autosave, list, open ================= */
+S.tripId = null; S.booked = []; S.reminders = {}; S.remStale = {}; S.saveState = "";
+let persistT = null, persisting = false, persistAgain = false;
+const tripTitle = () => (S.daysTotal > 1 ? `${S.daysTotal} Tage in ${S.place.local}` : S.days[0]?.plan.title || `Tag in ${S.place.local}`);
+function setSaveState(v) { S.saveState = v; const el = $("#saveState"); if (el) el.textContent = { pending: "Speichert …", ok: "Gespeichert ✓", err: "Nicht gespeichert" }[v] || ""; }
+function persistTrip() { if (!caps.db || !userId || S.example) return; setSaveState("pending"); clearTimeout(persistT); persistT = setTimeout(doPersist, 500); }
+async function doPersist() {
+  if (persisting) { persistAgain = true; return; }
+  persisting = true;
+  if (!S.tripId) S.tripId = "t" + Date.now();
+  const days = S.days.filter(Boolean);
+  const data = { kind: "trip", v: 3, title: tripTitle(), city: S.place.local, date: S.form.date, endDate: addDays(S.form.date, Math.max(0, (S.daysTotal || 1) - 1)), savedAt: Date.now(),
+    json: JSON.stringify({ v: 3, form: S.form, place: S.place, days, daysTotal: S.daysTotal, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins, booked: S.booked, reminders: S.reminders, remStale: S.remStale }) };
+  try { await caps.db.collection("data/users/" + userId).doc(S.tripId).set(data); S.savedId = S.tripId; setSaveState("ok"); }
+  catch { setSaveState("err"); toast("Deine Reise konnte gerade nicht gespeichert werden. Ich versuche es bei der nächsten Änderung erneut."); }
+  persisting = false;
+  if (persistAgain) { persistAgain = false; doPersist(); }
+}
+function newTrip() {
+  S.tripId = null; S.booked = []; S.reminders = {}; S.remStale = {}; S.savedId = null;
+  $("#fCity").value = ""; $("#fWish").value = ""; renderFormBooked();
+  document.body.classList.remove("start-home");
+  go("ausflug"); if (!appMode.matches) openForm();
+}
+$("#newTripBtn").addEventListener("click", newTrip);
+$("#newTripBtn2").addEventListener("click", newTrip);
+
+let savedDocs = [], startDecided = false;
 function loadSaved() {
   markSrc("db", "ok");
-  let timer = setTimeout(() => renderSaved("Gespeicherte Pläne laden gerade nicht."), 10000);
-  caps.db.collection("data/users/" + userId).orderBy("savedAt", "desc").limit(20).onSnapshot((snap) => {
+  let timer = setTimeout(() => renderSaved("Deine Reisen laden gerade nicht."), 10000);
+  caps.db.collection("data/users/" + userId).orderBy("savedAt", "desc").limit(30).onSnapshot((snap) => {
     clearTimeout(timer); savedDocs = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) })).filter((d) => typeof d.json === "string"); renderSaved();
-  }, () => { clearTimeout(timer); renderSaved("Gespeicherte Pläne konnten nicht geladen werden."); });
+    if (!startDecided) { startDecided = true;
+      if (S.example && savedDocs.length && !location.hash) { if (appMode.matches) go("plaene"); else document.body.classList.add("start-home"); } }
+  }, () => { clearTimeout(timer); renderSaved("Deine Reisen konnten nicht geladen werden."); });
+}
+function tripStatus(d) { const t = todayStr(), a = String(d.date || ""), b = String(d.endDate || d.date || ""); return b && b < t ? "past" : a && a > t ? "next" : "now"; }
+function tripVisited(d) {
+  try { const o = JSON.parse(d.json); let seen = 0, all = 0;
+    (o.days || []).forEach((x) => { const ids = (x?.plan?.stops || []).filter((q) => q.kind !== "hotel").map((q) => q.id); all += ids.length; const pr = x.progress || {};
+      seen += ids.filter((id) => pr.arrived?.[id] != null || pr.left?.[id] != null).length; });
+    return { seen, all }; } catch { return { seen: 0, all: 0 }; }
 }
 function renderSaved(msg) {
-  const ul = $("#savedList"); ul.textContent = "";
+  const box = $("#savedList"); box.textContent = "";
   const can = !!(caps.db && userId); document.body.classList.toggle("can-save", can);
   $("#savedJump").hidden = !can; $("#savedCount").textContent = String(savedDocs.length);
   const pb = $("#planBadge"); pb.hidden = !savedDocs.length; pb.textContent = String(savedDocs.length);
-  if (msg) { ul.append(h("li", { class: "empty" }, msg)); return; }
-  if (!caps.db || !userId) { ul.append(h("li", { class: "empty" }, "Melde dich in claude.ai an, um Pläne zu speichern.")); return; }
-  if (!savedDocs.length) { ul.append(h("li", { class: "empty" }, "Noch nichts gespeichert. Nach dem Planen: „Plan speichern“.")); return; }
-  savedDocs.forEach((d) => {
-    let confirm = false;
-    const del = h("button", { class: "btn small", type: "button" }, "Löschen");
-    del.addEventListener("click", async () => {
-      if (!confirm) { confirm = true; del.textContent = "Wirklich löschen?"; setTimeout(() => { confirm = false; del.textContent = "Löschen"; }, 4000); return; }
-      try { await caps.db.collection("data/users/" + userId).doc(d.id).delete(); toast("Gelöscht."); } catch { toast("Löschen hat nicht geklappt."); }
+  if (msg) { box.append(h("p", { class: "empty" }, msg)); return; }
+  if (!can) { box.append(h("p", { class: "empty" }, "Melde dich bei claude.ai an, dann speichert Stadtfaden deine Reisen automatisch.")); return; }
+  if (!savedDocs.length) { box.append(h("p", { class: "empty" }, "Noch keine Reisen. Plane deine erste: Sie speichert sich automatisch.")); return; }
+  const groups = [["now", "Läuft gerade"], ["next", "Kommend"], ["past", "Vergangen"]];
+  groups.forEach(([key, label]) => {
+    const docs = savedDocs.filter((d) => tripStatus(d) === key); if (!docs.length) return;
+    const ul = h("ul", { class: "saved-list" });
+    docs.forEach((d) => {
+      let confirm = false;
+      const del = h("button", { class: "btn small", type: "button" }, "Löschen");
+      del.addEventListener("click", async () => {
+        if (!confirm) { confirm = true; del.textContent = "Wirklich löschen?"; setTimeout(() => { confirm = false; del.textContent = "Löschen"; }, 4000); return; }
+        try { await caps.db.collection("data/users/" + userId).doc(d.id).delete(); if (S.tripId === d.id) S.tripId = null; toast("Reise gelöscht."); } catch { toast("Löschen hat nicht geklappt."); }
+      });
+      const v = key === "past" ? tripVisited(d) : null;
+      const dates = d.endDate && d.endDate !== d.date ? `${shortDate(String(d.date))} – ${shortDate(String(d.endDate))}` : d.date ? dateLabel(String(d.date)) : "";
+      ul.append(h("li", {}, h("span", { class: "t" }, str(d.title, 80), h("span", { class: "meta" }, [str(d.city, 40), dates, v && v.all ? `${v.seen} von ${v.all} Stopps besucht` : null].filter(Boolean).join(" · "))),
+        h("span", { class: "acts" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
     });
-    ul.append(h("li", {}, h("span", { class: "t" }, `${str(d.title, 80)} `, h("span", { class: "eyebrow" }, `${str(d.city, 40)} · ${d.date ? dateLabel(String(d.date)) : ""}`)),
-      h("span", { class: "acts" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
+    box.append(h("div", { class: "trip-group" }, h("h3", {}, label), ul));
   });
 }
 const t2s = (m) => (typeof m === "number" ? fmt(m) : m ?? null);
@@ -1496,16 +1724,31 @@ function revivePlan(p) {
   return cleanPlan({ ...p, stops: (p.stops || []).map((x) => ({ ...x, arrive: t2s(x.arrive), leave: t2s(x.leave), opens: t2s(x.opens), closes: t2s(x.closes) })),
     legs: (p.legs || []).map((g) => ({ ...g, depart: t2s(g.depart), arrive: t2s(g.arrive) })), shops: (p.shops || []).map((x) => ({ ...x, opens: t2s(x.opens), closes: t2s(x.closes) })) });
 }
+function cleanProgress(p) {
+  const pick = (o) => Object.fromEntries(Object.entries(o && typeof o === "object" ? o : {}).filter(([k, v]) => /^[\w-]{1,40}$/.test(k) && typeof v === "number" && v >= 0 && v < 2880));
+  return { arrived: pick(p?.arrived), left: pick(p?.left) };
+}
+function cleanBooked(list) {
+  return (Array.isArray(list) ? list : []).filter((b) => b && str(b.name)).slice(0, 10).map((b) => ({ id: str(b.id, 30) || "b" + Math.random().toString(36).slice(2, 8), name: str(b.name, 100), address: str(b.address, 160),
+    lat: num(b.lat, -90, 90), lng: num(b.lng, -180, 180), inDate: /^\d{4}-\d{2}-\d{2}$/.test(b.inDate || "") ? b.inDate : "", inTime: toMin(b.inTime) != null ? fmt(toMin(b.inTime)) : "",
+    outDate: /^\d{4}-\d{2}-\d{2}$/.test(b.outDate || "") ? b.outDate : "", outTime: toMin(b.outTime) != null ? fmt(toMin(b.outTime)) : "", ref: str(b.ref, 60), phone: str(b.phone, 40) }));
+}
+function cleanReminders(r) {
+  const out = {}; if (!r || typeof r !== "object") return out;
+  for (const [k, v] of Object.entries(r)) if (/^\d{4}-\d{2}-\d{2}$/.test(k) && Array.isArray(v)) out[k] = v.slice(0, 30).map((x) => ({ id: str(x?.id, 200) || null, at: num(x?.at, 0, 2880) ?? 0 }));
+  return out;
+}
 function openSaved(d) {
   try {
     const o = JSON.parse(d.json);
-    const days = Array.isArray(o.days) ? o.days.filter((x) => x && x.plan).map((x) => ({ date: String(x.date), plan: revivePlan(x.plan) })) : [{ date: o.form.date, plan: revivePlan(o.plan) }];
+    const days = Array.isArray(o.days) ? o.days.filter((x) => x && x.plan).map((x) => ({ date: String(x.date), plan: revivePlan(x.plan), progress: cleanProgress(x.progress) })) : [{ date: o.form.date, plan: revivePlan(o.plan), progress: cleanProgress(null) }];
     if (!days.length) throw new Error("leer");
-    S.days = days; S.daysTotal = days.length; S.dayIdx = 0; S.plan = days[0].plan;
+    S.days = days; S.daysTotal = Math.max(days.length, num(o.daysTotal, 1, 7) || 1); S.dayIdx = Math.max(0, days.findIndex((x) => x.date === todayStr())); S.plan = days[S.dayIdx].plan;
     S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = cleanAttractionsSaved(o.attractions);
-    S.checkins = o.checkins || {}; S.example = false; S.savedId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
-    renderAll(); onPlanReady(S.plan, true);
-  } catch { toast("Dieser Plan ließ sich nicht öffnen."); }
+    S.checkins = o.checkins || {}; S.booked = cleanBooked(o.booked); S.reminders = cleanReminders(o.reminders); S.remStale = o.remStale && typeof o.remStale === "object" ? o.remStale : {};
+    S.example = false; S.savedId = d.id; S.tripId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
+    setSaveState("ok"); renderFormBooked(); renderAll(); onPlanReady(S.plan, true);
+  } catch { toast("Diese Reise ließ sich nicht öffnen."); }
 }
 function cleanAttractionsSaved(list) {
   return (Array.isArray(list) ? list : []).filter((a) => a && str(a.id) && str(a.name)).slice(0, 12).map((a) => ({ id: str(a.id, 40), name: str(a.name, 120), url: safeUrl(a.url, "booking.com"),
@@ -1513,30 +1756,258 @@ function cleanAttractionsSaved(list) {
 }
 function cleanHotelsSaved(list) { return (Array.isArray(list) ? list : []).filter((x) => x && x.id && x.name).map((x) => ({ ...x, url: safeUrl(x.url, "booking.com"), facilities: Array.isArray(x.facilities) ? x.facilities : [] })); }
 
+/* ================= On the go: check-ins, stay longer, shift, rest via Claude ================= */
+const canLive = () => !S.example && D() === todayStr();
+function prog() { const d = S.days[S.dayIdx]; if (!d) return { arrived: {}, left: {} }; if (!d.progress) d.progress = { arrived: {}, left: {} }; return d.progress; }
+function liveState() {
+  if (!canLive() || S.simT != null) return null;
+  const pr = S.days[S.dayIdx]?.progress; if (!pr) return null;
+  const st = S.plan.stops; let idx = -1;
+  st.forEach((x, i) => { if (pr.arrived[x.id] != null || pr.left[x.id] != null) idx = i; });
+  if (idx < 0) return null;
+  const x = st[idx]; return pr.left[x.id] == null ? { at: x, idx } : { from: x, to: st[idx + 1] || null, idx };
+}
+const gmapsFromHere = (st) => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(stopLoc(st))}&travelmode=transit`;
+function shiftFrom(plan, idx, delta, fromLeave) {
+  const st = plan.stops[idx];
+  if (fromLeave) st.leave += delta; else { st.arrive += delta; st.leave += delta; }
+  for (let j = idx + 1; j < plan.stops.length; j++) { plan.stops[j].arrive += delta; plan.stops[j].leave += delta; }
+  const after = new Set(plan.stops.slice(idx).map((x) => x.id));
+  plan.legs.forEach((g) => { if (after.has(g.from)) { g.depart += delta; g.arrive += delta; } });
+  return plan;
+}
+function markStale() { if (S.reminders[D()]?.length) S.remStale[D()] = true; }
+function applyShift(idx, delta, fromLeave) {
+  shiftFrom(S.plan, idx, delta, fromLeave); markStale(); persistTrip(); renderAll();
+  toast(`Rest des Tages ${delta > 0 ? "um " + delta + " Min. nach hinten" : "um " + -delta + " Min. nach vorn"} verschoben.${S.remStale[D()] ? " Aktualisiere deine Erinnerungen." : ""}`);
+}
+function offerShift(idx, delta, fromLeave, why) {
+  const later = delta > 0, next = S.plan.stops[idx + 1];
+  openSheet("Rest des Tages anpassen?", h("div", { style: "display:grid;gap:12px" },
+    h("p", {}, why),
+    next ? h("div", { class: "preview" }, h("span", {}, `Nächster Stopp: `, h("b", {}, next.name)), h("span", { class: "mono" }, `${fmt(next.arrive)} → ${fmt(next.arrive + delta)}`)) : null,
+    h("div", { class: "toolbar" },
+      h("button", { class: "btn primary", type: "button", onclick: () => { closeSheet(); applyShift(idx, delta, fromLeave); } }, `Rest um ${Math.abs(delta)} Min. ${later ? "nach hinten" : "nach vorn"} schieben`),
+      h("button", { class: "btn", type: "button", onclick: () => closeSheet() }, "So lassen"))));
+}
+function checkIn(stop) {
+  const pr = prog(), t = nowMin(), idx = S.plan.stops.indexOf(stop), prev = S.plan.stops[idx - 1];
+  if (prev && pr.left[prev.id] == null) pr.left[prev.id] = Math.min(t, prev.leave);
+  pr.arrived[stop.id] = t; persistTrip(); renderLive(); renderTimeline(); markNow();
+  announce(`Angekommen: ${stop.name}.`);
+  const delta = t - stop.arrive;
+  if (Math.abs(delta) >= 10 && idx < S.plan.stops.length) offerShift(idx, delta, false, `Du bist ${Math.abs(delta)} Min. ${delta > 0 ? "später" : "früher"} angekommen als geplant.`);
+}
+function checkOut(stop) {
+  const pr = prog(), t = nowMin(), idx = S.plan.stops.indexOf(stop);
+  if (pr.arrived[stop.id] == null) pr.arrived[stop.id] = Math.min(t, stop.arrive);
+  pr.left[stop.id] = t; persistTrip(); renderLive(); renderTimeline(); markNow();
+  const next = S.plan.stops[idx + 1]; announce(next ? `Weiter zu ${next.name}.` : "Letzter Stopp erledigt.");
+  const delta = t - stop.leave;
+  if (next && Math.abs(delta) >= 10) offerShift(idx, delta, true, `Du gehst ${Math.abs(delta)} Min. ${delta > 0 ? "später" : "früher"} los als geplant.`);
+}
+function stayLonger(stop) {
+  const idx = S.plan.stops.indexOf(stop); let extra = 30;
+  const preview = h("div", { class: "preview", "aria-live": "polite" });
+  const upd = () => {
+    const pl = shiftFrom(structuredClone(S.plan), idx, extra, true), next = pl.stops[idx + 1];
+    preview.textContent = "";
+    preview.append(h("span", {}, "Neuer Aufbruch: ", h("b", { class: "mono" }, fmt(pl.stops[idx].leave))));
+    if (next) preview.append(h("span", {}, `${next.name}: `, h("b", { class: "mono" }, `${fmt(next.arrive - extra)} → ${fmt(next.arrive)}`)));
+    const conflicts = pl.stops.slice(idx + 1).flatMap((x) => stopWarnings(x).filter((w) => !w.startsWith("Öffnet")).map((w) => `${x.name}: ${w}`));
+    conflicts.slice(0, 3).forEach((c) => preview.append(h("span", { class: "warning" }, h("span", { "aria-hidden": "true" }, "⚠"), h("span", {}, c))));
+    if (!conflicts.length && next) preview.append(h("span", {}, "Alles Weitere passt noch."));
+  };
+  const opts = h("div", { class: "choice", role: "group", "aria-label": "Wie lange länger?" });
+  [15, 30, 60].forEach((m) => { const b = h("button", { class: "btn", type: "button", "aria-pressed": String(m === extra) }, `+${m} Min.`);
+    b.addEventListener("click", () => { extra = m; opts.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", String(x === b))); upd(); }); opts.append(b); });
+  upd();
+  openSheet(`Länger bei ${stop.name}`, h("div", { style: "display:grid;gap:12px" }, opts, preview,
+    h("div", { class: "toolbar" },
+      h("button", { class: "btn primary", type: "button", onclick: () => { closeSheet(); applyShift(idx, extra, true); } }, "Alles verschieben"),
+      h("button", { class: "btn", type: "button", disabled: !caps.sample, onclick: () => replanRest(stop, stop.leave + extra) }, caps.sample ? "Rest neu planen (neue Vorschläge)" : "Rest neu planen braucht Claude"))));
+}
+async function replanRest(stop, newLeave) {
+  closeSheet(true);
+  if (!caps.sample) { toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  if (S.running) { toast("Einen Moment, ich plane noch."); return; }
+  S.running = true; $("#progress").hidden = false; if (!S.steps.length) S.steps = [{ id: "plan", state: "idle" }];
+  setStep("plan", "run", `Plane den Rest des Tages ab ${stop.name} neu …`);
+  const p = S.plan, idx = p.stops.indexOf(stop), done = p.stops.slice(0, idx), rest = p.stops.slice(idx + 1);
+  const endMin = Math.max(p.stops[p.stops.length - 1].leave, newLeave + 45);
+  try {
+    const raw = await caps.sample.json(restPrompt(stop, newLeave, done, rest, endMin), { modelTier: "complex", cache: false });
+    const np = cleanPlan(raw), tag = "r" + Date.now().toString(36) + "_", map = new Map();
+    np.stops.forEach((x, i) => map.set(x.id, i === 0 ? stop.id : tag + x.id));
+    np.stops.forEach((x) => (x.id = map.get(x.id)));
+    np.legs.forEach((g) => { g.from = map.get(g.from) || g.from; g.to = map.get(g.to) || g.to; });
+    np.shops.forEach((x) => { x.near = x.near ? map.get(x.near) || null : null; });
+    const cur = { ...stop, leave: newLeave };
+    const stops = [...done, cur, ...np.stops.slice(1)], doneIds = new Set(done.map((x) => x.id));
+    const merged = revivePlan({ ...p, stops, legs: [...p.legs.filter((g) => doneIds.has(g.from)), ...np.legs], shops: np.shops.length ? np.shops : p.shops, warnings: np.warnings, evening: np.evening || p.evening });
+    S.days[S.dayIdx].plan = merged; S.plan = merged; markStale(); persistTrip(); renderAll();
+    setStep("plan", "ok", "Rest des Tages neu geplant"); toast(`Neuer Plan ab ${stop.name}.${S.remStale[D()] ? " Aktualisiere deine Erinnerungen." : ""}`);
+  } catch (e) { setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => replanRest(stop, newLeave) }); }
+  finally { S.running = false; }
+}
+function restPrompt(stop, newLeave, done, rest, endMin) {
+  const f = S.form, place = S.place;
+  return [
+    `Du bist ein lokaler Reiseplaner und kennst den Nahverkehr von ${place.local}. Plane den REST eines laufenden Ausflugs neu.`,
+    `- Datum: ${D()}, ${weekday(D())}`,
+    `- Der Nutzer ist gerade hier: ${JSON.stringify(stop.name)}${stop.lat != null ? ` (${stop.lat},${stop.lng})` : ""} und bleibt bis ${fmt(newLeave)}.`,
+    `- Schon besucht: ${done.filter((x) => x.kind !== "hotel").map((x) => x.name).join("; ") || "nichts"}`,
+    `- Ursprünglich danach geplant: ${rest.map((x) => `${x.name} (${fmt(x.arrive)})`).join("; ") || "nichts"}`,
+    `- Der Tag soll gegen ${fmt(endMin)} enden. Tempo: ${f.pace}. Wunsch: ${f.wish ? JSON.stringify(f.wish) : "keiner"}.`,
+    `Übernimm, was zeitlich noch passt; streiche den Rest oder ersetze ihn durch bessere Optionen in der Nähe. Öffnungszeiten am ${weekday(D())} beachten.`,
+    `Stopp s1 ist der aktuelle Ort mit arrive "${fmt(stop.arrive)}" und leave "${fmt(newLeave)}". Danach höchstens 4 weitere Stopps.`,
+    `Nahverkehr mit echter Linie, Richtung, Einstieg, Ausstieg und Zwischenhalten; legs pro Übergang in Reihenfolge; Koordinaten für jeden Stopp; Texte auf Deutsch.`,
+    ``, `Antworte nur mit JSON in genau dieser Form:`, PLAN_JSON_FORMAT].join("\n");
+}
+
+/* In-app nudge while the app is open */
+let audioCtx = null; const nudged = new Set();
+addEventListener("pointerdown", () => { if (!audioCtx) { try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch {} } }, { once: true });
+function beep() {
+  if (!pref.get("sound", true) || !audioCtx) return;
+  try { const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime; o.frequency.value = 880; g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.15, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + 0.65); } catch {}
+}
+function dueStop() { if (!canLive() || S.simT != null) return null; const t = nowMin(), ls = liveState(); const at = ls ? ls.at : situation(t).cur; if (!at || !S.plan.stops[S.plan.stops.indexOf(at) + 1]) return null; const left = at.leave - t; return left >= 0 && left <= 10 ? { at, left } : null; }
+function maybeNudge() {
+  const d = dueStop(); if (!d) return; const key = D() + d.at.id;
+  if (nudged.has(key)) return; nudged.add(key);
+  const next = S.plan.stops[S.plan.stops.indexOf(d.at) + 1];
+  toast(`In ${d.left} Min. weiter zu ${next.name}.`); beep();
+}
+
+/* ================= Reminders via Google Calendar ================= */
+let remindBusy = false;
+const remindLabel = () => { const r = S.reminders[D()]; return remindBusy ? "Erinnerungen …" : r && r.length ? (S.remStale[D()] ? "Erinnerungen aktualisieren" : "Erinnerungen ✓ erneuern") : "Erinnerungen aufs Handy"; };
+function departures(plan) {
+  return plan.stops.slice(0, -1).map((x, i) => {
+    const legs = plan.legs.filter((g) => g.from === x.id).sort((a, b) => a.depart - b.depart); if (!legs.length) return null;
+    const to = plan.stops[i + 1], ride = legs.find((g) => g.mode !== "walk");
+    const title = ride ? `Weiter: ${ride.line || MODES[ride.mode]}${ride.direction ? " Richtung " + ride.direction : ""} ab ${ride.board || x.name}` : `Weiter: zu Fuß zu ${to.name}`;
+    const steps = legs.map((g) => (g.mode === "walk" ? `${fmt(g.depart)} zu Fuß ${Math.round(g.minutes)} Min.${g.note ? " (" + g.note + ")" : ""}` : `${fmt(g.depart)} ${g.line || MODES[g.mode]}${g.direction ? " Richtung " + g.direction : ""}: ein ${g.board || "?"}, aus ${g.alight || "?"} (an ${fmt(g.arrive)})`));
+    return { at: legs[0].depart, title, desc: [`Nächster Stopp: ${to.name}, an ${fmt(to.arrive)}`, ...steps, "", "Aus Stadtfaden"].join("\n"), loc: `${ride?.board || x.name}, ${S.place.local}` };
+  }).filter(Boolean);
+}
+async function setReminders() {
+  if (!caps.mcp || remindBusy) return;
+  const date = D(), list = departures(S.plan);
+  if (!list.length) { toast("Für diesen Tag gibt es keine Aufbrüche."); return; }
+  const old = S.reminders[date] || [], made = [];
+  remindBusy = true; renderPlanHead();
+  const btn = () => $("#remindBtn");
+  try {
+    for (const r of old) { if (!r.id) continue; if (btn()) btn().textContent = "Alte Erinnerungen löschen …";
+      try { await caps.mcp.callTool("Google Calendar", "delete_event", { eventId: r.id }, { cache: false }); } catch (e) { if (e?.code !== "tool_error") throw e; } }
+    for (let i = 0; i < list.length; i++) {
+      const r = list[i]; if (btn()) btn().textContent = `Erinnerung ${i + 1}/${list.length} …`;
+      const res = await caps.mcp.callTool("Google Calendar", "create_event", { summary: r.title, startTime: `${date}T${fmt(r.at)}:00`, endTime: `${date}T${fmt(Math.min(r.at + 5, 1439))}:00`,
+        location: r.loc, description: r.desc, overrideReminders: [{ method: "popup", minutes: 10 }, { method: "popup", minutes: 0 }], ...(S.place.tz ? { timeZone: S.place.tz } : {}) }, { cache: false });
+      const pl = res?.payload && typeof res.payload === "object" ? res.payload : {};
+      made.push({ id: str(pl.id || pl.event?.id || pl.eventId, 200) || null, at: r.at });
+    }
+    S.reminders[date] = made; delete S.remStale[date]; persistTrip(); markSrc("calendar", "ok");
+    const noIds = old.some((r) => !r.id);
+    toast(`${made.length} Erinnerungen im Kalender: Dein Handy meldet sich 10 Min. vor jedem Aufbruch.${noIds ? " Ältere Erinnerungen ohne Kennung bitte selbst löschen." : ""}`);
+  } catch (e) {
+    if (made.length) { S.reminders[date] = [...old.filter((r) => !r.id), ...made]; persistTrip(); }
+    markSrc("calendar", "err");
+    toast(["server_unavailable", "upstream_error"].includes(e?.code) ? "Unklar, ob alle Erinnerungen angelegt wurden. Schau in deinen Kalender, bevor du es erneut versuchst." : mcpMessage(e, "Google Calendar"));
+  } finally { remindBusy = false; renderPlanHead(); }
+}
+
+/* ================= Booked stays ================= */
+function bookedAsStay(b) {
+  if (!b) return null;
+  if (b.inTime || b.outTime) S.checkins["b_" + b.id] = { in: b.inTime || null, inUntil: null, out: b.outTime || null };
+  return { id: "b_" + b.id, name: b.name, address: b.address, lat: b.lat, lng: b.lng, booked: b };
+}
+function bookedFor(date) { return S.booked.find((b) => (!b.inDate || b.inDate <= date) && (!b.outDate || date <= b.outDate)) || null; }
+function bookedStay(date) { return bookedAsStay(bookedFor(date)); }
+function stayById(id) { if (id == null) return null; const sid = String(id); return S.hotels.find((x) => String(x.id) === sid) || bookedAsStay(S.booked.find((b) => "b_" + b.id === sid)) || null; }
+function renderFormBooked() { $("#formBooked").textContent = S.booked.length ? "Gebucht: " + S.booked.map((b) => b.name).join(", ") : ""; }
+$("#formBookedBtn").addEventListener("click", () => bookedForm());
+$("#addBookedBtn").addEventListener("click", () => bookedForm());
+function bookedForm() {
+  const inp = (id, type = "text", ph = "") => h("input", { id, type, placeholder: ph, autocomplete: "off" });
+  const F2 = { name: inp("bkName", "text", "z. B. Hotel am Markt"), address: inp("bkAddr", "text", "Straße, PLZ Ort"), inDate: inp("bkInDate", "date"), inTime: inp("bkInTime", "time"),
+    outDate: inp("bkOutDate", "date"), outTime: inp("bkOutTime", "time"), ref: inp("bkRef"), phone: inp("bkPhone", "tel") };
+  if (!S.example || S.form.date) F2.inDate.value = S.example ? $("#fDate").value : S.form.date;
+  const text = h("textarea", { id: "bkText", placeholder: "Text der Buchungsbestätigung hier einfügen (aus der E-Mail kopieren)" });
+  const file = h("input", { type: "file", id: "bkImg", accept: "image/png,image/jpeg,image/webp", hidden: !imagesOK });
+  const hint = h("p", { class: "sub", "aria-live": "polite" }, caps.sample ? "Claude liest Name, Adresse und Zeiten aus. Du kannst alles vor dem Speichern prüfen." : "Ohne Claude trägst du die Daten selbst ein.");
+  let coords = null;
+  const read = h("button", { class: "btn", type: "button", disabled: !caps.sample }, "Mit Claude auslesen");
+  read.addEventListener("click", async () => {
+    const t = text.value.trim(), img = file.files && file.files[0];
+    if (!t && !img) { hint.textContent = "Füge zuerst den Text der Bestätigung ein" + (imagesOK ? " oder wähle einen Screenshot." : "."); text.focus(); return; }
+    read.setAttribute("aria-disabled", "true"); read.textContent = "Liest …";
+    try {
+      const r = await caps.sample.json(
+        `Lies diese Buchungsbestätigung einer Unterkunft aus. Antworte nur mit JSON wie {"name":"…","address":"Straße Hausnummer, PLZ Ort, Land","check_in_date":"YYYY-MM-DD","check_in_time":"15:00","check_out_date":"YYYY-MM-DD","check_out_time":"11:00","booking_ref":"…","phone":"…","lat":0,"lng":0}. Unbekanntes als null. lat/lng: Koordinaten der Adresse, so genau du kannst.\n\nText der Bestätigung:\n${t.slice(0, 8000) || "(siehe Bild)"}`,
+        { modelTier: "default", cache: false, ...(img && imagesOK ? { images: [img] } : {}) });
+      const b = cleanBooked([{ name: r?.name, address: r?.address, inDate: r?.check_in_date, inTime: r?.check_in_time, outDate: r?.check_out_date, outTime: r?.check_out_time, ref: r?.booking_ref, phone: r?.phone, lat: r?.lat, lng: r?.lng }])[0];
+      if (!b) { hint.textContent = "Darin habe ich keine Unterkunft gefunden. Trag die Daten bitte selbst ein."; return; }
+      F2.name.value = b.name; F2.address.value = b.address; F2.inDate.value = b.inDate; F2.inTime.value = b.inTime; F2.outDate.value = b.outDate; F2.outTime.value = b.outTime; F2.ref.value = b.ref; F2.phone.value = b.phone;
+      coords = b.lat != null ? { lat: b.lat, lng: b.lng } : null;
+      hint.textContent = "Ausgelesen. Prüfe die Felder und speichere."; F2.name.focus();
+    } catch (e) { hint.textContent = sampleMessage(e); }
+    finally { read.removeAttribute("aria-disabled"); read.textContent = "Mit Claude auslesen"; }
+  });
+  const save = h("button", { class: "btn primary", type: "button" }, "Buchung speichern");
+  save.addEventListener("click", async () => {
+    if (!F2.name.value.trim()) { F2.name.setAttribute("aria-invalid", "true"); hint.textContent = "Gib den Namen der Unterkunft ein."; F2.name.focus(); return; }
+    if (!coords && caps.sample && F2.address.value.trim()) {
+      save.textContent = "Sucht Ort …";
+      try { const g = await caps.sample.json(`Koordinaten dieser Adresse als JSON {"lat":0,"lng":0}, unbekannt: {"lat":null,"lng":null}. Adresse: ${JSON.stringify(F2.address.value.trim() + ", " + (PL().local || ""))}`, { modelTier: "quick" });
+        if (num(g?.lat, -90, 90) != null && num(g?.lng, -180, 180) != null) coords = { lat: g.lat, lng: g.lng }; } catch {}
+    }
+    const b = cleanBooked([{ id: "b" + Date.now().toString(36), name: F2.name.value, address: F2.address.value, inDate: F2.inDate.value, inTime: F2.inTime.value, outDate: F2.outDate.value, outTime: F2.outTime.value,
+      ref: F2.ref.value, phone: F2.phone.value, lat: coords?.lat, lng: coords?.lng }])[0];
+    S.booked.push(b); persistTrip(); renderFormBooked(); renderStays(); renderMap(); closeSheet();
+    toast(`${b.name} ist eingetragen.${coords ? "" : " Ohne Koordinaten erscheint sie nicht auf der Karte."}`);
+  });
+  openSheet("Gebuchte Unterkunft eintragen", h("div", { style: "display:grid;gap:12px" },
+    h("div", { class: "sheet-grid" }, field("Buchungsbestätigung", text, "c6"), imagesOK ? field("Oder Screenshot", file, "c6") : null),
+    h("div", { class: "toolbar" }, read), hint,
+    h("div", { class: "sheet-grid" }, field("Name *", F2.name, "c6"), field("Adresse", F2.address, "c6"),
+      field("Check-in Datum", F2.inDate, "c3"), field("ab", F2.inTime, "c3"), field("Check-out Datum", F2.outDate, "c3"), field("bis", F2.outTime, "c3"),
+      field("Buchungsnummer", F2.ref, "c3"), field("Telefon", F2.phone, "c3")),
+    h("p", { class: "sub" }, "Wird nur in deinem privaten Speicher abgelegt."),
+    h("div", { class: "toolbar" }, save, h("button", { class: "btn", type: "button", onclick: () => closeSheet() }, "Abbrechen"))));
+}
+function removeBooked(id) { S.booked = S.booked.filter((b) => b.id !== id); persistTrip(); renderFormBooked(); renderStays(); renderMap(); toast("Buchung entfernt."); }
+
 /* ================= Capabilities ================= */
 const SRC_TXT = { ok: "verbunden", err: "Problem", off: "nicht verfügbar" };
 function markSrc(id, state) { const el = document.querySelector(`.src[data-src="${id}"]`); if (el) { el.dataset.state = state; el.querySelector("span").textContent = id === "claude" && state === "ok" ? "bereit" : SRC_TXT[state]; } }
 async function initCaps() {
   if (!window.claude?.use) { renderSaved(); return; }
-  const [mcp, sample, db, user] = await Promise.all(["mcp", "sample", "db", "user"].map((n) => claude.use(n).catch(() => null)));
-  Object.assign(caps, { mcp, sample, db, user });
-  if (sample) markSrc("claude", "ok");
+  const [mcp, sample, db, user, permissions] = await Promise.all(["mcp", "sample", "db", "user", "permissions"].map((n) => claude.use(n).catch(() => null)));
+  Object.assign(caps, { mcp, sample, db, user }); perms = permissions;
+  if (sample) { markSrc("claude", "ok"); imagesOK = !!(await sample.limits().catch(() => null))?.images; }
   if (mcp) {
     try { const r = await mcp.listTools(); servers = new Set(r.servers.filter((x) => x.authStatus !== "needs_reauth").map((x) => x.server)); }
     catch { servers = new Set(["Booking.com", "Google Calendar"]); }
     markSrc("booking", servers.has("Booking.com") ? "ok" : "err");
     markSrc("calendar", servers.has("Google Calendar") ? "ok" : "err");
   }
-  if (user) { try { userId = await user.id(); } catch { userId = null; } }
+  if (user) { me = await user.me().catch(() => null); userId = me?.id || null; }
+  renderAccount();
   if (db && userId) loadSaved(); else renderSaved();
   if (!S.example) renderPlanHead();
+  if (!pref.get("welcomed", false)) showWelcome();
 }
 
 /* ================= Start ================= */
 document.documentElement.lang = "de";
 syncStay(); setHours(4);
 S.staysState = "idle"; S.expState = "idle";
-renderAll(); renderSaved();
+renderAll(); renderSaved(); renderAccount();
 applyView(location.hash.slice(1), false);
 initCaps();
 </script>

@@ -126,3 +126,47 @@ accessibility review (`design:accessibility-review`, WCAG 2.1 AA), both by agent
 - An always-present `role="status"` for announcements; form errors with `aria-invalid` + `aria-describedby`.
 - Slider with `aria-valuetext`, map as `role="group"`, targets ≥ 24px (≥ 44px on touch devices),
   "(neuer Tab)" (new tab) for external links, limited pulse animation.
+
+---
+
+## Increment 4: Account, trips, on the go, bookings
+
+**Owner's request:** sign-in; asked about location and notifications on start; see interactively where
+you are and where you need to go; a reminder when it's time to move on; "stay longer" with new options;
+choose a trip on start or plan a new one; past trips with what you did; enter booked hotels via a
+booking confirmation, with map + check-in info.
+
+### What the platform allows, and the solution
+| Wish | Limit in claude.ai artifacts | Solution |
+|---|---|---|
+| Sign-in with Apple/Google/free | No custom OAuth without a server | **claude.ai account is the sign-in** (that's how you sign in to claude.ai: Google, Apple, e-mail). Name + avatar via `user` (scope `profile`); trips private under `data/users/<id>/`. |
+| Share location (GPS) | No location capability for this account | **Check-ins** "Bin da" (I'm here) / "Weiter" (move on) mark your position; "Route ab meinem Standort ↗" (route from my location) and "Wo bin ich? ↗" (where am I?) open Google Maps with the real GPS. If a location capability becomes available, it plugs in at the same place. |
+| Notifications | No web notifications in the frame | **Real phone reminders via Google Calendar:** one event per departure with a popup 10 min before. When the plan shifts, old events are deleted (`delete_event` with the `id` from `create_event`) and new ones created. While the app is open: a hint on the board + optional sound. |
+| Asked on start | `permissions.request()` | **Welcome sheet** on first start: signed in as …, allow Claude / Booking.com / Google Calendar in one go, the location and notifications explanation, sound on/off. Reachable again later via "Erlaubnisse" (permissions). |
+
+### On the go (open day = today)
+- Board shows a button depending on the state: at a stop **[Weiter] [Länger bleiben]** (move on / stay longer); on the way **[Bin da: next stop]** (I'm here).
+- Check-ins store real times. Deviation ≥ 10 min → offer: "Rest verschieben?" (shift the rest?)
+- **Länger bleiben** (stay longer): +15 / +30 / +60 min → preview (next stop, closing-time conflicts) →
+  **[Alles verschieben]** (shift everything, local, immediate) or **[Rest neu planen]** (re-plan the rest; Claude re-plans from the current stop with new
+  options; completed stops stay fixed).
+- If reminders exist for the day: "Erinnerungen aktualisieren" (update reminders) after every shift.
+
+### Trips
+- Planned trips save **automatically** (no button). Trip = one doc with all days, stays,
+  bookings, check-ins, reminder IDs.
+- **Start:** if trips exist, the app opens "Meine Reisen" (my trips): *Läuft gerade* (ongoing) · *Kommend* (upcoming) · *Vergangen* (past), plus
+  "Neue Reise planen" (plan a new trip). Past trips show "x of y stops visited" and in the timeline "Du warst hier 10:42–11:30" (you were here).
+- Older saved plans (v1/v2) still open.
+
+### Booked stays
+- "Buchung eintragen" (add booking) in Buchen (book) and in the form: paste confirmation text **or** upload a screenshot →
+  Claude extracts name, address, check-in/out (date + time), booking number, phone, coordinates →
+  editable preview → save. Manual entry also works without Claude.
+- Booked stays: at the top of the stays list ("Gebucht"), as an H marker on the line map, as the **start
+  point** of the days within the booking period; check-in day = check-in in the plan.
+
+### Boundaries
+- Writes to the calendar only on a click; reminders only for the open day.
+- Data like booking numbers only privately under `data/users/<id>/`.
+- Never invent offers; extracted values are always shown editable before saving.

@@ -40,3 +40,12 @@
 21. **Review findings (code-reviewer)** — wheel scrolling over the side panel, breakpoint change, map pane on phones,
     example → refine path, button spacing in saved plans, board mini readable, slider renders only visible panes
     (rAF), pulse only once, saved tickets sanitized, SPEC updated for app views. ✔ Each finding has its own check.
+
+## Increment 4: Account, trips, on the go, bookings (SPEC)
+22. **Sheet component** (dialog with focus, Esc, return) + **welcome/permissions** + account in the masthead.
+23. **Trips:** autosave (debounced, one write per doc), "Meine Reisen" with ongoing/upcoming/past, new trip, start view.
+24. **On the go:** progress model (check-ins), board actions, live position from check-ins, shift (local),
+    rest via Claude (merge with fixed stops), nudge + sound.
+25. **Reminders:** calendar events per departure (popup 10 min), deletion via ID when updating.
+26. **Bookings:** form + extraction (text/image via Claude), booked stays in list, map, start point.
+✔ Checks per point with test doubles; regression of all earlier suites; review by the code-reviewer agent.
