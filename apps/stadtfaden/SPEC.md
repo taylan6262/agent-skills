@@ -170,3 +170,32 @@ booking confirmation, with map + check-in info.
 - Writes to the calendar only on a click; reminders only for the open day.
 - Data like booking numbers only privately under `data/users/<id>/`.
 - Never invent offers; extracted values are always shown editable before saving.
+
+---
+
+## Increment 5: Round trip (multiple cities)
+
+**Owner's request:** the Asia trip 2027 (reference PDF + Google Calendar) belongs in the app as one trip:
+Bangkok → Phuket → Bangkok → Tokyo → Kyoto → Osaka → Tokyo-Ueno, all hotels booked, Phuket flights and Shinkansen still open.
+
+**Model:** a trip can carry a `tour` object: stations (city, dates, nights), flights & trains
+(`transfers` with status *booked / open / no ticket needed*), to-dos (checklist), "good to know".
+Each day has its **own place** (`days[i].place`) and an **outline** (title, items, travel plan of the day,
+note, time window). `plan` can be **empty** until the day is planned.
+
+**Behavior**
+- Unplanned day: the timeline shows "Programm laut Reiseplan" (program per trip plan) + fixed appointments; buttons **"Diesen Tag planen"** (plan this day) and
+  **"Alle offenen Tage planen"** (plan all open days; sequential, with progress, can be cancelled after errors).
+- When planning, Claude gets: the place of the day, the outline as wishes, fixed appointments (flights/trains, check-in/out),
+  the booked hotel as starting point (changeover days: start at the old one, check-in at the new one) and the trip's preferences.
+- Planned day: everything as before (board, check-ins, reminders); the outline stays readable as "Programm".
+- Day line with city labels; station strip (click → first day of the station).
+- **Book view:** trip overview with stations, flights & trains (open ones highlighted + search link),
+  to-dos to tick off (saved), "good to know".
+- Map, Maps links, reminder time zone and Booking.com searches use the **place of the day**.
+
+**Import of this trip:** I write it once from the PDF + calendar into the private store (`ArtifactData`);
+nothing is invented beyond that: open flights stay "open", recommendations are labeled as such.
+
+**Boundaries:** no auto-planning without a click; editing via the trip form ("Ändern" / change) is hidden for round trips
+(the form only knows one city).

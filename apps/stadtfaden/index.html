@@ -418,6 +418,32 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
   .sheet-grid .c3, .sheet-grid .c2, .sheet-grid .c4 { grid-column: span 3; }
   .board:not(.open) .board-actions { display: flex; }
 }
+.outline { background: var(--card); border: 1.5px dashed var(--field-border); border-radius: var(--r-md); padding: 16px; display: grid; gap: 8px; min-width: 0; }
+.outline h3 { font-size: 1.15rem; font-weight: 750; }
+.outline ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.outline .travel { border-left: 3px solid var(--accent); padding: 6px 10px; background: var(--accent-soft); border-radius: 0 var(--r-sm) var(--r-sm) 0; font-size: .9rem; }
+.outline .transfer { font-size: .88rem; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+.outline-li { list-style: none; display: grid; gap: 12px; margin-bottom: 12px; }
+details.outline-mini > summary { cursor: pointer; font-weight: 700; font-size: .88rem; color: var(--muted); min-height: 32px; display: flex; align-items: center; }
+details.outline-mini[open] > summary { margin-bottom: 8px; }
+.station-strip { display: flex; gap: 6px; overflow-x: auto; padding: 2px 2px 6px; margin: 0 -2px; scrollbar-width: thin; }
+.station { flex: 0 0 auto; display: grid; gap: 1px; text-align: left; border: 1px solid var(--rule); background: var(--card); border-radius: var(--r-md); padding: 6px 10px; font-size: .74rem; color: var(--muted); min-height: 44px; }
+.station b { color: var(--ink); font-size: .86rem; font-family: var(--display); font-stretch: 105%; }
+.station[aria-current="true"] { border-color: var(--ink); box-shadow: inset 0 -3px 0 var(--signal); }
+.day-tab .city { font-size: .66rem; font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.day-tab.unplanned .node { border-style: dotted; }
+.tour-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 18px; align-items: start; }
+.tr-list, .todo-list { list-style: none; margin: 0; padding: 0; display: grid; }
+.tr-list li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: start; font-size: .88rem; }
+.tr-list li.open { background: var(--warn-bg); border-radius: var(--r-md); padding: 10px; border-bottom-color: transparent; margin: 4px 0; }
+.tr-list .dt { font-family: var(--mono); font-size: .78rem; font-weight: 600; }
+.tr-list .sub { color: var(--muted); font-size: .8rem; display: block; }
+.todo-list li { display: flex; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--rule); font-size: .88rem; }
+.todo-list input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--accent); flex: 0 0 auto; }
+.todo-list .due { display: block; font-family: var(--mono); font-size: .68rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.todo-list li.done label { color: var(--muted); text-decoration: line-through; }
+.tour-notes { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: .86rem; color: var(--muted); }
+@media (max-width: 900px) { .tour-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (prefers-reduced-motion: reduce) {
   .step[data-state="run"] .dot, #map .now-ring { animation: none; }
   .stop .body { transition: none; }
@@ -532,6 +558,16 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
         </section>
       </aside>
     </div>
+
+    <section class="section" id="tourSec" data-views="buchen" aria-labelledby="tourTitle" hidden>
+      <div class="section-head"><div><span class="eyebrow" id="tourSub">Rundreise</span><h2 id="tourTitle">Reise-Überblick</h2></div></div>
+      <div class="station-strip" id="tourStations" aria-label="Stationen"></div>
+      <div class="tour-grid">
+        <div><h3 class="eyebrow" style="margin-bottom:6px">Flüge &amp; Züge</h3><ul class="tr-list" id="transferList"></ul></div>
+        <div><h3 class="eyebrow" style="margin-bottom:6px">To-dos vor der Reise <span id="todoCount"></span></h3><ul class="todo-list" id="todoList"></ul>
+          <details class="outline-mini" style="margin-top:10px"><summary>Gut zu wissen</summary><ul class="tour-notes" id="tourNotes"></ul></details></div>
+      </div>
+    </section>
 
     <section class="section" id="bookSec" data-views="buchen" aria-labelledby="bookTitle">
       <div class="section-head">
@@ -738,11 +774,11 @@ const S = {
   forcedStay: null, simT: null, running: false, steps: [], savedId: null,
   days: [{ date: EXAMPLE.form.date, plan: EXAMPLE.plan }], dayIdx: 0, daysTotal: 1,
 };
-const F = () => (S.example ? EXAMPLE.form : S.form), PL = () => (S.example ? EXAMPLE.place : S.place);
+const F = () => (S.example ? EXAMPLE.form : S.form), PL = () => (S.example ? EXAMPLE.place : S.days[S.dayIdx]?.place || S.place);
 const D = () => (S.example ? EXAMPLE.form.date : S.days[S.dayIdx]?.date || S.form.date);   // date of the open day
 function setDay(i) { if (!S.days[i]) return; S.dayIdx = i; S.plan = S.days[i].plan; S.simT = null; S.forcedStay = null; renderAll(); }
-function chosenStay() { return stayById(S.forcedStay ?? S.days[0]?.plan.stay_id); }
-const avoidNames = (except) => S.days.flatMap((d, i) => (i === except || !d ? [] : d.plan.stops.filter((x) => x.kind !== "hotel").map((x) => x.name))).slice(0, 40);
+function chosenStay() { return stayById(S.forcedStay ?? S.days[0]?.plan?.stay_id); }
+const avoidNames = (except) => S.days.flatMap((d, i) => (i === except || !d || !d.plan ? [] : d.plan.stops.filter((x) => x.kind !== "hotel").map((x) => x.name))).slice(0, 40);
 const caps = { mcp: null, sample: null, db: null, user: null }; let userId = null; let servers = new Set();
 
 /* ================= Form ================= */
@@ -850,6 +886,9 @@ function collapseForm() {
 }
 function renderStub() {
   const f = S.form, n = S.daysTotal || 1;
+  $("#stubEdit").hidden = isTour();
+  if (isTour()) { $("#stubRoute").textContent = [S.tour.title, `${shortDate(S.tour.start)} – ${shortDate(S.tour.end)}`, tourCities(), `${f.people || 2} Pers.`].join(" · ");
+    $("#stubWish").textContent = S.tour.subtitle || ""; return; }
   $("#stubRoute").textContent = [PL().local || f.city, tripDates(f.date, n), "ab " + (f.start || "10:00"), `${f.people || 2} Pers.`, f.stay ? `Unterkunft ${f.nights || 1} N.` : null].filter(Boolean).join(" · ");
   $("#stubWish").textContent = f.wish ? `„${f.wish}“` : (f.chips || []).map((c) => c[0]).join(", ");
 }
@@ -864,7 +903,7 @@ $("#swExp").addEventListener("click", () => setSwitch("#swExp", "#swStays", "#ex
 $("#refineForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#refineIn").value.trim(); if (v) runPlanOnly(v); });
 
 /* ================= Rendering: plan head, timeline ================= */
-function legsFrom(id) { return S.plan.legs.filter((g) => g.from === id).sort((a, b) => a.depart - b.depart); }
+function legsFrom(id) { return (S.plan?.legs || []).filter((g) => g.from === id).sort((a, b) => a.depart - b.depart); }
 function mainMode(legs) { const t = legs.find((g) => g.mode !== "walk"); return t ? t.mode : "walk"; }
 const modeVar = (m) => `var(--m-${m})`;
 const placeQuery = (st) => `${st.name}, ${st.address || PL().local || F().city}`;
@@ -876,29 +915,33 @@ function announce(t) { const r = $("#sr"); r.textContent = ""; clearTimeout(anno
 function renderPlanHead() {
   const fid = document.activeElement && document.activeElement.id;
   const p = S.plan, el = $("#planHead"); el.textContent = "";
-  const first = p.stops[0], last = p.stops[p.stops.length - 1];
+  const first = p ? p.stops[0] : null, last = p ? p.stops[p.stops.length - 1] : null;
+  if (isTour()) el.append(stationStrip(true));
   if (!S.example && S.daysTotal > 1) {
     const line = h("div", { class: "day-line", role: "group", "aria-label": "Reisetage" });
     for (let i = 0; i < S.daysTotal; i++) {
-      const d = S.days[i];
-      line.append(d ? h("button", { type: "button", class: "day-tab", id: "day-tab-" + i, "aria-current": i === S.dayIdx ? "true" : null, onclick: () => setDay(i) },
-          h("span", { class: "node", "aria-hidden": "true" }), h("b", {}, `Tag ${i + 1}`), h("span", { class: "d" }, shortDate(d.date)))
+      const d = S.days[i], cityChange = isTour() && d && (i === 0 || S.days[i - 1]?.place?.local !== d.place?.local);
+      line.append(d ? h("button", { type: "button", class: `day-tab${d.plan ? "" : " unplanned"}`, id: "day-tab-" + i, "aria-current": i === S.dayIdx ? "true" : null, onclick: () => setDay(i),
+            "aria-label": `Tag ${i + 1}, ${shortDate(d.date)}${d.place ? ", " + d.place.local : ""}${d.plan ? "" : ", noch nicht geplant"}` },
+          h("span", { class: "node", "aria-hidden": "true" }), isTour() ? h("span", { class: "city", "aria-hidden": "true" }, cityChange ? d.place.local.replace(/\s*\(.*\)$/, "") : "\u00a0") : null, h("b", {}, `Tag ${i + 1}`), h("span", { class: "d" }, shortDate(d.date)))
         : h("button", { type: "button", class: "day-tab pending", id: "day-tab-" + i, disabled: S.running, onclick: () => resumeDays(i) },
           h("span", { class: "node", "aria-hidden": "true" }), h("b", {}, `Tag ${i + 1}`), h("span", { class: "d" }, S.running ? "plant …" : "jetzt planen")));
     }
     el.append(line);
   }
-  el.append(h("h2", { class: "plan-title", id: "planTitle", tabindex: "-1" }, p.title || `Dein Tag in ${PL().local || F().city}`));
-  const meta = [PL().local || F().city, dateLabel(D()), `${fmt(first.arrive)}–${fmt(last.leave)}`, minsLabel(last.leave - first.arrive), `${p.stops.length} Stopps`];
+  const o = dayRec()?.outline;
+  el.append(h("h2", { class: "plan-title", id: "planTitle", tabindex: "-1" }, p?.title || o?.title || `Dein Tag in ${PL().local || F().city}`));
+  const meta = p ? [PL().local || F().city, dateLabel(D()), `${fmt(first.arrive)}–${fmt(last.leave)}`, minsLabel(last.leave - first.arrive), `${p.stops.length} Stopps`]
+    : [PL().local || F().city, dateLabel(D()), "noch nicht geplant"];
   el.append(h("div", { class: "meta-line" }, S.example ? h("span", { class: "badge example" }, "Beispiel") : null,
     meta.flatMap((m, i) => (i ? [h("span", { class: "sep", "aria-hidden": "true" }, "·"), h("span", {}, m)] : [h("span", {}, m)]))));
-  if (p.summary) el.append(h("p", { class: "plan-sum" }, p.summary));
+  if (p?.summary) el.append(h("p", { class: "plan-sum" }, p.summary));
   const notes = [];
   if (S.example) notes.push(h("p", {}, h("b", {}, "So sieht ein geplanter halber Tag aus. "), appMode.matches ? "Tippe unten auf „Ausflug“, um deinen eigenen anzulegen." : "Lege oben deinen Ausflug an.", " Dann kommen echte Unterkünfte, Check-in-Zeiten und Tickets dazu."));
-  if (p.transit_tip) notes.push(h("p", {}, h("b", {}, "Ticket: "), p.transit_tip));
-  p.warnings.forEach((w) => notes.push(h("p", { class: "w" }, w)));
+  if (p?.transit_tip) notes.push(h("p", {}, h("b", {}, "Ticket: "), p.transit_tip));
+  (p?.warnings || []).forEach((w) => notes.push(h("p", { class: "w" }, w)));
   if (notes.length) el.append(h("div", { class: "notes", role: "note", "aria-label": "Hinweise" }, notes));
-  if (!S.example) {
+  if (!S.example && p) {
     el.append(h("div", { class: "toolbar" },
       h("button", { class: "btn small primary", type: "button", id: "remindBtn", onclick: setReminders, hidden: !caps.mcp, "aria-disabled": remindBusy ? "true" : null }, remindLabel()),
       h("button", { class: "btn small", type: "button", id: "calBtn", onclick: addToCalendar, hidden: !caps.mcp }, calLabel()),
@@ -906,13 +949,16 @@ function renderPlanHead() {
       caps.mcp && orphanDates().length ? h("button", { class: "btn small", type: "button", id: "orphanBtn", onclick: deleteOrphans }, "Alte Erinnerungen löschen") : null,
       caps.db && userId ? h("span", { class: "save-state", id: "saveState" }, { pending: "Speichert …", ok: "Gespeichert ✓", err: "Nicht gespeichert" }[S.saveState] || "") : null));
   }
-  $("#refinePanel").hidden = S.example;
+  $("#refinePanel").hidden = S.example || !p;
   $("#refineLab").textContent = S.daysTotal > 1 && !S.example ? `Tag ${S.dayIdx + 1} anpassen` : "Plan anpassen";
   if (fid && document.activeElement === document.body) { const again = document.getElementById(fid); if (again) again.focus({ preventScroll: true }); }
 }
 
 function renderTimeline() {
   const ol = $("#timeline"); ol.textContent = "";
+  const rec = dayRec();
+  if (!S.plan) { ol.append(h("li", { class: "outline-li" }, rec ? outlineCard(rec) : null, planDayActions())); return; }
+  if (isTour() && rec?.outline) ol.append(h("li", { class: "outline-li" }, h("details", { class: "outline-mini" }, h("summary", {}, "Programm laut Reiseplan"), outlineCard(rec))));
   const p = S.plan, bookById = new Map(S.attractions.map((a) => [a.id, a]));
   p.stops.forEach((st, i) => {
     const legs = legsFrom(st.id), warns = stopWarnings(st);
@@ -973,7 +1019,7 @@ function renderLeg(g, from, to) {
 /* ================= Rendering: board, map, hours ================= */
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
 const isLive = () => S.simT == null && D() === todayStr();
-const boardTime = () => (S.simT != null ? S.simT : D() === todayStr() ? nowMin() : S.plan.stops[0].arrive);
+const boardTime = () => (S.simT != null ? S.simT : D() === todayStr() || !S.plan ? nowMin() : S.plan.stops[0].arrive);
 function situation(t) {
   const p = S.plan, st = p.stops;
   const cur = st.find((x) => t >= x.arrive && t < x.leave);
@@ -984,6 +1030,12 @@ function situation(t) {
 }
 function renderBoard() {
   const el = $("#board"), wasOpen = el.classList.contains("open"); el.textContent = "";
+  if (!S.plan) { el.classList.remove("due"); const tr = dayTransfers(D());
+    el.append(h("div", { class: "board-top" }, h("span", { class: "lbl" }, dateLabel(D())), h("span", { class: "clock" }, PL().local || "")),
+      h("div", { class: "board-cell" }, h("span", { class: "lbl" }, "Heute"), h("span", { class: "big" }, dayRec()?.outline?.title || "Noch nicht geplant"),
+        tr.map((t) => h("span", { class: "sub" }, `${t.label}: ${t.from}${t.depart ? " " + t.depart : ""} → ${t.to} · ${STATUS_TXT[t.status] || t.status}`)),
+        h("span", { class: "sub" }, "Plane den Tag, dann zeigt die Tafel Abfahrten, „Bin da“ und „Weiter“.")));
+    return; }
   const p = S.plan, lo = p.stops[0].arrive - 30, hi = p.stops[p.stops.length - 1].leave + 30;
   const range = h("input", { type: "range", id: "boardRange", min: String(lo), max: String(hi), step: "5", "aria-label": "Uhrzeit vorspulen" });
   range.addEventListener("input", () => { S.simT = +range.value; updateBoard(); markNow(); schedulePanes(); });
@@ -1000,7 +1052,7 @@ function renderBoard() {
   updateBoard();
 }
 function updateBoard() {
-  const el = $("#boardInfo"); if (!el) return; el.textContent = "";
+  const el = $("#boardInfo"); if (!el || !S.plan) return; el.textContent = "";
   const p = S.plan, t = boardTime(), sit = situation(t), byId = new Map(p.stops.map((x) => [x.id, x]));
   $("#boardMode").textContent = isLive() ? "Jetzt · live" : "Simuliert";
   $("#boardClock").textContent = fmt(t);
@@ -1034,7 +1086,7 @@ function updateBoard() {
 }
 function renderBoardActions() {
   const el = $("#boardActions"); if (!el) return; el.textContent = "";
-  if (S.example) return;
+  if (S.example || !S.plan) return;
   if (!canLive() || S.simT != null) { el.append(h("span", { class: "sub" }, S.simT != null ? "Vorschau. „Zurück zu live“ zeigt deine Knöpfe." : "„Bin da“ und „Weiter“ erscheinen am Reisetag.")); return; }
   const st = S.plan.stops, ls = liveState(), t = nowMin();
   let at = null, next = null;
@@ -1051,6 +1103,7 @@ function renderBoardActions() {
   el.append(ext("https://www.google.com/maps/@?api=1&map_action=map", "Wo bin ich? ↗", "Google Maps", "board-link"));
 }
 function markNow() {
+  if (!S.plan) return;
   const sit = situation(boardTime()), ls = liveState(), cur = ls ? ls.at : sit.cur;
   document.querySelectorAll("#timeline .stop").forEach((li) => { const on = !!cur && li.id === "stop-" + cur.id; li.classList.toggle("now", on); on ? li.setAttribute("aria-current", "step") : li.removeAttribute("aria-current"); });
 }
@@ -1059,13 +1112,13 @@ function elbow(x1, y1, x2, y2) { const dx = x2 - x1, dy = y2 - y1, d = Math.min(
 function renderMap() {
   const svg = $("#map"); svg.textContent = "";
   const legend = $("#legend"); legend.textContent = "";
-  const st = S.plan.stops;
-  const c0 = st.find((x) => x.lat != null), stopNames = new Set(st.map((x) => x.name.toLowerCase()));
+  const st = S.plan ? S.plan.stops : [];
+  const c0 = st.find((x) => x.lat != null) || (PL().lat != null ? { lat: PL().lat, lng: PL().lng } : null), stopNames = new Set(st.map((x) => x.name.toLowerCase()));
   const bookedPts = curBooked().filter((b) => b.lat != null && !stopNames.has(b.name.toLowerCase()) && (!c0 || haversine(c0, b) < 30));
   const pts = [...st.filter((x) => x.lat != null), ...bookedPts];
-  $("#mapLink").href = st.length > 1 ? `https://www.google.com/maps/dir/${st.map((x) => encodeURIComponent(x.lat != null ? `${x.lat},${x.lng}` : placeQuery(x))).join("/")}` : gmapsPlace(placeQuery(st[0]));
+  $("#mapLink").href = st.length > 1 ? `https://www.google.com/maps/dir/${st.map((x) => encodeURIComponent(x.lat != null ? `${x.lat},${x.lng}` : placeQuery(x))).join("/")}` : gmapsPlace(st[0] ? placeQuery(st[0]) : PL().en || PL().local || "");
   const W = Math.max(280, Math.round(svg.parentElement.clientWidth || 460));
-  if (pts.length < 2) { const H0 = Math.round(W * 0.5); svg.setAttribute("viewBox", `0 0 ${W} ${H0}`); svg.setAttribute("height", H0); svg.append(s("text", { x: W / 2, y: H0 / 2, "text-anchor": "middle", class: "lbl" }, "Für die Karte fehlen Koordinaten.")); return; }
+  if (pts.length < 2) { const H0 = Math.round(W * 0.5); svg.setAttribute("viewBox", `0 0 ${W} ${H0}`); svg.setAttribute("height", H0); svg.append(s("text", { x: W / 2, y: H0 / 2, "text-anchor": "middle", class: "lbl" }, S.plan ? "Für die Karte fehlen Koordinaten." : "Plane den Tag, dann erscheint hier deine Route.")); return; }
   const lat0 = pts.reduce((a, x) => a + x.lat, 0) / pts.length, k = Math.cos((lat0 * Math.PI) / 180);
   const xs = pts.map((x) => x.lng * k), ys = pts.map((x) => -x.lat);
   let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
@@ -1097,11 +1150,11 @@ function renderMap() {
     lines.append(s("path", { d: path, fill: "none", stroke: modeVar(mode), "stroke-width": mode === "walk" ? 4 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": mode === "walk" ? "2 8" : null }));
   }
   // live position: highlight the station you are at, or a dot on the line between two stations
-  const t = boardTime(), ls = liveState();
-  const cur = ls ? (ls.at && ls.at.lat != null ? ls.at : null) : st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
+  const t = boardTime(), ls = S.plan ? liveState() : null;
+  const cur = !S.plan ? null : ls ? (ls.at && ls.at.lat != null ? ls.at : null) : st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
   let pos = null;
   if (ls && ls.to && ls.from.lat != null && ls.to.lat != null) { const [x1, y1] = proj(ls.from), [x2, y2] = proj(ls.to), [ex, ey] = elbow(x1, y1, x2, y2); pos = [ex, ey]; }
-  else if (!ls && !cur) for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
+  else if (S.plan && !ls && !cur) for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
     if (t >= a.leave && t < b.arrive && a.lat != null && b.lat != null) {
       const f = (t - a.leave) / Math.max(1, b.arrive - a.leave), [x1, y1] = proj(a), [x2, y2] = proj(b), [ex, ey] = elbow(x1, y1, x2, y2);
       const l1 = Math.hypot(ex - x1, ey - y1), l2 = Math.hypot(x2 - ex, y2 - ey), at = f * (l1 + l2);
@@ -1163,6 +1216,7 @@ function renderHours() {
   const ul = $("#hoursList"); ul.textContent = "";
   $("#hoursTitle").textContent = `Öffnungszeiten · ${weekday(D())}`;
   const t = boardTime();
+  if (!S.plan) { ul.append(h("li", { class: "empty" }, "Öffnungszeiten erscheinen, sobald der Tag geplant ist.")); return; }
   const items = [...S.plan.stops.filter((x) => x.kind !== "hotel" && (x.hours || x.opens != null || x.closes != null)).map((x) => ({ name: x.name, kind: KINDS[x.kind], hours: x.hours, opens: x.opens, closes: x.closes })),
     ...S.plan.shops.map((x) => ({ name: x.name, kind: x.kind || "Laden", hours: x.hours, opens: x.opens, closes: x.closes }))];
   if (!items.length) { ul.append(h("li", { class: "empty" }, "Keine Öffnungszeiten im Plan.")); return; }
@@ -1174,7 +1228,7 @@ function renderHours() {
 }
 
 /* ================= Rendering: stays, experiences ================= */
-function planCenter() { const p = S.plan.stops.filter((x) => x.lat != null && x.kind !== "hotel"); if (!p.length) return null; return { lat: p.reduce((a, x) => a + x.lat, 0) / p.length, lng: p.reduce((a, x) => a + x.lng, 0) / p.length }; }
+function planCenter() { const p = (S.plan?.stops || []).filter((x) => x.lat != null && x.kind !== "hotel"); if (!p.length) return null; return { lat: p.reduce((a, x) => a + x.lat, 0) / p.length, lng: p.reduce((a, x) => a + x.lng, 0) / p.length }; }
 const cell = (label, ...kids) => h("div", {}, h("span", { class: "cl" }, label), ...kids);
 function updateCounts() {
   $("#stayCount").textContent = S.hotels.length + curBooked().length ? String(S.hotels.length + curBooked().length) : "";
@@ -1187,9 +1241,9 @@ function bookedRows(g) {
     let confirm = false;
     const del = h("button", { class: "btn small", type: "button" }, "Entfernen");
     del.addEventListener("click", () => { if (!confirm) { confirm = true; del.textContent = "Wirklich entfernen?"; setTimeout(() => { confirm = false; del.textContent = "Entfernen"; }, 4000); return; } removeBooked(b.id); });
-    const isChosen = String(S.plan.stay_id) === "b_" + b.id;
+    const isChosen = String(S.plan?.stay_id) === "b_" + b.id;
     g.append(h("article", { class: "row booked", "aria-label": `Gebucht: ${b.name}` },
-      h("div", {}, h("h3", {}, b.name), h("p", { class: "sub" }, h("span", { class: "badge ok" }, "Gebucht"), b.address || ""), b.ref ? h("p", { class: "sub" }, `Buchungsnr. ${b.ref}${b.phone ? " · " + b.phone : ""}`) : null),
+      h("div", {}, h("h3", {}, b.name), h("p", { class: "sub" }, h("span", { class: "badge ok" }, "Gebucht"), b.address || ""), b.ref ? h("p", { class: "sub" }, `Buchungsnr. ${b.ref}${b.phone ? " · " + b.phone : ""}`) : null, b.note ? h("p", { class: "sub" }, b.note) : null),
       cell("Zeitraum", h("span", { class: "mono" }, [b.inDate ? shortDate(b.inDate) : "", b.outDate ? shortDate(b.outDate) : ""].filter(Boolean).join(" – ") || "–")),
       cell("Zur Route", h("span", { class: "mono" }, (() => { const c = planCenter(); return c && b.lat != null ? (haversine(c, b) < 1 ? `${Math.round(haversine(c, b) * 1000)} m` : `${haversine(c, b).toFixed(1).replace(".", ",")} km`) : "–"; })())),
       cell("Check-in / -out", h("div", { class: "ci" }, h("div", {}, "ein ", b.inTime ? `ab ${b.inTime}` : "–"), h("div", {}, "aus ", b.outTime ? `bis ${b.outTime}` : "–"))),
@@ -1203,7 +1257,7 @@ function renderStays() {
   if (S.staysState === "run") { g.append(h("p", { class: "empty" }, "Unterkünfte werden bei Booking.com gesucht …")); return; }
   if (S.staysState === "err") { g.append(h("p", { class: "empty" }, S.staysErr)); return; }
   if (!S.hotels.length) { g.append(h("p", { class: "empty" }, S.staysState === "ok" ? "Booking.com hat für diese Suche nichts Freies gefunden. Versuche ein anderes Datum oder ein höheres Budget." : S.staysState === "skip" ? "Unterkunftssuche ist ausgeschaltet." : "Lege einen Ausflug mit „Unterkunft suchen“ an. Hier erscheinen dann freie Hotels und Ferienwohnungen mit Preis, Bewertung und Check-in-Zeit.")); return; }
-  const c = planCenter(), chosen = S.forcedStay || S.plan.stay_id;
+  const c = planCenter(), chosen = S.forcedStay || S.plan?.stay_id;
   const sorted = [...S.hotels].sort((a, b) => (String(b.id) === String(chosen)) - (String(a.id) === String(chosen)));
   sorted.forEach((x) => {
     const ci = S.checkins[x.id], dist = c && x.lat != null ? haversine(c, x) : null, isChosen = String(x.id) === String(chosen);
@@ -1211,7 +1265,7 @@ function renderStays() {
       : h("div", { class: "ci" }, h("span", { class: "muted" }, S.checkinState === "run" ? "wird abgefragt …" : "auf Booking.com prüfen"));
     g.append(h("article", { class: `row${isChosen ? " chosen" : ""}`, "aria-label": x.name },
       h("div", {}, h("h3", {}, x.name), h("p", { class: "sub" }, isChosen ? h("span", { class: "badge ok" }, S.forcedStay ? "Dein Start" : "Empfohlen") : null,
-        [x.type, x.district || x.city].filter(Boolean).join(" · ")), isChosen && S.plan.stay_reason && !S.forcedStay ? h("p", { class: "sub" }, S.plan.stay_reason) : null),
+        [x.type, x.district || x.city].filter(Boolean).join(" · ")), isChosen && S.plan?.stay_reason && !S.forcedStay ? h("p", { class: "sub" }, S.plan.stay_reason) : null),
       cell("Bewertung", x.score != null ? h("span", { class: "score", "aria-label": `Bewertung ${x.score.toFixed(1).replace(".", ",")} von 10` }, x.score.toFixed(1).replace(".", ",")) : "–",
         x.reviews ? h("span", { class: "cnt" }, `${x.reviews.toLocaleString("de-DE")} Bew.`) : null, x.stars ? h("span", { class: "cnt", "aria-label": `${x.stars} Sterne` }, "★".repeat(x.stars)) : null),
       cell("Zur Route", h("span", { class: "mono" }, dist != null ? (dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1).replace(".", ",")} km`) : "–")),
@@ -1228,7 +1282,7 @@ function renderExp() {
   if (S.expState === "run") { g.append(h("p", { class: "empty" }, "Erlebnisse werden bei Booking.com gesucht …")); return; }
   if (S.expState === "err") { g.append(h("p", { class: "empty" }, S.expErr)); return; }
   if (!S.attractions.length) { g.append(h("p", { class: "empty" }, S.expState === "ok" ? "Booking.com hat hier keine buchbaren Erlebnisse gefunden." : "Nach dem Planen erscheinen hier Touren, Museen und Tickets mit Preis und Bewertung.")); return; }
-  const inPlan = new Set(S.days.flatMap((d) => (d ? d.plan.stops.map((x) => x.booking_id).filter(Boolean) : [])));
+  const inPlan = new Set(S.days.flatMap((d) => (d && d.plan ? d.plan.stops.map((x) => x.booking_id).filter(Boolean) : [])));
   S.attractions.forEach((a) => g.append(h("article", { class: "row", "aria-label": a.name },
     h("div", {}, h("h3", {}, a.name), h("p", { class: "sub" }, inPlan.has(a.id) ? h("span", { class: "badge ok" }, "Im Plan") : null, a.address || "")),
     cell("Bewertung", a.score != null ? h("span", { class: "score", "aria-label": `Bewertung ${a.score.toFixed(1).replace(".", ",")} von 5` }, a.score.toFixed(1).replace(".", ",")) : "–", a.reviews ? h("span", { class: "cnt" }, `${a.reviews.toLocaleString("de-DE")} Bew.`) : null),
@@ -1242,7 +1296,7 @@ function renderPanes() { if (shown("#mapPane")) renderMap(); if (shown("#hoursPa
 function schedulePanes() { if (!panesRaf) panesRaf = requestAnimationFrame(() => { panesRaf = 0; renderPanes(); }); }
 if (window.ResizeObserver) new ResizeObserver(() => fitSide()).observe(document.querySelector(".col-side"));
 function fitSide() { const el = $(".col-side"); if (el) el.classList.toggle("fits", !appMode.matches && el.getBoundingClientRect().height + 32 <= innerHeight); }
-function renderAll() { S.pulsed = false; renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); if (!S.example) renderStub(); fitSide(); }
+function renderAll() { S.pulsed = false; renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); renderTour(); markNow(); if (!S.example) renderStub(); fitSide(); }
 function renderLive() { updateBoard(); markNow(); renderPanes(); maybeNudge(); }
 setInterval(() => { if (isLive()) renderLive(); }, 30000);
 let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (shown("#mapPane")) renderMap(); fitSide(); }, 150); });
@@ -1361,6 +1415,8 @@ function planPrompt(f, place, opts) {
       : f.from ? `- Startpunkt: ${JSON.stringify(f.from)}` : `- Startpunkt: zentraler Punkt der Stadt`,
     opts.checkin ? `- Check-in heute in ${JSON.stringify(opts.checkin.name)}${opts.checkin.address ? ", " + opts.checkin.address : ""}${opts.checkin.lat != null ? ` (${opts.checkin.lat},${opts.checkin.lng})` : ""} ab ${S.checkins[opts.checkin.id]?.in || "15:00"}. Plane den Check-in (oder vorher die Gepäckabgabe) passend ein${stay && stay.id === opts.checkin.id ? "" : `, als eigenen Stopp mit kind "hotel"`}.`
       : f.checkinToday && stay ? `- Check-in heute: ${S.checkins[stay.id]?.in ? "ab " + S.checkins[stay.id].in : "Zeit unbekannt, nimm 15:00 an"}. Plane Gepäckabgabe am Anfang und den Check-in passend ein.` : null,
+    opts.fixed && opts.fixed.length ? `- FESTE TERMINE heute (nicht verschieben, Wege dorthin einplanen): ${opts.fixed.join(" | ")}` : null,
+    opts.outline ? `- PROGRAMM LAUT REISEPLAN (Wünsche: übernehmen, sinnvoll ordnen, Wege, Linien und Zeiten ergänzen): ${[opts.outline.title, opts.outline.transfer ? "Reiseablauf: " + opts.outline.transfer : null, ...(opts.outline.items || []), opts.outline.note ? "Hinweis: " + opts.outline.note : null].filter(Boolean).join(" | ")}` : null,
     opts.visited && opts.visited.length ? `- Heute schon besucht (als erste Stopps unverändert übernehmen): ${opts.visited.join("; ")}` : null,
     ``,
   ];
@@ -1407,7 +1463,7 @@ async function planTrip(f) {
   const wasExample = S.example, intentNew = wasExample || S.formIntent !== "edit";
   await flushPersist();
   const snap = wasExample ? null : { days: S.days, daysTotal: S.daysTotal, dayIdx: S.dayIdx, plan: S.plan, form: S.form, place: S.place, tripId: S.tripId, booked: S.booked,
-    reminders: S.reminders, remStale: S.remStale, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins, staysState: S.staysState, expState: S.expState, checkinState: S.checkinState };
+    reminders: S.reminders, remStale: S.remStale, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins, staysState: S.staysState, expState: S.expState, checkinState: S.checkinState, tour: S.tour };
   $("#planBtn").setAttribute("aria-disabled", "true"); $("#planBtn").textContent = "Plant …"; announce("Planung gestartet.");
   S.steps = ["locate", "attr", "stay", "checkin", "plan"].map((id) => ({ id, state: "idle", detail: "" }));
   $("#progress").hidden = false; renderSteps();
@@ -1464,7 +1520,7 @@ async function planTrip(f) {
       setStep("plan", "skip", "Claude ist in dieser Ansicht nicht verfügbar, deshalb gibt es keine Route. Unterkünfte und Erlebnisse siehst du unten.");
       renderStays(); renderExp(); return;
     }
-    if (intentNew) { S.gen++; S.tripId = null; S.booked = S.draftBooked.slice(); S.reminders = {}; S.remStale = {}; }
+    if (intentNew) { S.gen++; S.tripId = null; S.tour = null; S.booked = S.draftBooked.slice(); S.reminders = {}; S.remStale = {}; }
     else Object.keys(S.reminders).forEach((dt) => { if (S.reminders[dt]?.length) S.remStale[dt] = true; });
     S.days = []; S.daysTotal = f.days; S.dayIdx = 0;
     await planDays(0);
@@ -1481,7 +1537,7 @@ function onPlanReady(plan, opened) {
   collapseForm(); document.body.classList.remove("start-home");
   go("plan");   // all widths: keeps body[data-view] right if the window later narrows
   setTimeout(() => $("#planTitle")?.focus({ preventScroll: true }), 80);
-  announce(`${opened ? "Plan geöffnet" : "Plan fertig"}: ${plan.title || "dein Tag"}, ${plan.stops.length} Stopps.`);
+  announce(plan ? `${opened ? "Plan geöffnet" : "Plan fertig"}: ${plan.title || "dein Tag"}, ${plan.stops.length} Stopps.` : `Reise geöffnet: ${tripTitle()}. Tag ${S.dayIdx + 1} ist noch nicht geplant.`);
 }
 
 /* Plan the trip day by day (one Claude call per day), starting at day index `from` */
@@ -1495,7 +1551,7 @@ async function planDays(from) {
       const plan = await makePlan({ ...f, date, checkinToday: ci ? true : !bk && f.checkinToday && d === 0 }, S.place, { stay, pickStay: !bk && d === 0, day, avoid: avoidNames(d), checkin: ci ? bookedAsStay(ci) : null });
       if (gen !== S.gen) return false;
       if (stay) plan.stay_id = String(stay.id);
-      S.days[d] = { date, plan, progress: { arrived: {}, left: {} } }; markSrc("claude", "ok");
+      S.days[d] = { ...(S.days[d] || {}), date, plan, progress: { arrived: {}, left: {} } }; markSrc("claude", "ok");
       if (d === 0 || S.example) {
         S.example = false; S.dayIdx = d; S.plan = plan; S.simT = null; renderAll(); onPlanReady(plan);
       } else renderPlanHead();
@@ -1536,22 +1592,23 @@ async function runPlanOnly(change, variant) {
   const stay = bk || (S.forcedStay != null ? chosenStay() : idx > 0 ? nonBooked(chosenStay()) : keepStay && f.checkinToday ? keepStay : null);
   if (stay && stay.booked) f.checkinToday = !!ci;
   const oldDay = wasExample ? null : S.days[idx];
-  const visited = oldDay?.progress ? oldDay.plan.stops.filter((x) => oldDay.progress.arrived[x.id] != null || oldDay.progress.left[x.id] != null).map((x) => x.name) : [];
-  const prevStayId = S.days[0]?.plan.stay_id ?? null;
+  const visited = oldDay?.progress && oldDay.plan ? oldDay.plan.stops.filter((x) => oldDay.progress.arrived[x.id] != null || oldDay.progress.left[x.id] != null).map((x) => x.name) : [];
+  const prevStayId = S.days[0]?.plan?.stay_id ?? null;
+  if (oldDay?.outline) Object.assign(f, tourWindow(oldDay.outline));
   setStep("plan", "run", (multi ? `Tag ${idx + 1}: ` : "") + (S.forcedStay != null && stay ? `Neu ab ${stay.name} …` : change ? `Passe an: „${change}“ …` : "Plane neu …"));
   try {
-    const prev = S.example ? null : { title: S.plan.title, stops: S.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) };
-    const plan = await makePlan(f, S.place, { stay, pickStay: !stay && !keepStay, previous: change || variant ? prev : null, change,
+    const prev = S.example || !S.plan ? null : { title: S.plan.title, stops: S.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) };
+    const plan = await makePlan(f, PL(), { stay, pickStay: !isTour() && !stay && !keepStay, previous: change || variant ? prev : null, change, outline: oldDay?.outline, fixed: dayTransfers(f.date).map(transferText),
       day: multi ? { n: idx + 1, total: S.daysTotal } : null, avoid: avoidNames(idx), checkin: ci ? bookedAsStay(ci) : null, visited });
     if (gen !== S.gen) return;
     if (stay) plan.stay_id = String(stay.id); else if (keepStay) plan.stay_id = String(keepStay.id);
-    const movedStay = multi && idx === 0 && !wasExample && prevStayId != null && String(plan.stay_id) !== String(prevStayId);
+    const movedStay = !isTour() && multi && idx === 0 && !wasExample && prevStayId != null && String(plan.stay_id) !== String(prevStayId);
     if (wasExample) S.days = [];
     const keep = { arrived: {}, left: {} };
-    if (oldDay?.progress) { const byName = new Map(oldDay.plan.stops.map((x) => [x.name.toLowerCase(), x.id]));
+    if (oldDay?.progress && oldDay.plan) { const byName = new Map(oldDay.plan.stops.map((x) => [x.name.toLowerCase(), x.id]));
       plan.stops.forEach((x) => { const oid = byName.get(x.name.toLowerCase()); if (!oid) return;
         if (oldDay.progress.arrived[oid] != null) keep.arrived[x.id] = oldDay.progress.arrived[oid]; if (oldDay.progress.left[oid] != null) keep.left[x.id] = oldDay.progress.left[oid]; }); }
-    S.days[idx] = { date: f.date, plan, progress: keep }; S.dayIdx = idx; S.plan = plan; S.example = false; markStale(); persistTrip();
+    S.days[idx] = { ...(oldDay || {}), date: f.date, plan, progress: keep }; S.dayIdx = idx; S.plan = plan; S.example = false; markStale(); persistTrip();
     setStep("plan", "ok", (multi ? `Tag ${idx + 1}: ` : "") + `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
     renderAll(); if (wasExample) onPlanReady(plan); else toast(movedStay ? "Tag 1 startet an der neuen Unterkunft. Die anderen Tage starten noch an der alten. Plane sie bei Bedarf mit „Neu planen“ neu." : change ? "Plan angepasst." : "Neuer Plan ist da.");
     if (wasExample && multi) await planDays(1);
@@ -1575,6 +1632,7 @@ $("#tripForm").addEventListener("submit", (e) => {
 const calLabel = () => (S.days.length > 1 ? `Tag ${S.dayIdx + 1} in Google Kalender` : "In Google Kalender eintragen");
 async function addToCalendar() {
   const btn = $("#calBtn"); if (!caps.mcp || !btn) return;
+  if (!S.plan) return;
   const p = S.plan, f = { date: D() }, first = p.stops[0], last = p.stops[p.stops.length - 1];
   const lines = [];
   p.stops.forEach((x, i) => {
@@ -1582,9 +1640,9 @@ async function addToCalendar() {
     legsFrom(x.id).forEach((g) => { if (g.mode === "walk") lines.push(`   ${fmt(g.depart)} zu Fuß, ${Math.round(g.minutes)} Min.`);
       else lines.push(`   ${fmt(g.depart)} ${g.line || MODES[g.mode]}${g.direction ? " Richtung " + g.direction : ""}: ${g.board || "?"} → ${g.alight || "?"} (an ${fmt(g.arrive)})`); });
   });
-  const input = { summary: `Stadtfaden${S.days.length > 1 ? ` · Tag ${S.dayIdx + 1}` : ""}: ${p.title || S.place.local}`, startTime: isoAt(f.date, first.arrive), endTime: isoAt(f.date, last.leave),
-    location: `${first.name}, ${S.place.local}`, description: [p.summary, "", ...lines, "", p.transit_tip ? "Ticket: " + p.transit_tip : ""].join("\n").slice(0, 7000),
-    ...(S.place.tz ? { timeZone: S.place.tz } : {}) };
+  const input = { summary: `Stadtfaden${S.days.length > 1 ? ` · Tag ${S.dayIdx + 1}` : ""}: ${p.title || PL().local}`, startTime: isoAt(f.date, first.arrive), endTime: isoAt(f.date, last.leave),
+    location: `${first.name}, ${PL().local}`, description: [p.summary, "", ...lines, "", p.transit_tip ? "Ticket: " + p.transit_tip : ""].join("\n").slice(0, 7000),
+    ...(PL().tz ? { timeZone: PL().tz } : {}) };
   btn.disabled = true; btn.textContent = "Trage ein …";
   try { await caps.mcp.callTool("Google Calendar", "create_event", input, { cache: false }); btn.textContent = "Im Kalender ✓"; markSrc("calendar", "ok"); toast("Dein Tag steht im Google Kalender."); }
   catch (e) {
@@ -1674,7 +1732,7 @@ const curBooked = () => (S.example ? S.draftBooked : S.booked);
 const BUSY_MSG = "Einen Moment, ich plane gerade noch.";
 const busy = () => S.running || remindBusy;
 let persistT = null, persisting = false, persistAgain = false;
-const tripTitle = () => (S.daysTotal > 1 ? `${S.daysTotal} Tage in ${S.place.local}` : S.days[0]?.plan.title || `Tag in ${S.place.local}`);
+const tripTitle = () => S.tour?.title || (S.daysTotal > 1 ? `${S.daysTotal} Tage in ${S.place.local}` : S.days[0]?.plan.title || `Tag in ${S.place.local}`);
 function setSaveState(v) { S.saveState = v; const el = $("#saveState"); if (el) el.textContent = { pending: "Speichert …", ok: "Gespeichert ✓", err: "Nicht gespeichert" }[v] || ""; }
 function persistTrip() { if (!caps.db || !userId || S.example) return; setSaveState("pending"); clearTimeout(persistT); persistT = setTimeout(doPersist, 500); }
 async function flushPersist() {
@@ -1687,8 +1745,8 @@ async function doPersist() {
   persisting = true;
   if (!S.tripId) S.tripId = "t" + Date.now();
   const days = S.days.filter(Boolean);
-  const data = { kind: "trip", v: 3, title: tripTitle(), city: S.place.local, date: S.form.date, endDate: addDays(S.form.date, Math.max(0, (S.daysTotal || 1) - 1)), savedAt: Date.now(),
-    json: JSON.stringify({ v: 3, form: S.form, place: S.place, days, daysTotal: S.daysTotal, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins, booked: S.booked, reminders: S.reminders, remStale: S.remStale }) };
+  const data = { kind: "trip", v: S.tour ? 4 : 3, title: tripTitle(), city: S.tour ? tourCities() : S.place.local, date: S.form.date, endDate: addDays(S.form.date, Math.max(0, (S.daysTotal || 1) - 1)), savedAt: Date.now(),
+    json: JSON.stringify({ v: 3, form: S.form, place: S.place, days, daysTotal: S.daysTotal, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins, booked: S.booked, reminders: S.reminders, remStale: S.remStale, tour: S.tour }) };
   try { await caps.db.collection("data/users/" + userId).doc(S.tripId).set(data); S.savedId = S.tripId; setSaveState("ok"); }
   catch { setSaveState("err"); toast("Deine Reise konnte gerade nicht gespeichert werden. Ich versuche es bei der nächsten Änderung erneut."); }
   persisting = false;
@@ -1767,7 +1825,7 @@ async function deleteTrip(d) {
     h("div", { class: "toolbar" }, go2, h("button", { class: "btn", type: "button", onclick: () => closeSheet() }, "Behalten"))));
 }
 function resetToExample() {
-  S.gen++; S.example = true; S.tripId = null; S.days = [{ date: EXAMPLE.form.date, plan: EXAMPLE.plan }]; S.daysTotal = 1; S.dayIdx = 0; S.plan = EXAMPLE.plan;
+  S.gen++; S.example = true; S.tripId = null; S.tour = null; S.days = [{ date: EXAMPLE.form.date, plan: EXAMPLE.plan }]; S.daysTotal = 1; S.dayIdx = 0; S.plan = EXAMPLE.plan;
   S.booked = []; S.reminders = {}; S.remStale = {}; S.hotels = []; S.attractions = []; S.checkins = {}; S.staysState = "idle"; S.expState = "idle"; S.formIntent = "new"; S.simT = null;
   document.body.classList.remove("has-plan", "form-open"); $("#newTripBtn").hidden = true; setSaveState(""); renderAll(); go("plaene");
 }
@@ -1784,7 +1842,7 @@ function cleanProgress(p) {
 function cleanBooked(list) {
   return (Array.isArray(list) ? list : []).filter((b) => b && str(b.name)).slice(0, 10).map((b) => ({ id: str(b.id, 30) || "b" + Math.random().toString(36).slice(2, 8), name: str(b.name, 100), address: str(b.address, 160),
     lat: num(b.lat, -90, 90) != null && num(b.lng, -180, 180) != null ? num(b.lat, -90, 90) : null, lng: num(b.lat, -90, 90) != null ? num(b.lng, -180, 180) : null, inDate: /^\d{4}-\d{2}-\d{2}$/.test(b.inDate || "") ? b.inDate : "", inTime: toMin(b.inTime) != null ? fmt(toMin(b.inTime)) : "",
-    outDate: /^\d{4}-\d{2}-\d{2}$/.test(b.outDate || "") ? b.outDate : "", outTime: toMin(b.outTime) != null ? fmt(toMin(b.outTime)) : "", ref: str(b.ref, 60), phone: str(b.phone, 40) })).map((b) => (b.inDate && b.outDate && b.outDate < b.inDate ? { ...b, outDate: "" } : b));
+    outDate: /^\d{4}-\d{2}-\d{2}$/.test(b.outDate || "") ? b.outDate : "", outTime: toMin(b.outTime) != null ? fmt(toMin(b.outTime)) : "", ref: str(b.ref, 60), phone: str(b.phone, 40), note: str(b.note, 240) })).map((b) => (b.inDate && b.outDate && b.outDate < b.inDate ? { ...b, outDate: "" } : b));
 }
 function cleanReminders(r) {
   const out = {}; if (!r || typeof r !== "object") return out;
@@ -1796,10 +1854,14 @@ async function openSaved(d) {
   await flushPersist();
   try {
     const o = JSON.parse(d.json);
-    const days = Array.isArray(o.days) ? o.days.filter((x) => x && x.plan).map((x) => ({ date: String(x.date), plan: revivePlan(x.plan), progress: cleanProgress(x.progress) })) : [{ date: o.form.date, plan: revivePlan(o.plan), progress: cleanProgress(null) }];
+    const tour = cleanTour(o.tour);
+    const days = Array.isArray(o.days) ? o.days.filter((x) => x && /^\d{4}-\d{2}-\d{2}$/.test(String(x.date)) && (x.plan || (tour && x.outline))).map((x) => ({ date: String(x.date), plan: x.plan ? revivePlan(x.plan) : null,
+        progress: cleanProgress(x.progress), ...(x.place ? { place: cleanPlace(x.place) } : {}), ...(x.outline ? { outline: cleanOutline(x.outline) } : {}) }))
+      : [{ date: o.form.date, plan: revivePlan(o.plan), progress: cleanProgress(null) }];
     if (!days.length) throw new Error("leer");
-    S.days = days; S.daysTotal = Math.max(days.length, num(o.daysTotal, 1, 7) || 1); S.dayIdx = Math.max(0, days.findIndex((x) => x.date === todayStr())); S.plan = days[S.dayIdx].plan;
-    S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = cleanAttractionsSaved(o.attractions);
+    S.tour = tour;
+    S.days = days; S.daysTotal = Math.max(days.length, num(o.daysTotal, 1, tour ? 40 : 7) || 1); S.dayIdx = Math.max(0, days.findIndex((x) => x.date === todayStr())); S.plan = days[S.dayIdx].plan;
+    S.form = o.form; S.place = cleanPlace(o.place); S.hotels = cleanHotelsSaved(o.hotels); S.attractions = cleanAttractionsSaved(o.attractions);
     S.checkins = o.checkins || {}; S.booked = cleanBooked(o.booked); S.reminders = cleanReminders(o.reminders); S.remStale = o.remStale && typeof o.remStale === "object" ? o.remStale : {};
     S.gen++; S.formIntent = "new"; S.draftBooked = [];
     S.example = false; S.savedId = d.id; S.tripId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
@@ -1817,7 +1879,7 @@ const canLive = () => !S.example && D() === todayStr();
 function prog() { const d = S.days[S.dayIdx]; if (!d) return { arrived: {}, left: {} }; if (!d.progress) d.progress = { arrived: {}, left: {} }; return d.progress; }
 function liveState() {
   if (!canLive() || S.simT != null) return null;
-  const pr = S.days[S.dayIdx]?.progress; if (!pr) return null;
+  const pr = S.days[S.dayIdx]?.progress; if (!pr || !S.plan) return null;
   const st = S.plan.stops; let idx = -1;
   st.forEach((x, i) => { if (pr.arrived[x.id] != null || pr.left[x.id] != null) idx = i; });
   if (idx < 0) return null;
@@ -1912,7 +1974,7 @@ async function replanRest(stop, newLeave) {
   finally { S.running = false; }
 }
 function restPrompt(stop, newLeave, done, rest, endMin) {
-  const f = S.form, place = S.place;
+  const f = S.form, place = PL();
   return [
     `Du bist ein lokaler Reiseplaner und kennst den Nahverkehr von ${place.local}. Plane den REST eines laufenden Ausflugs neu.`,
     `- Datum: ${D()}, ${weekday(D())}`,
@@ -1934,7 +1996,7 @@ function beep() {
   try { const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime; o.frequency.value = 880; g.gain.setValueAtTime(0.0001, t);
     g.gain.exponentialRampToValueAtTime(0.15, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.6); o.connect(g).connect(audioCtx.destination); o.start(t); o.stop(t + 0.65); } catch {}
 }
-function dueStop() { if (!canLive() || S.simT != null) return null; const t = nowMin(), ls = liveState(); const at = ls ? ls.at : situation(t).cur; if (!at || !S.plan.stops[S.plan.stops.indexOf(at) + 1]) return null; const left = at.leave - t; return left >= 0 && left <= 10 ? { at, left } : null; }
+function dueStop() { if (!canLive() || S.simT != null || !S.plan) return null; const t = nowMin(), ls = liveState(); const at = ls ? ls.at : situation(t).cur; if (!at || !S.plan.stops[S.plan.stops.indexOf(at) + 1]) return null; const left = at.leave - t; return left >= 0 && left <= 10 ? { at, left } : null; }
 function maybeNudge() {
   const d = dueStop(); if (!d) return; const key = `${D()}|${d.at.id}@${d.at.leave}`;
   if (nudged.has(key)) return; nudged.add(key);
@@ -1946,7 +2008,7 @@ function maybeNudge() {
 const isoAt = (date, m) => `${addDays(date, Math.floor(m / 1440))}T${fmt(m)}:00`;   // minutes past midnight may run into the next day
 async function findEventId(title, date, at) {
   try {
-    const res = await caps.mcp.callTool("Google Calendar", "list_events", { startTime: isoAt(date, at - 1), endTime: isoAt(date, at + 6), fullText: title.slice(0, 80), pageSize: 5, ...(S.place.tz ? { timeZone: S.place.tz } : {}) }, { cache: false });
+    const res = await caps.mcp.callTool("Google Calendar", "list_events", { startTime: isoAt(date, at - 1), endTime: isoAt(date, at + 6), fullText: title.slice(0, 80), pageSize: 5, ...(PL().tz ? { timeZone: PL().tz } : {}) }, { cache: false });
     const ev = (res?.payload?.events || []).find((e) => e && e.summary === title); return ev ? str(ev.id, 200) : null;
   } catch { return null; }
 }
@@ -1969,11 +2031,11 @@ function departures(plan) {
     const to = plan.stops[i + 1], ride = legs.find((g) => g.mode !== "walk");
     const title = ride ? `Weiter: ${ride.line || MODES[ride.mode]}${ride.direction ? " Richtung " + ride.direction : ""} ab ${ride.board || x.name}` : `Weiter: zu Fuß zu ${to.name}`;
     const steps = legs.map((g) => (g.mode === "walk" ? `${fmt(g.depart)} zu Fuß ${Math.round(g.minutes)} Min.${g.note ? " (" + g.note + ")" : ""}` : `${fmt(g.depart)} ${g.line || MODES[g.mode]}${g.direction ? " Richtung " + g.direction : ""}: ein ${g.board || "?"}, aus ${g.alight || "?"} (an ${fmt(g.arrive)})`));
-    return { at: legs[0].depart, title, desc: [`Nächster Stopp: ${to.name}, an ${fmt(to.arrive)}`, ...steps, "", "Aus Stadtfaden"].join("\n"), loc: `${ride?.board || x.name}, ${S.place.local}` };
+    return { at: legs[0].depart, title, desc: [`Nächster Stopp: ${to.name}, an ${fmt(to.arrive)}`, ...steps, "", "Aus Stadtfaden"].join("\n"), loc: `${ride?.board || x.name}, ${PL().local}` };
   }).filter(Boolean);
 }
 async function setReminders() {
-  if (!caps.mcp || remindBusy) return;
+  if (!caps.mcp || remindBusy || !S.plan) return;
   const date = D(), live = date === todayStr(), list = departures(S.plan).filter((r) => !live || r.at > nowMin());
   if (!list.length) { toast("Für diesen Tag gibt es keine Aufbrüche mehr."); return; }
   const old = S.reminders[date] || [], made = [];
@@ -1986,7 +2048,7 @@ async function setReminders() {
     for (let i = 0; i < list.length; i++) {
       const r = list[i]; if (btn()) btn().textContent = `Erinnerung ${i + 1}/${list.length} …`;
       const res = await caps.mcp.callTool("Google Calendar", "create_event", { summary: r.title, startTime: isoAt(date, r.at), endTime: isoAt(date, r.at + 5),
-        location: r.loc, description: r.desc, overrideReminders: [{ method: "popup", minutes: 10 }, { method: "popup", minutes: 0 }], ...(S.place.tz ? { timeZone: S.place.tz } : {}) }, { cache: false });
+        location: r.loc, description: r.desc, overrideReminders: [{ method: "popup", minutes: 10 }, { method: "popup", minutes: 0 }], ...(PL().tz ? { timeZone: PL().tz } : {}) }, { cache: false });
       const pl = res?.payload && typeof res.payload === "object" ? res.payload : {};
       made.push({ id: str(pl.id || pl.event?.id || pl.eventId, 200) || (await findEventId(r.title, date, r.at)), at: r.at, title: r.title });
     }
@@ -2071,6 +2133,133 @@ function bookedForm(target) {
     h("div", { class: "toolbar" }, save, h("button", { class: "btn", type: "button", onclick: () => closeSheet() }, "Abbrechen"))));
 }
 function removeBooked(id) { if (S.example) S.draftBooked = S.draftBooked.filter((b) => b.id !== id); else { S.booked = S.booked.filter((b) => b.id !== id); persistTrip(); } renderFormBooked(); renderStays(); renderMap(); toast("Buchung entfernt."); }
+
+/* ================= Round trips (several cities) ================= */
+S.tour = null;
+const isTour = () => !S.example && !!S.tour;
+const dayRec = () => (S.example ? null : S.days[S.dayIdx] || null);
+const STATUS_TXT = { booked: "gebucht", open: "offen", none: "kein Ticket nötig" };
+const STATUS_CLS = { booked: "open", open: "closed", none: "unknown" };
+const transferText = (t) => `${t.label}: ${t.from}${t.depart ? " " + t.depart : ""} → ${t.to}${t.arrive ? " an " + t.arrive : ""} (${STATUS_TXT[t.status] || t.status})${t.note ? " – " + t.note : ""}`;
+const dayTransfers = (date) => (S.tour?.transfers || []).filter((t) => t.date === date);
+const tourCities = () => [...new Set((S.tour?.stations || []).map((x) => x.city.replace(/-.*/, "")))].join(" · ");
+function tourWindow(o) { const a = toMin(o.start) ?? 540; let b = toMin(o.end) ?? 1380; if (b <= a) b += 1440; return { start: fmt(a), hours: Math.max(2, Math.min(18, (b - a) / 60)) }; }
+function cleanPlace(p) {
+  if (!p || typeof p !== "object") return { local: "", en: "", tz: null, lat: null, lng: null };
+  const lat = num(p.lat, -90, 90), lng = num(p.lng, -180, 180);
+  return { local: str(p.local, 60), en: str(p.en, 100), tz: /^[A-Za-z_]+\/[A-Za-z_\/+-]+$/.test(p.tz || "") ? p.tz : null, lat: lat != null && lng != null ? lat : null, lng: lat != null && lng != null ? lng : null, cc: /^[a-z]{2}$/.test(p.cc || "") ? p.cc : null };
+}
+function cleanOutline(o) {
+  if (!o || typeof o !== "object") return null;
+  return { title: str(o.title, 90), items: (Array.isArray(o.items) ? o.items : []).map((x) => str(x, 240)).filter(Boolean).slice(0, 10), transfer: str(o.transfer, 300), note: str(o.note, 300),
+    start: toMin(o.start) != null ? fmt(toMin(o.start)) : "09:00", end: toMin(o.end) != null ? fmt(toMin(o.end)) : "23:00" };
+}
+function cleanTour(t) {
+  if (!t || typeof t !== "object" || !Array.isArray(t.stations)) return null;
+  const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v || "");
+  return { title: str(t.title, 80) || "Rundreise", subtitle: str(t.subtitle, 120), start: isDate(t.start) ? t.start : "", end: isDate(t.end) ? t.end : "", source: str(t.source, 120),
+    stations: t.stations.slice(0, 20).filter((x) => x && str(x.city) && isDate(x.from) && isDate(x.to)).map((x) => ({ city: str(x.city, 40), from: x.from, to: x.to, nights: num(x.nights, 0, 60) || 0 })),
+    transfers: (Array.isArray(t.transfers) ? t.transfers : []).slice(0, 30).filter((x) => x && isDate(x.date)).map((x) => ({ date: x.date, mode: ["flight", "train", "bus", "ferry"].includes(x.mode) ? x.mode : "train",
+      label: str(x.label, 60), from: str(x.from, 60), to: str(x.to, 60), depart: str(x.depart, 20), arrive: str(x.arrive, 30), status: ["booked", "open", "none"].includes(x.status) ? x.status : "open",
+      note: str(x.note, 200), search: /^[A-Z]{3}-[A-Z]{3}$/.test(x.search || "") ? x.search : "" })),
+    todos: (Array.isArray(t.todos) ? t.todos : []).slice(0, 40).filter((x) => x && str(x.text)).map((x, i) => ({ id: str(x.id, 20) || "todo" + i, text: str(x.text, 240), due: str(x.due, 40), done: x.done === true })),
+    notes: (Array.isArray(t.notes) ? t.notes : []).map((x) => str(x, 240)).filter(Boolean).slice(0, 12) };
+}
+function stationStrip(nav) {
+  const strip = h("div", { class: "station-strip", role: "group", "aria-label": "Stationen der Reise" });
+  const curDate = D();
+  (S.tour?.stations || []).forEach((st) => {
+    const first = S.days.findIndex((d) => d && d.date >= st.from && d.date < st.to);
+    const here = curDate >= st.from && curDate < st.to;
+    const b = h(nav && first >= 0 ? "button" : "div", { class: "station", type: nav && first >= 0 ? "button" : null, "aria-current": here ? "true" : null,
+        onclick: nav && first >= 0 ? () => { setDay(first); $("#planTitle")?.focus({ preventScroll: true }); } : null },
+      h("b", {}, st.city), h("span", {}, `${shortDate(st.from).replace(/^\w+\.,\s*/, "")} – ${shortDate(st.to).replace(/^\w+\.,\s*/, "")}`), h("span", {}, `${st.nights} ${st.nights === 1 ? "Nacht" : "Nächte"}`));
+    strip.append(b);
+  });
+  return strip;
+}
+function outlineCard(day) {
+  const o = day.outline || {}, tr = dayTransfers(day.date);
+  return h("div", { class: "outline" },
+    h("div", { class: "kind" }, `Programm laut Reiseplan · ${day.place?.local || ""}`),
+    h("h3", {}, o.title || "Freier Tag"),
+    o.transfer ? h("p", { class: "travel" }, h("b", {}, "Reiseablauf: "), o.transfer) : null,
+    tr.map((t) => h("p", { class: "transfer" }, h("span", { class: `state ${STATUS_CLS[t.status] || "unknown"}` }, STATUS_TXT[t.status] || t.status),
+      h("span", {}, `${t.label}: ${t.from}${t.depart ? " " + t.depart : ""} → ${t.to}${t.arrive ? " (an " + t.arrive + ")" : ""}`))),
+    o.items && o.items.length ? h("ul", {}, o.items.map((x) => h("li", {}, x))) : null,
+    o.note ? h("p", { class: "tip" }, o.note) : null);
+}
+function planDayActions() {
+  if (S.example) return null;
+  const open = S.days.filter((d) => d && !d.plan).length;
+  return h("div", { class: "toolbar" },
+    h("button", { class: "btn primary", type: "button", id: "planDayBtn", disabled: !caps.sample, onclick: () => planTourDays([S.dayIdx]) }, caps.sample ? "Diesen Tag planen" : "Planen braucht Claude"),
+    open > 1 && caps.sample ? h("button", { class: "btn", type: "button", id: "planAllBtn", onclick: () => planTourDays(S.days.map((d, i) => (d && !d.plan ? i : -1)).filter((i) => i >= 0)) }, `Alle offenen Tage planen (${open})`) : null,
+    h("span", { class: "sub" }, "Claude ergänzt Linien, Ein- und Ausstiege, Zeiten und Öffnungszeiten. Hotels, Flüge und Züge bleiben feste Termine."));
+}
+async function planTourDay(i, gen) {
+  const day = S.days[i]; if (!day) return false;
+  const date = day.date, place = day.place || S.place, o = day.outline || {};
+  const f = { ...S.form, date, ...tourWindow(o), checkinToday: false };
+  const stay = bookedStay(date), ci = checkinBooking(date);
+  f.checkinToday = !!ci;
+  const plan = await makePlan(f, place, { stay, pickStay: false, day: { n: i + 1, total: S.days.length }, avoid: avoidNames(i), checkin: ci ? bookedAsStay(ci) : null,
+    outline: o, fixed: dayTransfers(date).map(transferText) });
+  if (gen !== S.gen) return false;
+  if (stay) plan.stay_id = String(stay.id);
+  S.days[i] = { ...day, plan, progress: day.progress || { arrived: {}, left: {} } };
+  if (i === S.dayIdx) S.plan = plan;
+  return true;
+}
+async function planTourDays(list) {
+  if (!caps.sample) { toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  if (busy()) { toast(BUSY_MSG); return; }
+  if (!list.length) return;
+  S.running = true; const gen = S.gen; $("#progress").hidden = false;
+  S.steps = [{ id: "plan", state: "idle", detail: "" }]; renderSteps(); renderPlanHead(); renderTimeline();
+  let done = 0;
+  try {
+    for (const i of list) {
+      if (gen !== S.gen) return;
+      setStep("plan", "run", list.length > 1 ? `Tag ${i + 1} (${done + 1} von ${list.length}): ${S.days[i]?.place?.local || ""} …` : `Plane Tag ${i + 1} …`);
+      try { if (!(await planTourDay(i, gen))) return; done++; persistTrip(); if (i === S.dayIdx) { renderAll(); } else renderPlanHead(); }
+      catch (e) {
+        if (gen !== S.gen) return;
+        const rest = list.slice(list.indexOf(i));
+        setStep("plan", "err", `Tag ${i + 1}: ${e?.code ? sampleMessage(e) : "Der Plan war unvollständig: " + e.message}`, { label: rest.length > 1 ? `Ab Tag ${i + 1} weiterplanen` : "Nochmal", fn: () => planTourDays(rest) });
+        markSrc("claude", "err"); return;
+      }
+    }
+    setStep("plan", "ok", done > 1 ? `${done} Tage geplant` : "Tag geplant"); markSrc("claude", "ok"); announce(done > 1 ? `${done} Tage geplant.` : "Tag geplant.");
+    if (S.steps.every((x) => x.state === "ok")) $("#progress").hidden = true;
+  } finally { S.running = false; if (gen === S.gen) { renderAll(); } }
+}
+function renderTour() {
+  const sec = $("#tourSec"); sec.hidden = !isTour(); if (!isTour()) return;
+  const t = S.tour;
+  $("#tourTitle").textContent = t.title; $("#tourSub").textContent = `Rundreise · ${shortDate(t.start)} – ${shortDate(t.end)}${t.source ? " · aus " + t.source : ""}`;
+  const strip = $("#tourStations"); strip.textContent = ""; strip.append(...stationStrip(true).childNodes);
+  const tl = $("#transferList"); tl.textContent = "";
+  t.transfers.forEach((x) => {
+    const search = x.status === "open" ? (x.mode === "flight" && x.search ? `https://www.google.com/travel/flights?q=${encodeURIComponent(`Flights from ${x.search.slice(0, 3)} to ${x.search.slice(4)} on ${x.date}`)}`
+      : x.mode === "train" ? "https://smart-ex.jp/en/" : null) : null;
+    tl.append(h("li", { class: x.status === "open" ? "open" : "" }, h("span", { class: "dt" }, shortDate(x.date)),
+      h("span", {}, h("b", {}, `${x.from} → ${x.to}`), h("span", { class: "sub" }, [x.label, x.depart ? "ab " + x.depart : "", x.arrive ? "an " + x.arrive : ""].filter(Boolean).join(" · ")), x.note ? h("span", { class: "sub" }, x.note) : null,
+        search ? ext(search, x.mode === "flight" ? "Flüge suchen ↗" : "SmartEX ↗", `${x.from} nach ${x.to}`) : null),
+      h("span", { class: `state ${STATUS_CLS[x.status]}` }, STATUS_TXT[x.status])));
+  });
+  const ul = $("#todoList"); ul.textContent = "";
+  t.todos.forEach((x) => {
+    const id = "td-" + x.id;
+    const cb = h("input", { type: "checkbox", id, checked: x.done });
+    cb.addEventListener("change", () => { x.done = cb.checked; li.classList.toggle("done", x.done); updTodoCount(); persistTrip(); });
+    const li = h("li", { class: x.done ? "done" : "" }, cb, h("label", { for: id }, x.due ? h("span", { class: "due" }, x.due) : null, x.text));
+    ul.append(li);
+  });
+  updTodoCount();
+  const nl = $("#tourNotes"); nl.textContent = ""; t.notes.forEach((x) => nl.append(h("li", {}, x)));
+}
+function updTodoCount() { const t = S.tour; if (!t) return; const open = t.todos.filter((x) => !x.done).length; $("#todoCount").textContent = open ? `(${open} offen)` : "(alles erledigt)"; }
 
 /* ================= Capabilities ================= */
 const SRC_TXT = { ok: "verbunden", err: "Problem", off: "nicht verfügbar" };

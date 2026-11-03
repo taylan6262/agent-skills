@@ -56,3 +56,11 @@
     time; reminders stale on re-plan/failure, past departures skipped, ID fallback via `list_events`, delete old ones;
     deleting the open trip does not resurrect it (+ offer to delete its reminders); sheet makes the background `inert`;
     side panel watches its size (ResizeObserver); "welcomed" also stored in the account. ✔ 19 regression checks.
+
+## Increment 5: Round trip
+28. Model: `tour`, `days[i].place/outline`, `plan` may be null; all render/live functions null-safe.
+29. Unplanned day: outline view, "plan this day / all open days" (planTourDay with fixed appointments).
+30. Trip overview (stations, flights/trains, to-dos, good to know) + day line with cities.
+31. Prompts/map/reminders per day place.
+32. Import of the Asia trip 2027 (one source: generator → store + test doubles).
+✔ New suite test-tour + all earlier suites; review by the code-reviewer agent.
