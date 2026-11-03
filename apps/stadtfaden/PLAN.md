@@ -64,3 +64,8 @@
 31. Prompts/map/reminders per day place.
 32. Import of the Asia trip 2027 (one source: generator → store + test doubles).
 ✔ New suite test-tour + all earlier suites; review by the code-reviewer agent.
+33. **Review findings increment 5 (code-reviewer)** — step buttons bound to trip/day; replanRest guard; one doc per day
+    (256 KB limit checked); place/time zone per stop on changeover days; fixed appointments incl. arrival and check-out;
+    "plan from here" only for the day's hotel; to-dos locked while planning; no fake "nothing found" texts, ticket
+    search per city; focus on progress/title; "Anhalten" (stop) for long runs; avoid list per city.
+    ✔ test-review5 (22 checks); 226 checks in total across nine suites.

@@ -199,3 +199,13 @@ nothing is invented beyond that: open flights stay "open", recommendations are l
 
 **Boundaries:** no auto-planning without a click; editing via the trip form ("Ändern" / change) is hidden for round trips
 (the form only knows one city).
+
+### Addendum to increment 5 (after the code review)
+- **Storage:** a document in the app store may be at most 256 KB (checked). The trip document therefore holds
+  only metadata; each planned day lives in its own document `data/users/<id>/<trip>/days/d<i>`.
+  Older trips (plans inline) still open; the next save writes the new format.
+- **Changeover days:** stops get the place they are located in (nearest station of the day), so reminders get the right
+  time zone and Maps links the right city.
+- **Fixed appointments** in all prompts (plan, adjust, rest of the day): flights/trains on the day, overnight arrivals,
+  check-outs (time from the booking, otherwise 11:00). Shift previews warn when a flight/train gets tight.
+- **Tickets & tours** for round trips per city on demand (Booking.com, place of the open day).
