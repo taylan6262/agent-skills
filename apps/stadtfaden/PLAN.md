@@ -49,3 +49,10 @@
 25. **Reminders:** calendar events per departure (popup 10 min), deletion via ID when updating.
 26. **Bookings:** form + extraction (text/image via Claude), booked stays in list, map, start point.
 ✔ Checks per point with test doubles; regression of all earlier suites; review by the code-reviewer agent.
+27. **Review findings increment 4 (code-reviewer)** — trip identity: "Neue Reise" (new trip) only takes effect once a new plan arrives
+    (form intent edit/new, draft bookings, `flushPersist` before switching, generation guard after every `await`, no
+    opening/deleting while planning); restore on a failed re-plan; times past midnight without the 24h wrap;
+    booking save guarded; changeover day (start at A, check-in at B), no booking outside its dates; nudge per departure
+    time; reminders stale on re-plan/failure, past departures skipped, ID fallback via `list_events`, delete old ones;
+    deleting the open trip does not resurrect it (+ offer to delete its reminders); sheet makes the background `inert`;
+    side panel watches its size (ResizeObserver); "welcomed" also stored in the account. ✔ 19 regression checks.
