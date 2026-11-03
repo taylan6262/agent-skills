@@ -1,0 +1,627 @@
+<title>Abendlicht</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Italiana&family=Manrope:wght@300;400;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one full-bleed night scene on canvas, framed by cinema letterbox bars that hold HUD (top) and controls + sponsor credit (bottom). */
+:root {
+  color-scheme: dark;
+  --sky-top: #04060f;
+  --sky-mid: #0b1430;
+  --dusk: #2b2342;
+  --lake: #050913;
+  --ink: #ece6da;          /* warm paper white for text */
+  --muted: #8d95aa;        /* blue-biased grey */
+  --amber: #f2b45c;        /* lantern light, the one bold accent */
+  --amber-deep: #c9772f;
+  --moon: #dde4f0;
+  --bar: #020308;          /* letterbox black */
+  --line: rgba(236, 230, 218, 0.14);
+  --glass: rgba(10, 14, 28, 0.72);
+  --display: "Italiana", "Didot", "Bodoni 72", Georgia, serif;
+  --body: "Manrope", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --bar-h: clamp(46px, 8.5vh, 84px);
+}
+html, body { height: 100%; }
+body { background: var(--bar); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-font-smoothing: antialiased; }
+button, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 1.5px solid var(--amber); outline-offset: 3px; }
+
+#stage { position: fixed; inset: 0; }
+#sky { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: manipulation; }
+.vignette { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 55%, transparent 55%, rgba(0,0,0,.55) 100%); }
+.grain { position: absolute; inset: -50%; pointer-events: none; opacity: .09; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  animation: grain 0.9s steps(6) infinite; }
+@keyframes grain { 0%{transform:translate(0,0)} 20%{transform:translate(-3%,2%)} 40%{transform:translate(2%,-3%)} 60%{transform:translate(-2%,-1%)} 80%{transform:translate(3%,3%)} 100%{transform:translate(0,0)} }
+
+/* Letterbox */
+.bar { position: fixed; left: 0; right: 0; background: var(--bar); z-index: 5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; align-items: center; gap: 16px; transition: transform 2.4s cubic-bezier(.7,0,.2,1); }
+.bar.top { top: 0; min-height: var(--bar-h); padding-top: env(safe-area-inset-top, 0px); justify-content: space-between; }
+.bar.bottom { bottom: 0; min-height: var(--bar-h); padding-bottom: env(safe-area-inset-bottom, 0px); padding-block-start: 8px; justify-content: space-between; flex-wrap: wrap; row-gap: 6px; }
+body.opening .bar.top { transform: translateY(calc(50vh - var(--bar-h))); }
+body.opening .bar.bottom { transform: translateY(calc(-50vh + var(--bar-h))); }
+
+.wordmark { font-family: var(--display); font-size: 1.35rem; letter-spacing: .32em; text-transform: uppercase; white-space: nowrap; }
+.hud { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+  display: flex; gap: 18px; align-items: center; flex-wrap: wrap; justify-content: flex-end; font-variant-numeric: tabular-nums; min-width: 0; }
+.hud b { color: var(--ink); font-weight: 500; }
+.live { display: inline-flex; align-items: center; gap: 7px; color: var(--ink); }
+.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--amber); box-shadow: 0 0 10px var(--amber); animation: pulse 2.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn { border: 1px solid var(--line); background: transparent; padding: 9px 16px; border-radius: 999px;
+  font-size: .78rem; letter-spacing: .08em; transition: background .3s, border-color .3s, color .3s; white-space: nowrap; }
+.btn:hover { border-color: rgba(236,230,218,.4); }
+.btn[aria-pressed="true"] { border-color: var(--amber); color: var(--amber); }
+.btn.primary { background: var(--amber); color: #1a0f04; border-color: var(--amber); font-weight: 600; }
+.btn.primary:hover { background: #f7c47a; }
+
+.credit { font-family: var(--mono); font-size: .64rem; letter-spacing: .16em; text-transform: uppercase; color: var(--muted);
+  display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 4px 0; text-align: left; }
+.credit .sponsor { font-family: var(--display); font-size: 1rem; letter-spacing: .12em; color: var(--ink); text-transform: none; }
+.ad-tag { border: 1px solid var(--line); border-radius: 3px; padding: 1px 5px; font-size: .58rem; letter-spacing: .12em; color: var(--muted); }
+
+/* Title card */
+.title-card { position: fixed; inset: 0; display: grid; place-content: center; text-align: center; z-index: 3; pointer-events: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  transition: opacity 2.2s ease, transform 6s ease; }
+.title-card.gone { opacity: 0; transform: scale(1.04); }
+.title-card .eyebrow { font-family: var(--mono); font-size: .7rem; letter-spacing: .4em; color: var(--muted); text-transform: uppercase; }
+.title-card h1 { font-family: var(--display); font-weight: 400; font-size: clamp(3.2rem, 11vw, 8.5rem); letter-spacing: .14em; margin: .15em 0 .1em; line-height: 1;
+  text-shadow: 0 0 40px rgba(242,180,92,.25); text-wrap: balance; }
+.title-card p { max-width: 34ch; margin: 0 auto; color: var(--ink); opacity: .82; font-weight: 300; line-height: 1.6; text-wrap: balance; }
+
+/* Sheets & cards */
+.sheet { position: fixed; z-index: 8; left: 50%; bottom: calc(var(--bar-h) + 20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+  width: min(440px, calc(100% - 32px)); background: var(--glass); backdrop-filter: blur(18px) saturate(1.2); -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--line); border-radius: 18px; padding: 22px; display: grid; gap: 14px; box-shadow: 0 30px 80px rgba(0,0,0,.5);
+  animation: rise .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 14px); } }
+.sheet h2 { font-family: var(--display); font-weight: 400; font-size: 1.7rem; letter-spacing: .06em; margin: 0; }
+.sheet .kicker { font-family: var(--mono); font-size: .64rem; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+.sheet .row { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+.sheet textarea { width: 100%; box-sizing: border-box; min-height: 92px; resize: none; background: rgba(255,255,255,.04); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 14px; line-height: 1.55; font-weight: 300; }
+.sheet textarea::placeholder { color: var(--muted); }
+.count { font-family: var(--mono); font-size: .66rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tints { display: flex; gap: 10px; }
+.tint { width: 26px; height: 26px; border-radius: 50%; border: 2px solid transparent; padding: 0; background: var(--c); box-shadow: 0 0 14px var(--c); }
+.tint[aria-checked="true"] { border-color: var(--ink); }
+.x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 50%; background: transparent; border: 1px solid var(--line); line-height: 1; }
+.msg { font-family: var(--display); font-size: 1.6rem; line-height: 1.35; margin: 0; overflow-wrap: anywhere; }
+.meta { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.example { color: var(--amber); }
+.note { font-size: .8rem; color: var(--muted); line-height: 1.5; margin: 0; }
+.packages { display: grid; gap: 10px; }
+.pkg { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; }
+.pkg strong { font-weight: 600; font-size: .9rem; }
+.pkg span { font-size: .78rem; color: var(--muted); line-height: 1.45; grid-column: 1; }
+.pkg em { font-style: normal; font-family: var(--mono); font-size: .72rem; color: var(--amber); grid-row: 1; grid-column: 2; white-space: nowrap; }
+.copy { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.copy code { font-family: var(--mono); font-size: .78rem; user-select: all; }
+
+/* Constellation ad label */
+.constellation { position: fixed; z-index: 2; font-family: var(--mono); font-size: .6rem; letter-spacing: .2em; text-transform: uppercase;
+  color: var(--moon); background: none; border: 0; padding: 4px; opacity: 0; transition: opacity 2.5s ease; pointer-events: none; text-align: left; }
+.constellation.on { opacity: .8; pointer-events: auto; }
+.constellation .ad-tag { margin-right: 6px; }
+
+/* Breathing */
+.breath { position: fixed; inset: 0; z-index: 4; display: grid; place-items: center; pointer-events: none; }
+.breath .ring { width: min(46vmin, 300px); aspect-ratio: 1; max-width: 100%; border-radius: 50%; border: 1px solid rgba(221,228,240,.5);
+  box-shadow: 0 0 60px rgba(221,228,240,.15), inset 0 0 60px rgba(221,228,240,.08); display: grid; place-items: center; transform: scale(.55);
+  transition: transform 4s cubic-bezier(.45,0,.55,1); }
+.breath .word { font-family: var(--display); font-size: 1.8rem; letter-spacing: .2em; }
+.breath .sub { font-family: var(--mono); font-size: .62rem; letter-spacing: .2em; color: var(--muted); text-transform: uppercase; margin-top: 6px; text-align: center; }
+
+.toast { position: fixed; z-index: 9; top: calc(var(--bar-h) + 18px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%);
+  background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid var(--line); border-radius: 999px;
+  padding: 10px 18px; font-size: .82rem; max-width: calc(100% - 32px); box-sizing: border-box; text-align: center; animation: rise .4s ease; }
+
+@media (max-width: 640px) {
+  .hud .hide-sm { display: none; }
+  .wordmark { font-size: 1.05rem; letter-spacing: .24em; }
+  .bar.bottom { padding-block-start: 10px; }
+  .controls { width: 100%; justify-content: center; }
+  .btn { padding: 8px 12px; font-size: .72rem; }
+  .credit { width: 100%; justify-content: center; padding-bottom: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar, .title-card, .breath .ring { transition: none; }
+  .grain, .live::before { animation: none; }
+  .sheet, .toast { animation: none; }
+}
+</style>
+
+<div id="stage">
+  <canvas id="sky" aria-label="Nachthimmel über einem See mit aufsteigenden Laternen. Tippe auf eine Laterne, um ihren Gedanken zu lesen."></canvas>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+</div>
+
+<div class="title-card" id="titleCard">
+  <div class="eyebrow">Szene 01 · Ein Himmel für alle</div>
+  <h1>Abendlicht</h1>
+  <p>Lass einen Gedanken als Laterne steigen. Jeder, der diesen Himmel öffnet, sieht sie.</p>
+</div>
+
+<header class="bar top">
+  <div class="wordmark">Abendlicht</div>
+  <div class="hud" aria-live="off">
+    <span class="live" id="presence">Du bist hier</span>
+    <span class="hide-sm" id="moonHud">Mond —</span>
+    <span id="clock"><b>00:00:00</b></span>
+  </div>
+</header>
+
+<button class="constellation" id="constellation" type="button"><span class="ad-tag">Anzeige</span><span id="constellationName">Sternbild</span></button>
+
+<div class="breath" id="breath" hidden>
+  <div class="ring" id="ring"><div><div class="word" id="breathWord">Einatmen</div><div class="sub" id="breathSub">4 Sekunden</div></div></div>
+</div>
+
+<footer class="bar bottom">
+  <div class="controls">
+    <button class="btn primary" id="openRelease" type="button">Laterne steigen lassen</button>
+    <button class="btn" id="readBtn" type="button">Lichter lesen</button>
+    <button class="btn" id="breathBtn" type="button" aria-pressed="false">Atmen</button>
+    <button class="btn" id="soundBtn" type="button" aria-pressed="false">Klang</button>
+  </div>
+  <button class="credit" id="credit" type="button" aria-label="Werbepartner: mehr erfahren">
+    <span>Präsentiert von</span><span class="sponsor" id="sponsorName">—</span><span class="ad-tag">Anzeige</span>
+  </button>
+</footer>
+
+<section class="sheet" id="releaseSheet" hidden aria-labelledby="releaseTitle">
+  <button class="x" type="button" data-close aria-label="Schließen">×</button>
+  <div class="kicker">Deine Laterne</div>
+  <h2 id="releaseTitle">Was möchtest du loslassen?</h2>
+  <textarea id="releaseText" maxlength="120" placeholder="Ein Dank, ein Wunsch, ein Name, an den du heute denkst …"></textarea>
+  <div class="row">
+    <div class="tints" role="radiogroup" aria-label="Farbe des Lichts" id="tints"></div>
+    <span class="count" id="count">0 / 120</span>
+  </div>
+  <div class="row">
+    <p class="note" id="releaseNote">Jede Person hat eine Laterne am Himmel. Eine neue ersetzt deine alte.</p>
+    <button class="btn primary" id="releaseBtn" type="button">Loslassen</button>
+  </div>
+</section>
+
+<section class="sheet" id="lanternCard" hidden aria-live="polite">
+  <button class="x" type="button" data-close aria-label="Schließen">×</button>
+  <div class="meta" id="cardMeta"></div>
+  <p class="msg" id="cardMsg"></p>
+  <div class="row">
+    <div class="controls" style="width:auto">
+      <button class="btn" id="prevL" type="button" aria-label="Vorherige Laterne">‹</button>
+      <button class="btn" id="nextL" type="button" aria-label="Nächste Laterne">›</button>
+    </div>
+    <div class="controls" style="width:auto">
+      <button class="btn" id="removeL" type="button" hidden>Entfernen</button>
+      <button class="btn primary" id="glowBtn" type="button">✦ Licht senden</button>
+    </div>
+  </div>
+</section>
+
+<section class="sheet" id="sponsorSheet" hidden aria-labelledby="sponsorTitle">
+  <button class="x" type="button" data-close aria-label="Schließen">×</button>
+  <div class="kicker">Werbung bei Abendlicht</div>
+  <h2 id="sponsorTitle">Ein leiser Platz für Ihre Marke</h2>
+  <p class="note">Keine Pop-ups, kein Ton, keine Unterbrechung. Werbung erscheint hier so ruhig wie die Szene selbst und ist immer als Anzeige markiert.</p>
+  <div class="packages" id="packages"></div>
+  <div class="copy"><span class="note">Anfragen:</span> <code id="contact"></code> <button class="btn" id="copyContact" type="button">Kopieren</button></div>
+</section>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+/* ============ Monetarisierung: hier anpassen ============ */
+const SPONSOR = {
+  name: "Ihre Marke hier",                 // erscheint im Abspann und als Sternbild
+  constellation: "Ihr Sternbild",
+  url: null,                               // z. B. "https://…" — öffnet sich beim Klick auf die Anzeige
+  contact: "werbung@abendlicht.example",   // Platzhalter-Adresse
+  packages: [                              // Beispielpreise
+    { name: "Sternbild", text: "Ihr Name als Sternbild am Himmel, alle 45 Sekunden für einige Sekunden sichtbar.", price: "ab 490 € / Monat" },
+    { name: "Abspann-Credit", text: "„Präsentiert von“ dauerhaft im unteren Kinobalken.", price: "ab 190 € / Monat" },
+    { name: "Goldene Laterne", text: "Eine gesponserte Laterne mit Ihrer Botschaft, deutlich als Anzeige markiert.", price: "ab 290 € / Woche" },
+  ],
+};
+
+/* ============ Grundzustand ============ */
+const TINTS = [
+  { id: "amber", label: "Bernstein", h: 34, s: 88, l: 64 },
+  { id: "rose",  label: "Rosé",      h: 8,  s: 80, l: 70 },
+  { id: "moon",  label: "Mondlicht", h: 214, s: 55, l: 82 },
+  { id: "jade",  label: "Jade",      h: 150, s: 45, l: 66 },
+];
+const EXAMPLES = [
+  "Danke, Oma. Ich koche immer noch dein Rezept.",
+  "Morgen ist die Prüfung. Ich hab genug gelernt.",
+  "Für alle, die heute Nacht nicht schlafen können.",
+  "Ich vermisse das Meer.",
+  "Heute habe ich mich endlich entschuldigt.",
+  "Möge mein Bruder gut ankommen.",
+  "Einfach nur: es war ein guter Tag.",
+].map((text, i) => ({ id: "ex" + i, text, hue: TINTS[i % 4].id, at: Date.now() - (i * 37 + 12) * 60000, lights: (i * 5) % 9, example: true }));
+
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (id) => document.getElementById(id);
+const state = {
+  lanterns: EXAMPLES.slice(), live: false, myId: null, isOwner: false,
+  db: null, room: null, selected: null, tint: "amber", breathing: false, breath: 0, sparks: [],
+};
+const born = new Map(); // id -> local time first seen (for rise animation)
+
+/* ============ Canvas-Szene ============ */
+const cv = $("sky"), ctx = cv.getContext("2d");
+let W = 0, H = 0, DPR = 1, stars = [], hills = [], horizon = 0;
+function hash(str) {
+  let h = 2166136261; for (const c of str) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+  h ^= h >>> 16; h = Math.imul(h, 0x85ebca6b); h ^= h >>> 13; h = Math.imul(h, 0xc2b2ae35); h ^= h >>> 16; // Avalanche, damit ähnliche IDs weit streuen
+  return (h >>> 0) / 4294967295;
+}
+function resize() {
+  DPR = Math.min(devicePixelRatio || 1, 2);
+  W = innerWidth; H = innerHeight;
+  cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  horizon = H * 0.66;
+  stars = Array.from({ length: Math.round(W * H / 4200) }, (_, i) => ({
+    x: Math.random() * W, y: Math.random() * horizon * 0.95, r: Math.random() * 1.1 + 0.2, p: Math.random() * 6.28, s: 0.4 + Math.random() * 1.6 }));
+  hills = [0, 1].map((layer) => { const pts = []; for (let x = 0; x <= W + 40; x += 40) {
+    const n = Math.sin(x * 0.004 + layer * 2) * 0.5 + Math.sin(x * 0.011 + layer) * 0.3 + Math.sin(x * 0.027) * 0.12;
+    pts.push([x, horizon - 18 - layer * -10 - (n + 1) * (layer ? 22 : 40)]); } return pts; });
+  placeConstellation();
+}
+
+/* Mondphase: Referenz-Neumond 6. Jan. 2000, 18:14 UTC */
+function moonPhase(d = new Date()) {
+  const syn = 29.530588853, ref = Date.UTC(2000, 0, 6, 18, 14);
+  const p = (((d - ref) / 86400000) % syn + syn) % syn / syn;
+  const illum = (1 - Math.cos(2 * Math.PI * p)) / 2;
+  const names = ["Neumond", "Zunehmende Sichel", "Erstes Viertel", "Zunehmender Mond", "Vollmond", "Abnehmender Mond", "Letztes Viertel", "Abnehmende Sichel"];
+  return { p, illum, name: names[Math.round(p * 8) % 8] };
+}
+const moon = moonPhase();
+$("moonHud").innerHTML = `${moon.name} <b>${Math.round(moon.illum * 100)} %</b>`;
+
+function drawMoon(cx, cy, r) {
+  const g = ctx.createRadialGradient(cx, cy, r, cx, cy, r * 7);
+  g.addColorStop(0, `rgba(221,228,240,${0.16 + moon.illum * 0.14})`); g.addColorStop(1, "rgba(221,228,240,0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, r * 7, 0, 7); ctx.fill();
+  ctx.fillStyle = "rgba(160,170,195,.10)"; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.fill(); // Erdschein
+  const k = Math.cos(2 * Math.PI * moon.p), s = moon.p < 0.5 ? 1 : -1;
+  ctx.fillStyle = "#e4e9f2"; ctx.beginPath();
+  for (let t = -Math.PI / 2; t <= Math.PI / 2 + 0.001; t += 0.05) ctx.lineTo(cx + s * r * Math.cos(t), cy + r * Math.sin(t));
+  for (let t = Math.PI / 2; t >= -Math.PI / 2 - 0.001; t -= 0.05) ctx.lineTo(cx + s * r * k * Math.cos(t), cy + r * Math.sin(t));
+  ctx.fill();
+}
+
+function tintOf(id) { return TINTS.find((t) => t.id === id) || TINTS[0]; }
+function lanternPos(l, now) {
+  const seed = hash(l.id), seed2 = hash(l.id + "y");
+  const restY = horizon * (0.16 + seed2 * 0.58);
+  const first = born.get(l.id) ?? now;
+  const t = reduceMotion ? 1 : Math.min(1, (now - first) / 14000);
+  const ease = 1 - Math.pow(1 - t, 3);
+  const startY = horizon + 12;
+  const drift = reduceMotion ? 0 : Math.sin(now / 5200 + seed * 40) * 14;
+  const bob = reduceMotion ? 0 : Math.sin(now / 2100 + seed * 90) * 4;
+  return { x: W * (0.06 + seed * 0.88) + drift * ease, y: startY + (restY - startY) * ease + bob, scale: 0.75 + seed2 * 0.5 };
+}
+function drawLantern(x, y, sc, tint, flick, brightness, alpha = 1) {
+  const c = `hsla(${tint.h},${tint.s}%,${tint.l}%,`;
+  const R = 34 * sc * brightness;
+  const g = ctx.createRadialGradient(x, y, 0, x, y, R);
+  g.addColorStop(0, c + 0.55 * flick * alpha + ")"); g.addColorStop(0.35, c + 0.18 * alpha + ")"); g.addColorStop(1, c + "0)");
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 7); ctx.fill();
+  const w = 7 * sc, h = 10 * sc;
+  ctx.fillStyle = `hsla(${tint.h},${tint.s}%,${Math.min(92, tint.l + 14)}%,${0.95 * alpha})`;
+  ctx.beginPath(); ctx.moveTo(x - w * 0.8, y - h / 2); ctx.lineTo(x + w * 0.8, y - h / 2); ctx.lineTo(x + w * 0.6, y + h / 2); ctx.lineTo(x - w * 0.6, y + h / 2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = `rgba(255,248,230,${0.9 * flick * alpha})`; ctx.beginPath(); ctx.arc(x, y + h * 0.18, 1.6 * sc, 0, 7); ctx.fill();
+}
+
+const hit = [];
+let constellation = { pts: [], on: false, since: 0 };
+function placeConstellation() {
+  const bx = W * 0.12, by = horizon * 0.2, s = Math.min(W, H) * 0.09;
+  constellation.pts = [[0, 0.2], [0.7, 0], [1.4, 0.35], [2.1, 0.15], [2.6, 0.8], [1.9, 1.2]].map(([a, b]) => [bx + a * s, by + b * s]);
+  const lab = $("constellation"); const [lx, ly] = constellation.pts[5];
+  lab.style.left = Math.min(lx - 10, W - 220) + "px"; lab.style.top = ly + 16 + "px";
+}
+
+function frame(now) {
+  ctx.clearRect(0, 0, W, H);
+  // Himmel
+  const sky = ctx.createLinearGradient(0, 0, 0, horizon);
+  sky.addColorStop(0, "#04060f"); sky.addColorStop(0.62, "#0b1430"); sky.addColorStop(1, "#2b2342");
+  ctx.fillStyle = sky; ctx.fillRect(0, 0, W, horizon + 1);
+  // Sterne
+  for (const st of stars) {
+    const tw = reduceMotion ? 0.7 : 0.45 + 0.55 * Math.sin(now / 1000 * st.s + st.p);
+    ctx.fillStyle = `rgba(230,236,250,${0.25 + tw * 0.6})`; ctx.fillRect(st.x, st.y, st.r, st.r);
+  }
+  // Sternbild-Anzeige: alle 45 s für 14 s
+  const cyc = (now / 1000) % 45, on = cyc > 30;
+  if (on !== constellation.on) { constellation.on = on; $("constellation").classList.toggle("on", on); }
+  const ca = on ? Math.min(1, (cyc - 30) / 3, (45 - cyc) / 3) : 0;
+  if (ca > 0) {
+    ctx.strokeStyle = `rgba(221,228,240,${0.35 * ca})`; ctx.lineWidth = 0.8; ctx.beginPath();
+    constellation.pts.forEach(([x, y], i) => (i ? ctx.lineTo(x, y) : ctx.moveTo(x, y))); ctx.stroke();
+  }
+  for (const [x, y] of constellation.pts) { ctx.fillStyle = `rgba(240,244,255,${0.55 + 0.45 * ca})`; ctx.beginPath(); ctx.arc(x, y, 1.4 + ca, 0, 7); ctx.fill(); }
+  // Mond
+  const mx = W * 0.78, my = horizon * 0.26, mr = Math.max(16, Math.min(W, H) * 0.035);
+  drawMoon(mx, my, mr);
+  // Hügel
+  hills.forEach((pts, i) => { ctx.fillStyle = i ? "#0a0d1c" : "#121530"; ctx.beginPath(); ctx.moveTo(0, horizon + 2);
+    for (const [x, y] of pts) ctx.lineTo(x, y); ctx.lineTo(W, horizon + 2); ctx.closePath(); ctx.fill(); });
+  // See
+  const lake = ctx.createLinearGradient(0, horizon, 0, H);
+  lake.addColorStop(0, "#151a33"); lake.addColorStop(0.35, "#070b18"); lake.addColorStop(1, "#03050b");
+  ctx.fillStyle = lake; ctx.fillRect(0, horizon, W, H - horizon);
+  // Mondspiegelung
+  const breathGlow = state.breathing ? 0.6 + 0.6 * state.breath : 1;
+  for (let i = 0; i < 26; i++) {
+    const y = horizon + 6 + i * i * 0.55 * (H - horizon) / 380;
+    if (y > H) break;
+    const w = (mr * 1.6 + i * 3) * (0.6 + 0.4 * Math.sin(now / 700 + i * 1.7)) * breathGlow;
+    ctx.fillStyle = `rgba(221,228,240,${(0.22 - i * 0.007) * (0.4 + moon.illum * 0.6) * breathGlow})`;
+    ctx.fillRect(mx - w / 2 + Math.sin(now / 900 + i) * 5, y, w, 1.4);
+  }
+  // Laternen
+  hit.length = 0;
+  for (const l of state.lanterns) {
+    const tint = tintOf(l.hue), { x, y, scale } = lanternPos(l, now);
+    const flick = reduceMotion ? 1 : 0.82 + 0.18 * Math.sin(now / 120 + hash(l.id) * 50) * Math.sin(now / 330);
+    const bright = 1 + Math.min(l.lights || 0, 25) * 0.035 + (state.selected === l.id ? 0.35 : 0);
+    // Spiegelung
+    const ry = horizon + (horizon - y) * 0.42;
+    if (ry < H) {
+      ctx.save(); ctx.globalAlpha = 0.35; ctx.translate(x + Math.sin(now / 600 + y) * 3, ry);
+      ctx.scale(1, 0.55); drawLantern(0, 0, scale, tint, flick, bright * 0.9, 0.7); ctx.restore();
+    }
+    drawLantern(x, y, scale, tint, flick, bright);
+    hit.push({ id: l.id, x, y, r: 26 * scale + 8 });
+  }
+  // Funken (gesendetes Licht)
+  state.sparks = state.sparks.filter((s) => now - s.t < 1600);
+  for (const s of state.sparks) {
+    const l = state.lanterns.find((q) => q.id === s.id); if (!l) continue;
+    const { x, y } = lanternPos(l, now), k = (now - s.t) / 1600;
+    ctx.strokeStyle = `rgba(255,236,200,${0.8 * (1 - k)})`; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(x, y, 12 + k * 70, 0, 7); ctx.stroke();
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ============ UI ============ */
+const sheets = ["releaseSheet", "lanternCard", "sponsorSheet"];
+function openSheet(id) { sheets.forEach((s) => ($(s).hidden = s !== id)); }
+function closeSheets() { sheets.forEach((s) => ($(s).hidden = true)); state.selected = null; }
+document.querySelectorAll("[data-close]").forEach((b) => b.addEventListener("click", closeSheets));
+addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheets(); });
+
+let toastTimer;
+function toast(text) { const t = $("toast"); t.textContent = text; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => (t.hidden = true), 4200); }
+
+function ago(at) {
+  const m = Math.max(0, Math.round((Date.now() - at) / 60000));
+  if (m < 1) return "gerade eben"; if (m < 60) return `vor ${m} Min.`;
+  const h = Math.round(m / 60); if (h < 24) return `vor ${h} Std.`;
+  const d = Math.round(h / 24); return d === 1 ? "vor 1 Tag" : `vor ${d} Tagen`;
+}
+function showLantern(id) {
+  const l = state.lanterns.find((q) => q.id === id); if (!l) return;
+  state.selected = id; openSheet("lanternCard");
+  $("cardMsg").textContent = l.text;
+  const meta = $("cardMeta"); meta.textContent = "";
+  if (l.example) { const ex = document.createElement("span"); ex.className = "example"; ex.textContent = "Beispiel · "; meta.append(ex); }
+  const mine = l.id === state.myId || l.local;
+  meta.append(`${mine ? "Deine Laterne" : "Eine Laterne"} · ${ago(l.at)} · ✦ ${l.lights || 0} ${l.lights === 1 ? "Licht" : "Lichter"} erhalten`);
+  $("glowBtn").disabled = mine; $("glowBtn").textContent = mine ? "✦ Deine Laterne" : "✦ Licht senden";
+  $("removeL").hidden = !(state.isOwner && state.live && !l.example);
+}
+function step(dir) {
+  if (!state.lanterns.length) return;
+  const i = state.lanterns.findIndex((l) => l.id === state.selected);
+  showLantern(state.lanterns[(i + dir + state.lanterns.length) % state.lanterns.length].id);
+}
+$("prevL").onclick = () => step(-1); $("nextL").onclick = () => step(1);
+$("readBtn").onclick = () => state.lanterns.length ? showLantern(state.lanterns[0].id) : toast("Noch keine Laternen. Lass die erste steigen.");
+
+cv.addEventListener("click", (e) => {
+  const r = cv.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+  let best = null, bd = Infinity;
+  for (const h of hit) { const d = Math.hypot(h.x - x, h.y - y); if (d < h.r && d < bd) { bd = d; best = h; } }
+  if (best) showLantern(best.id); else closeSheets();
+});
+
+// Freigabe-Formular
+TINTS.forEach((t) => {
+  const b = document.createElement("button"); b.type = "button"; b.className = "tint"; b.setAttribute("role", "radio");
+  b.setAttribute("aria-label", t.label); b.title = t.label; b.style.setProperty("--c", `hsl(${t.h} ${t.s}% ${t.l}%)`);
+  b.setAttribute("aria-checked", String(t.id === state.tint));
+  b.onclick = () => { state.tint = t.id; document.querySelectorAll(".tint").forEach((x) => x.setAttribute("aria-checked", String(x === b))); };
+  $("tints").append(b);
+});
+$("releaseText").addEventListener("input", (e) => ($("count").textContent = `${e.target.value.length} / 120`));
+$("openRelease").onclick = () => { openSheet("releaseSheet"); $("releaseText").focus(); };
+$("releaseBtn").onclick = async () => {
+  const text = $("releaseText").value.trim().slice(0, 120);
+  if (!text) { $("releaseText").focus(); toast("Schreib ein paar Worte, dann kann die Laterne steigen."); return; }
+  const id = state.myId || "local-" + Date.now();
+  const entry = { id, text, hue: state.tint, at: Date.now(), lights: 0, local: !state.live };
+  born.set(id, performance.now());
+  state.lanterns = [entry, ...state.lanterns.filter((l) => l.id !== id)];
+  $("releaseText").value = ""; $("count").textContent = "0 / 120"; closeSheets(); chime();
+  if (state.live && state.myId) {
+    try { await state.db.collection("lanterns").doc(state.myId).set({ text, hue: state.tint, at: entry.at, lights: 0 }); toast("Deine Laterne steigt. Alle hier sehen sie jetzt."); }
+    catch (err) { toast("Deine Laterne ist nur bei dir sichtbar. Speichern hat nicht geklappt, versuch es später noch einmal."); }
+  } else toast("Deine Laterne steigt. Ohne Anmeldung siehst nur du sie.");
+};
+
+// Licht senden
+$("glowBtn").onclick = () => {
+  const id = state.selected; if (!id) return;
+  state.sparks.push({ id, t: performance.now() }); chime(1320);
+  const l = state.lanterns.find((q) => q.id === id);
+  if (l && (l.example || !state.room)) { l.lights = (l.lights || 0) + 1; showLantern(id); toast("Dein Licht ist angekommen."); return; }
+  state.room.emit("glow", { to: id }).then(() => toast("Dein Licht ist unterwegs.")).catch(() => toast("Licht senden geht gerade nicht. Versuch es gleich noch einmal."));
+};
+$("removeL").onclick = async () => {
+  const id = state.selected; if (!id || !state.db) return;
+  try { await state.db.collection("lanterns").doc(id).delete(); closeSheets(); toast("Laterne entfernt."); }
+  catch { toast("Entfernen hat nicht geklappt."); }
+};
+
+// Werbung
+$("sponsorName").textContent = SPONSOR.name;
+$("constellationName").textContent = `${SPONSOR.constellation} · ${SPONSOR.name}`;
+$("contact").textContent = SPONSOR.contact;
+SPONSOR.packages.forEach((p) => {
+  const d = document.createElement("div"); d.className = "pkg";
+  const s = document.createElement("strong"); s.textContent = p.name;
+  const em = document.createElement("em"); em.textContent = p.price;
+  const sp = document.createElement("span"); sp.textContent = p.text;
+  d.append(s, em, sp); $("packages").append(d);
+});
+function adClick() { if (SPONSOR.url) { const a = document.createElement("a"); a.href = SPONSOR.url; a.target = "_blank"; a.rel = "noopener sponsored"; a.click(); } else openSheet("sponsorSheet"); }
+$("credit").onclick = adClick; $("constellation").onclick = adClick;
+$("copyContact").onclick = () => {
+  navigator.clipboard?.writeText(SPONSOR.contact).then(() => toast("Adresse kopiert."), () => selectContact());
+  if (!navigator.clipboard) selectContact();
+};
+function selectContact() { const r = document.createRange(); r.selectNodeContents($("contact")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+
+// Uhr
+function tick() { $("clock").innerHTML = `<b>${new Date().toLocaleTimeString("de-DE")}</b>`; }
+tick(); setInterval(tick, 1000);
+
+/* ============ Atmen (4 · 4 · 6) ============ */
+let breathTimer;
+function breathLoop() {
+  const phases = [["Einatmen", 4, 1], ["Halten", 4, 1], ["Ausatmen", 6, 0.55]];
+  let i = 0;
+  const run = () => {
+    if (!state.breathing) return;
+    const [w, sec, sc] = phases[i];
+    $("breathWord").textContent = w; $("breathSub").textContent = `${sec} Sekunden`;
+    $("ring").style.transitionDuration = sec + "s"; $("ring").style.transform = `scale(${sc})`;
+    animateBreath(sc === 1 ? 1 : 0, sec);
+    i = (i + 1) % 3; breathTimer = setTimeout(run, sec * 1000);
+  };
+  run();
+}
+function animateBreath(target, sec) {
+  const from = state.breath, t0 = performance.now();
+  const f = (t) => { const k = Math.min(1, (t - t0) / (sec * 1000)); state.breath = from + (target - from) * (0.5 - Math.cos(k * Math.PI) / 2); if (k < 1 && state.breathing) requestAnimationFrame(f); };
+  requestAnimationFrame(f);
+}
+$("breathBtn").onclick = () => {
+  state.breathing = !state.breathing; $("breathBtn").setAttribute("aria-pressed", String(state.breathing));
+  $("breath").hidden = !state.breathing; clearTimeout(breathTimer);
+  if (state.breathing) { closeSheets(); $("ring").style.transform = "scale(.55)"; requestAnimationFrame(() => breathLoop()); }
+};
+
+/* ============ Klang (WebAudio, erst nach Klick) ============ */
+let audio = null;
+function startAudio() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  const ac = new AC(), master = ac.createGain(); master.gain.value = 0; master.connect(ac.destination);
+  master.gain.linearRampToValueAtTime(0.9, ac.currentTime + 4);
+  // Wasser: braunes Rauschen mit langsamen Wellen
+  const len = ac.sampleRate * 4, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+  let last = 0; for (let i = 0; i < len; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; d[i] = last * 3.2; }
+  const noise = ac.createBufferSource(); noise.buffer = buf; noise.loop = true;
+  const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 520;
+  const wave = ac.createGain(); wave.gain.value = 0.22;
+  const lfo = ac.createOscillator(), lfoG = ac.createGain(); lfo.frequency.value = 0.09; lfoG.gain.value = 0.12; lfo.connect(lfoG).connect(wave.gain);
+  noise.connect(lp).connect(wave).connect(master); noise.start(); lfo.start();
+  // Pad: A-Moll add9, leicht verstimmt
+  const padF = ac.createBiquadFilter(); padF.type = "lowpass"; padF.frequency.value = 900; const pad = ac.createGain(); pad.gain.value = 0.045;
+  padF.connect(pad).connect(master);
+  [110, 164.81, 246.94, 261.63, 329.63].forEach((f, i) => { [-4, 4].forEach((det) => {
+    const o = ac.createOscillator(); o.type = i < 2 ? "sine" : "triangle"; o.frequency.value = f; o.detune.value = det; o.connect(padF); o.start(); }); });
+  const swell = ac.createOscillator(), swG = ac.createGain(); swell.frequency.value = 0.04; swG.gain.value = 0.02; swell.connect(swG).connect(pad.gain); swell.start();
+  // Echo für Glockentöne
+  const delay = ac.createDelay(2), fb = ac.createGain(); delay.delayTime.value = 0.42; fb.gain.value = 0.38; delay.connect(fb).connect(delay); delay.connect(master);
+  return { ac, master, delay };
+}
+function chime(freq = 880) {
+  if (!audio || audio.ac.state !== "running") return;
+  const { ac, master, delay } = audio, o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime;
+  o.type = "sine"; o.frequency.value = freq; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.08, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+  o.connect(g); g.connect(master); g.connect(delay); o.start(t); o.stop(t + 2.5);
+}
+$("soundBtn").onclick = async () => {
+  if (!audio) audio = startAudio();
+  if (!audio) { toast("Dein Browser unterstützt keinen Klang."); return; }
+  const on = $("soundBtn").getAttribute("aria-pressed") !== "true";
+  $("soundBtn").setAttribute("aria-pressed", String(on));
+  const t = audio.ac.currentTime;
+  if (on) { await audio.ac.resume(); audio.master.gain.cancelScheduledValues(t); audio.master.gain.setValueAtTime(audio.master.gain.value, t); audio.master.gain.linearRampToValueAtTime(0.9, t + 2.5); }
+  else { audio.master.gain.cancelScheduledValues(t); audio.master.gain.setValueAtTime(audio.master.gain.value, t); audio.master.gain.linearRampToValueAtTime(0, t + 1.2); setTimeout(() => audio.ac.suspend(), 1300); }
+};
+
+/* ============ Verbindung: db + room + user ============ */
+function clean(id, d) {
+  if (!d || typeof d.text !== "string" || !d.text.trim()) return null;
+  return { id, text: d.text.slice(0, 120), hue: TINTS.some((t) => t.id === d.hue) ? d.hue : "amber",
+    at: typeof d.at === "number" ? d.at : Date.now(), lights: Math.max(0, Math.min(9999, Number(d.lights) || 0)) };
+}
+let myLights = 0, lightTimer = null;
+async function connect() {
+  if (!window.claude?.use) return;
+  const [db, room, user] = await Promise.all([claude.use("db"), claude.use("room"), claude.use("user")]);
+  if (user) { state.myId = await user.id(); state.isOwner = await user.isOwner(); }
+  if (db && state.myId) {
+    state.db = db;
+    db.collection("lanterns").orderBy("at", "desc").limit(60).onSnapshot((snap) => {
+      const list = snap.docs.map((d) => clean(d.id, d.data())).filter(Boolean);
+      state.live = true;
+      const now = performance.now();
+      for (const l of list) if (!born.has(l.id)) born.set(l.id, firstSnap ? now - 20000 : now);
+      firstSnap = false;
+      const mine = list.find((l) => l.id === state.myId); myLights = mine ? mine.lights : 0;
+      state.lanterns = list.length ? list : EXAMPLES.slice();
+      $("releaseNote").textContent = "Jede Person hat eine Laterne am Himmel. Eine neue ersetzt deine alte.";
+      if (state.selected && !$("lanternCard").hidden) showLantern(state.selected);
+    }, () => {});
+  } else {
+    $("releaseNote").textContent = "Melde dich an, damit alle deine Laterne sehen. Ohne Anmeldung bleibt sie bei dir.";
+  }
+  if (room) {
+    state.room = room;
+    room.presence({ here: true }).catch(() => {});
+    const render = (peers) => { const n = new Set(peers.map((p) => p.by || p.peer)).size;
+      $("presence").textContent = n <= 1 ? "Du bist hier" : `${n} sehen diesen Himmel`; };
+    render(room.peers()); room.onPeers(({ peers }) => render(peers));
+    room.on("glow", (msg) => {
+      const to = msg?.data?.to; if (typeof to !== "string") return;
+      state.sparks.push({ id: to, t: performance.now() });
+      if (to === state.myId && !msg.isMe) {
+        toast("✦ Jemand hat deiner Laterne gerade Licht geschickt."); chime(1046);
+        myLights += 1; clearTimeout(lightTimer);
+        lightTimer = setTimeout(() => state.db?.collection("lanterns").doc(state.myId).update({ lights: myLights }).catch(() => {}), 1500);
+      }
+    });
+  }
+}
+let firstSnap = true;
+
+/* ============ Start ============ */
+resize(); addEventListener("resize", resize);
+const t0 = performance.now(); EXAMPLES.forEach((l, i) => born.set(l.id, t0 - 20000 + i * 900));
+requestAnimationFrame(frame);
+if (!reduceMotion) { document.body.classList.add("opening"); requestAnimationFrame(() => requestAnimationFrame(() => document.body.classList.remove("opening"))); }
+setTimeout(() => $("titleCard").classList.add("gone"), reduceMotion ? 3500 : 5200);
+connect().catch(() => {});
+</script>
