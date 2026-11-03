@@ -28,3 +28,12 @@
 13. **UI** — day tabs (incl. "plant …"), day-dependent board/hours/calendar, refine per day.
     ✔ Check: tab 2 → date badge + weekday in the opening-hours heading change.
 14. **Review & ship** — tests, screenshot, publish, commit, push (updates PR #1).
+
+## Increment 3: Redesign (design contract in SPEC.md)
+15. **Tokens & base** — contrast values, field-border, inverse, radii, lang, sr-only/status region.
+16. **Form** — native radios, "Weitere Angaben" details, stub after planning, error ARIA.
+17. **Results layout** — plan header full width, 7/5 grid, sticky panel, phone order via flex + display:contents.
+18. **Components** — day line, notes box, board (2 cells, compact phone mode), timeline rails, map (labels, height, switcher), book rows.
+19. **Focus & announcements** — focus restoration, plan title focus, aria-disabled, valuetext.
+✔ Check: existing 76 tests (selectors adjusted) + new checks for stub, radios, focus, contrast tokens; before/after screenshots.
+20. **Review** — `code-reviewer` agent on the diff; fix findings; ship.

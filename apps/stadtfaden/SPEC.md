@@ -73,3 +73,49 @@ of all days on "adjust": only the open day, so a change doesn't overwrite good d
 
 **Success criteria:** 3-day trip → 3 tabs, 3 plan calls, day 2 starts at the stay,
 no stop of day 1 repeats in the day 2 prompt, error on day 2 keeps day 1.
+
+---
+
+## Increment 3: More stylish & clearer (design contract)
+
+Basis: design critique (`design:design-critique` + `frontend-ui-engineering`) and an
+accessibility review (`design:accessibility-review`, WCAG 2.1 AA), both by agents with screenshots.
+
+**The screen's job:** after planning, show the plan immediately. The form recedes, the plan leads.
+
+### Layout
+- **Before planning:** compact ticket form. Visible: city, wish, focus areas, time frame, date, start.
+  "Weitere Angaben" (more details: starting point, pace, people, stay) collapses into a `<details>` with a summary of the current values.
+- **After planning:** the form becomes a ~72px **ticket stub** (city · dates · start · people · stay + wish) with "Ändern" (change).
+- **Plan header full width:** day tabs as stations on a line → title (2.6rem) → one mono meta line → summary
+  → one "Hinweise" (notes) box (ticket tip + warnings) → toolbar (save · calendar · plan again).
+- **Desktop 7fr/5fr:** left the timeline; right a sticky panel (never taller than the viewport) with board,
+  "Plan anpassen" (adjust plan), and map card with switcher [Linienplan (line map) | Öffnungszeiten (opening hours)].
+- **"Buchen" (book) section full width** with switcher [Unterkünfte (stays) | Tickets & Touren (tickets & tours)] as comparison rows
+  (name · rating · distance · check-in/out · price · action), chosen stay first, "via Booking.com" once.
+  Hidden in example mode.
+- **Phone order:** stub → plan header → board (sticky, compact, expandable) → timeline → adjust → map
+  → book → my plans.
+- Masthead in one line with "Meine Pläne (n)" (my plans); data sources as a text status line in the footer.
+
+### Visual
+- Type: plan title 2.6rem/1.05, wordmark 1.6rem, section h2 1.3rem, panel titles as mono eyebrows.
+- Sections 40px apart, opened with a 2px ink line + eyebrow.
+- Radii only as tokens: 12 / 8 / 4 px; pills only for buttons and chips.
+- Timeline: time at a stop = thin muted line, ride = 6px mode color, walk = dotted; current stop filled
+  in signal yellow; time column arrival bold over departure muted.
+- Accent in moderation: links in ink with an accent underline, short ("Maps ↗", "Tickets 12,5 € ↗").
+- Board: two cells (now | next departure), clock 2rem, edge in dark mode.
+- Map: height from content (16:9 to 1:1), labels avoid each other and the stations, current stop
+  highlighted instead of covered.
+
+### Accessibility (must fix)
+- Contrast: S-Bahn `#1f8243`, ferry `#0a7b92`, walk `#76837c`, taxi `#a37a00`, accent `#087050`;
+  badge text via `--lb-ink` (dark theme: dark text); fields with `--field-border` ≥ 3:1; placeholder opacity 1.
+- `--inverse` tokens instead of `--ink` as a fill (no white blocks in dark).
+- Status not only via color (data sources with text). `lang="de"`.
+- Keep focus after rebuilding (day tabs, buttons); after planning, focus on the plan title.
+- Time frame as native radios (arrow keys); day tabs/switchers as buttons with `aria-current`.
+- An always-present `role="status"` for announcements; form errors with `aria-invalid` + `aria-describedby`.
+- Slider with `aria-valuetext`, map as `role="group"`, targets ≥ 24px (≥ 44px on touch devices),
+  "(neuer Tab)" (new tab) for external links, limited pulse animation.
