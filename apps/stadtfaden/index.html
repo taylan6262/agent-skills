@@ -151,7 +151,7 @@ details.more[open] > summary::before { content: "–"; }
 /* Results */
 .results { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px 36px; align-items: start; }
 .col-main, .col-side { display: grid; gap: 18px; min-width: 0; }
-.col-side { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); max-height: calc(100dvh - 32px); overflow: auto; overscroll-behavior: contain; padding: 3px; margin: -3px; scrollbar-width: thin; }
+.col-side { position: sticky; top: calc(16px + env(safe-area-inset-top, 0px)); max-height: calc(100dvh - 32px); overflow: auto; padding: 3px; margin: -3px; scrollbar-width: thin; }
 .plan-head { grid-column: 1 / -1; display: grid; gap: 12px; min-width: 0; }
 .plan-title { font-size: clamp(1.9rem, 4.2vw, 2.6rem); line-height: 1.05; font-stretch: 125%; font-weight: 800; max-width: 26ch; }
 .plan-title:focus { outline: none; }
@@ -310,6 +310,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
 @media (min-width: 761px) {
   body.has-plan:not(.form-open) #tripForm { display: none; }
   body.has-plan:not(.form-open) #tripStub { display: flex; }
+  body:not(.has-plan) #formCancel { display: none; }
   body:not(.has-search) #bookSec { display: none; }
   body:not(.can-save) #savedSec { display: none; }
 }
@@ -335,6 +336,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
   .seg label:nth-child(-n+2) span { border-bottom: 1px solid var(--rule); }
   #tripStub { display: none; }
   body.has-plan #tripStub { display: flex; }
+  #formCancel { display: none; }
   .stub { padding: 12px 20px; }
   .tl { grid-template-columns: 44px 24px minmax(0, 1fr); column-gap: 8px; }
   .tl .when { font-size: .8rem; }
@@ -349,7 +351,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
   .board-cells { grid-template-columns: 1fr; gap: 10px; }
   .board-cell + .board-cell { border-left: 0; border-top: 1px dotted var(--board-dim); padding: 10px 0 0; }
   .map-switch { display: none; }
-  #hoursPane[hidden] { display: block !important; }
+  #hoursPane[hidden], #mapPane[hidden] { display: block !important; }
   #hoursPane { border-top: 1px solid var(--rule); padding-top: 6px; }
   .rows-head { display: none; }
   .stays .row, .exps .row { grid-template-columns: 1fr 1fr; gap: 10px 12px; }
@@ -393,7 +395,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
     </div>
     <nav class="mast-nav" aria-label="Schnellzugriff">
       <button class="btn small" type="button" id="newTripBtn" hidden>Neuer Ausflug</button>
-      <button class="btn small" type="button" id="savedJump" hidden>Meine Pläne <span class="mono" id="savedCount">0</span></button>
+      <button class="btn small" type="button" id="savedJump" hidden>Meine Pläne (<span class="mono" id="savedCount">0</span>)</button>
     </nav>
   </header>
 
@@ -444,7 +446,7 @@ footer { color: var(--muted); font-size: .8rem; display: grid; gap: 8px; max-wid
       </div>
       <div class="ticket-foot">
         <p class="hint" id="formHint">Unterkünfte, Check-in-Zeiten und Tickets kommen live von Booking.com. Route, Linien und Öffnungszeiten plant Claude.</p>
-        <button class="btn primary" type="submit" id="planBtn">Tag planen</button>
+        <span class="toolbar"><button class="btn" type="button" id="formCancel">Zurück zum Plan</button><button class="btn primary" type="submit" id="planBtn">Tag planen</button></span>
       </div>
     </form>
 
@@ -769,13 +771,20 @@ function defaultView() { return S.example ? "ausflug" : "plan"; }
 function applyView(v, scroll) {
   if (!VIEWS.includes(v)) v = defaultView();
   document.body.dataset.view = v;
-  if (v === "karte") requestAnimationFrame(renderMap);
+  if (appMode.matches) document.body.classList.toggle("form-open", v === "ausflug");
+  if (v === "karte") requestAnimationFrame(() => { renderMap(); renderHours(); });
   document.querySelectorAll("#appbar button").forEach((b) => (b.dataset.go === v ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current")));
   if (!scroll) return;
   if (appMode.matches) scrollTo({ top: 0, behavior: "auto" });
   else { if (v === "ausflug") openForm(); const t = $(VIEW_TARGET[v]); if (t && t.offsetParent !== null) t.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" }); }
 }
 function go(v) { if (location.hash === "#" + v) applyView(v, true); else location.hash = v; }
+appMode.addEventListener("change", () => {
+  if (appMode.matches) applyView(document.body.classList.contains("form-open") ? "ausflug" : VIEWS.includes(location.hash.slice(1)) && location.hash !== "#ausflug" ? location.hash.slice(1) : defaultView(), false);
+  else if (document.body.dataset.view === "ausflug" && document.body.classList.contains("has-plan")) document.body.classList.add("form-open");
+  if (S.example) renderPlanHead();
+  renderMap(); renderHours();
+});
 addEventListener("hashchange", () => applyView(location.hash.slice(1), true));
 document.querySelectorAll("#appbar button").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
 function openForm() {
@@ -793,11 +802,12 @@ function renderStub() {
   $("#stubWish").textContent = f.wish ? `„${f.wish}“` : (f.chips || []).map((c) => c[0]).join(", ");
 }
 $("#stubEdit").addEventListener("click", () => (appMode.matches ? go("ausflug") : openForm()));
+$("#formCancel").addEventListener("click", () => { document.body.classList.remove("form-open"); go("plan"); setTimeout(() => $("#stubEdit").focus({ preventScroll: true }), 60); });
 $("#newTripBtn").addEventListener("click", () => go("ausflug"));
 $("#savedJump").addEventListener("click", () => go("plaene"));
 function setSwitch(onId, offId, onPane, offPane) { $(onId).setAttribute("aria-current", "true"); $(offId).removeAttribute("aria-current"); $(onPane).hidden = false; $(offPane).hidden = true; }
 $("#swMap").addEventListener("click", () => { setSwitch("#swMap", "#swHours", "#mapPane", "#hoursPane"); renderMap(); });
-$("#swHours").addEventListener("click", () => setSwitch("#swHours", "#swMap", "#hoursPane", "#mapPane"));
+$("#swHours").addEventListener("click", () => { setSwitch("#swHours", "#swMap", "#hoursPane", "#mapPane"); renderHours(); });
 $("#swStays").addEventListener("click", () => setSwitch("#swStays", "#swExp", "#stayPane", "#expPane"));
 $("#swExp").addEventListener("click", () => setSwitch("#swExp", "#swStays", "#expPane", "#stayPane"));
 $("#refineForm").addEventListener("submit", (e) => { e.preventDefault(); const v = $("#refineIn").value.trim(); if (v) runPlanOnly(v); });
@@ -833,7 +843,7 @@ function renderPlanHead() {
     meta.flatMap((m, i) => (i ? [h("span", { class: "sep", "aria-hidden": "true" }, "·"), h("span", {}, m)] : [h("span", {}, m)]))));
   if (p.summary) el.append(h("p", { class: "plan-sum" }, p.summary));
   const notes = [];
-  if (S.example) notes.push(h("p", {}, h("b", {}, "So sieht ein geplanter halber Tag aus. "), "Lege oben deinen Ausflug an. Dann kommen echte Unterkünfte, Check-in-Zeiten und Tickets dazu."));
+  if (S.example) notes.push(h("p", {}, h("b", {}, "So sieht ein geplanter halber Tag aus. "), appMode.matches ? "Tippe unten auf „Ausflug“, um deinen eigenen anzulegen." : "Lege oben deinen Ausflug an.", " Dann kommen echte Unterkünfte, Check-in-Zeiten und Tickets dazu."));
   if (p.transit_tip) notes.push(h("p", {}, h("b", {}, "Ticket: "), p.transit_tip));
   p.warnings.forEach((w) => notes.push(h("p", { class: "w" }, w)));
   if (notes.length) el.append(h("div", { class: "notes", role: "note", "aria-label": "Hinweise" }, notes));
@@ -917,12 +927,12 @@ function renderBoard() {
   const el = $("#board"), wasOpen = el.classList.contains("open"); el.textContent = "";
   const p = S.plan, lo = p.stops[0].arrive - 30, hi = p.stops[p.stops.length - 1].leave + 30;
   const range = h("input", { type: "range", id: "boardRange", min: String(lo), max: String(hi), step: "5", "aria-label": "Uhrzeit vorspulen" });
-  range.addEventListener("input", () => { S.simT = +range.value; updateBoard(); renderMap(); renderHours(); markNow(); });
+  range.addEventListener("input", () => { S.simT = +range.value; updateBoard(); markNow(); schedulePanes(); });
   const toggle = h("button", { class: "board-btn board-toggle", type: "button", id: "boardToggle", "aria-expanded": String(wasOpen), "aria-controls": "boardInfo" }, wasOpen ? "Weniger" : "Mehr");
   toggle.addEventListener("click", () => { const o = el.classList.toggle("open"); toggle.setAttribute("aria-expanded", String(o)); toggle.textContent = o ? "Weniger" : "Mehr"; });
   el.append(
     h("div", { class: "board-top" }, h("span", { class: "lbl", id: "boardMode" }), h("span", { class: "clock", id: "boardClock" }), toggle),
-    h("div", { class: "board-mini", id: "boardMini", "aria-hidden": "true" }),
+    h("div", { class: "board-mini", id: "boardMini" }),
     h("div", { class: "board-cells", id: "boardInfo" }),
     h("div", { class: "board-scrub" }, h("div", { class: "scrub-row" }, h("span", { class: "lbl" }, "Zeit vorspulen"),
       h("button", { class: "board-btn", type: "button", id: "liveBtn", hidden: true, onclick: () => { S.simT = null; renderLive(); } }, "Zurück zu live")), range));
@@ -1040,7 +1050,7 @@ function renderMap() {
     stations.append(g);
   });
   svg.append(lines, stations);
-  if (pos) svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 8, class: "now-ring", "aria-hidden": "true" }), s("circle", { cx: pos[0], cy: pos[1], r: 7, class: "now-dot", "aria-hidden": "true" }));
+  if (pos) { if (!S.pulsed) svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 8, class: "now-ring", "aria-hidden": "true" })); svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 7, class: "now-dot", "aria-hidden": "true" })); S.pulsed = true; }
   [...used].forEach((m) => legend.append(h("span", {}, h("i", { class: m === "walk" ? "dash" : "", style: `--c:${modeVar(m)}` }), MODES[m])));
   legend.append(h("span", {}, h("i", { class: "dot" }), "Deine Position"));
 }
@@ -1106,10 +1116,14 @@ function renderExp() {
     h("div", { class: "acts" }, a.url ? ext(a.url, "Tickets ↗", `${a.name} auf Booking.com`, "btn small primary") : null))));
 }
 
-function renderAll() { renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); if (!S.example) renderStub(); }
-function renderLive() { updateBoard(); renderMap(); renderHours(); markNow(); }
+const shown = (sel) => { const el = $(sel); return !!el && el.getClientRects().length > 0; };
+let panesRaf = 0;
+function renderPanes() { if (shown("#mapPane")) renderMap(); if (shown("#hoursPane")) renderHours(); }
+function schedulePanes() { if (!panesRaf) panesRaf = requestAnimationFrame(() => { panesRaf = 0; renderPanes(); }); }
+function renderAll() { S.pulsed = false; renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); if (!S.example) renderStub(); }
+function renderLive() { updateBoard(); markNow(); renderPanes(); }
 setInterval(() => { if (isLive()) renderLive(); }, 30000);
-let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(renderMap, 150); });
+let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(() => { if (shown("#mapPane")) renderMap(); }, 150); });
 
 /* ================= Progress steps ================= */
 const STEP_LABELS = { locate: "Ort erkennen", attr: "Erlebnisse bei Booking.com suchen", stay: "Unterkünfte bei Booking.com suchen", checkin: "Check-in-Zeiten bei Booking.com abfragen", plan: "Route, Linien und Zeiten berechnen" };
@@ -1332,7 +1346,7 @@ async function planTrip(f) {
 /* After the first plan (or opening a saved one): stub instead of form, show the plan, focus its title */
 function onPlanReady(plan, opened) {
   collapseForm();
-  if (appMode.matches) go("plan"); else document.querySelector(".results").scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+  go("plan");   // all widths: keeps body[data-view] right if the window later narrows
   setTimeout(() => $("#planTitle")?.focus({ preventScroll: true }), 80);
   announce(`${opened ? "Plan geöffnet" : "Plan fertig"}: ${plan.title || "dein Tag"}, ${plan.stops.length} Stopps.`);
 }
@@ -1392,7 +1406,7 @@ async function runPlanOnly(change, variant) {
     if (wasExample) S.days = [];
     S.days[idx] = { date: f.date, plan }; S.dayIdx = idx; S.plan = plan; S.example = false; S.savedId = null;
     setStep("plan", "ok", (multi ? `Tag ${idx + 1}: ` : "") + `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
-    renderAll(); toast(movedStay ? "Tag 1 startet an der neuen Unterkunft. Die anderen Tage starten noch an der alten. Plane sie bei Bedarf mit „Neu planen“ neu." : change ? "Plan angepasst." : "Neuer Plan ist da.");
+    renderAll(); if (wasExample) onPlanReady(plan); else toast(movedStay ? "Tag 1 startet an der neuen Unterkunft. Die anderen Tage starten noch an der alten. Plane sie bei Bedarf mit „Neu planen“ neu." : change ? "Plan angepasst." : "Neuer Plan ist da.");
     if (wasExample && multi) await planDays(1);
   } catch (e) { setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => runPlanOnly(change, variant) }); }
   finally { S.running = false; }
@@ -1469,7 +1483,7 @@ function renderSaved(msg) {
       try { await caps.db.collection("data/users/" + userId).doc(d.id).delete(); toast("Gelöscht."); } catch { toast("Löschen hat nicht geklappt."); }
     });
     ul.append(h("li", {}, h("span", { class: "t" }, `${str(d.title, 80)} `, h("span", { class: "eyebrow" }, `${str(d.city, 40)} · ${d.date ? dateLabel(String(d.date)) : ""}`)),
-      h("span", { class: "actions" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
+      h("span", { class: "acts" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
   });
 }
 const t2s = (m) => (typeof m === "number" ? fmt(m) : m ?? null);
@@ -1483,10 +1497,14 @@ function openSaved(d) {
     const days = Array.isArray(o.days) ? o.days.filter((x) => x && x.plan).map((x) => ({ date: String(x.date), plan: revivePlan(x.plan) })) : [{ date: o.form.date, plan: revivePlan(o.plan) }];
     if (!days.length) throw new Error("leer");
     S.days = days; S.daysTotal = days.length; S.dayIdx = 0; S.plan = days[0].plan;
-    S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = Array.isArray(o.attractions) ? o.attractions : [];
+    S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = cleanAttractionsSaved(o.attractions);
     S.checkins = o.checkins || {}; S.example = false; S.savedId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
     renderAll(); onPlanReady(S.plan, true);
   } catch { toast("Dieser Plan ließ sich nicht öffnen."); }
+}
+function cleanAttractionsSaved(list) {
+  return (Array.isArray(list) ? list : []).filter((a) => a && str(a.id) && str(a.name)).slice(0, 12).map((a) => ({ id: str(a.id, 40), name: str(a.name, 120), url: safeUrl(a.url, "booking.com"),
+    price: num(a.price, 0, 1e6), priceLabel: str(a.priceLabel, 30), score: num(a.score, 0, 5), reviews: num(a.reviews, 0, 1e8), address: str(a.address, 120) }));
 }
 function cleanHotelsSaved(list) { return (Array.isArray(list) ? list : []).filter((x) => x && x.id && x.name).map((x) => ({ ...x, url: safeUrl(x.url, "booking.com"), facilities: Array.isArray(x.facilities) ? x.facilities : [] })); }
 

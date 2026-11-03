@@ -37,3 +37,6 @@
 19. **Focus & announcements** — focus restoration, plan title focus, aria-disabled, valuetext.
 ✔ Check: existing 76 tests (selectors adjusted) + new checks for stub, radios, focus, contrast tokens; before/after screenshots.
 20. **Review** — `code-reviewer` agent on the diff; fix findings; ship.
+21. **Review findings (code-reviewer)** — wheel scrolling over the side panel, breakpoint change, map pane on phones,
+    example → refine path, button spacing in saved plans, board mini readable, slider renders only visible panes
+    (rAF), pulse only once, saved tickets sanitized, SPEC updated for app views. ✔ Each finding has its own check.

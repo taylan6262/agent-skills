@@ -94,8 +94,15 @@ accessibility review (`design:accessibility-review`, WCAG 2.1 AA), both by agent
 - **"Buchen" (book) section full width** with switcher [Unterkünfte (stays) | Tickets & Touren (tickets & tours)] as comparison rows
   (name · rating · distance · check-in/out · price · action), chosen stay first, "via Booking.com" once.
   Hidden in example mode.
-- **Phone order:** stub → plan header → board (sticky, compact, expandable) → timeline → adjust → map
-  → book → my plans.
+- **Phones (≤ 760px): app views** instead of one long page (owner's request). A bottom bar with
+  **Plan · Karte (map) · + Ausflug (trip) · Buchen (book) · Pläne (plans)**; each view shows only its content. Routing via a plain hash
+  (`#plan`, `#karte`, `#ausflug`, `#buchen`, `#plaene`), so the back button returns to the previous view.
+  First visit opens "Ausflug"; after planning, "Plan". The Plan view: stub → plan header → board (sticky,
+  compact, expandable with "Mehr") → timeline → adjust. Karte: map and opening hours one below the other.
+  Buchen also shows empty states in example mode (explaining what will appear there).
+- **Crossing the breakpoint** (rotating, resizing the window): "Ausflug" ↔ open form are mapped to each other,
+  so nobody lands mid-edit on the wrong view; the map is redrawn.
+- Desktop: "Zurück zum Plan" (back to the plan) closes the reopened form again.
 - Masthead in one line with "Meine Pläne (n)" (my plans); data sources as a text status line in the footer.
 
 ### Visual
