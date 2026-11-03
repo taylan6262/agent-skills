@@ -132,6 +132,13 @@ legend { font-weight: 700; font-size: .82rem; padding: 0; margin-bottom: 6px; }
 .badge.ok { color: var(--accent); border-color: currentColor; }
 .note-box { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: .9rem; }
 .warn-box { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: .9rem; color: var(--ink); }
+.day-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; max-width: 100%; }
+.day-tab { flex: 0 0 auto; display: grid; text-align: left; gap: 1px; border: 1px solid var(--rule); background: var(--card); border-radius: 12px; padding: 8px 14px; font-size: .78rem; color: var(--muted); }
+.day-tab b { font-family: var(--display); font-stretch: 110%; font-size: .95rem; color: var(--ink); }
+.day-tab[aria-selected="true"] { background: var(--ink); border-color: var(--ink); color: var(--card); }
+.day-tab[aria-selected="true"] b { color: var(--card); }
+.day-tab.pending { border-style: dashed; }
+.day-tab[disabled] { cursor: progress; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .refine { display: flex; gap: 8px; flex-wrap: wrap; }
 .refine input { flex: 1 1 220px; min-width: 0; font: inherit; background: var(--card); color: var(--ink); border: 1px solid var(--rule); border-radius: 999px; padding: 8px 14px; }
@@ -283,8 +290,10 @@ footer { color: var(--muted); font-size: .8rem; max-width: 80ch; }
             <button type="button" role="radio" data-h="4" aria-checked="true">Halber Tag</button>
             <button type="button" role="radio" data-h="9" aria-checked="false">Ganzer Tag</button>
             <button type="button" role="radio" data-h="custom" aria-checked="false">Eigene Dauer</button>
+            <button type="button" role="radio" data-h="multi" aria-checked="false">Mehrere Tage</button>
           </div>
           <div class="range"><input type="range" id="fHours" min="1" max="14" step="0.5" value="4" aria-label="Dauer in Stunden"><output id="fHoursOut" for="fHours">4 Std.</output></div>
+          <label class="f" id="fDaysWrap" hidden>Tage<input type="number" id="fDays" min="2" max="7" value="3"></label>
         </div>
       </fieldset>
       <label class="f c4">Tempo<select id="fPace"><option value="entspannt">Entspannt, mit Pausen</option><option value="normal" selected>Normal</option><option value="sportlich">Sportlich, viel sehen</option></select></label>
@@ -389,6 +398,7 @@ const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d
 const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
 const weekday = (iso) => WEEKDAYS[new Date(iso + "T12:00:00").getDay()];
 const dateLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+const shortDate = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "short" });
 const durLabel = (h) => (h % 1 ? `${Math.floor(h)},5` : h) + " Std.";
 const minsLabel = (m) => (m < 60 ? `${m} Min.` : `${Math.floor(m / 60)} Std.${m % 60 ? " " + (m % 60) + " Min." : ""}`);
 function haversine(a, b) { const R = 6371, r = Math.PI / 180, dLa = (b.lat - a.lat) * r, dLo = (b.lng - a.lng) * r;
@@ -502,8 +512,13 @@ const S = {
   example: true, form: { ...EXAMPLE.form }, place: { ...EXAMPLE.place }, plan: EXAMPLE.plan,
   attractions: [], hotels: [], checkins: {}, checkinRaw: "", staysState: "idle", expState: "idle",
   forcedStay: null, simT: null, running: false, steps: [], savedId: null,
+  days: [{ date: EXAMPLE.form.date, plan: EXAMPLE.plan }], dayIdx: 0, daysTotal: 1,
 };
 const F = () => (S.example ? EXAMPLE.form : S.form), PL = () => (S.example ? EXAMPLE.place : S.place);
+const D = () => (S.example ? EXAMPLE.form.date : S.days[S.dayIdx]?.date || S.form.date);   // date of the open day
+function setDay(i) { if (!S.days[i]) return; S.dayIdx = i; S.plan = S.days[i].plan; S.simT = null; S.forcedStay = null; renderAll(); }
+function chosenStay() { const id = S.forcedStay ?? S.days[0]?.plan.stay_id; return id == null ? null : S.hotels.find((x) => String(x.id) === String(id)) || null; }
+const avoidNames = (except) => S.days.flatMap((d, i) => (i === except || !d ? [] : d.plan.stops.filter((x) => x.kind !== "hotel").map((x) => x.name))).slice(0, 40);
 const caps = { mcp: null, sample: null, db: null, user: null }; let userId = null; let servers = new Set();
 
 /* ================= Form ================= */
@@ -516,15 +531,30 @@ CHIPS.forEach(([de]) => $("#fChips").append(h("button", { type: "button", class:
 $("#fDate").value = todayStr(); $("#fDate").min = todayStr(); $("#fDate").max = addDays(todayStr(), 179);
 { const d = new Date(); const n = d.getHours() + 1; if (n >= 8 && n <= 20) $("#fStart").value = `${String(n).padStart(2, "0")}:00`; }
 const setHours = (v) => { $("#fHours").value = v; $("#fHoursOut").textContent = durLabel(+v); };
+const isMulti = () => $('#fSeg button[data-h="multi"]').getAttribute("aria-checked") === "true";
+const planLabel = () => (isMulti() ? "Reise planen" : "Tag planen");
+function syncMulti() {
+  const m = isMulti(); $("#fDaysWrap").hidden = !m;
+  $("#fHoursOut").textContent = durLabel(+$("#fHours").value) + (m ? " / Tag" : "");
+  if (m && $("#fStay").checked) $("#fNights").value = String(Math.max(1, (+$("#fDays").value || 2) - 1));
+  if (!S.running) $("#planBtn").textContent = planLabel();
+  updTicket();
+}
 document.querySelectorAll("#fSeg button").forEach((b) => b.addEventListener("click", () => {
   document.querySelectorAll("#fSeg button").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
-  if (b.dataset.h !== "custom") setHours(b.dataset.h); else $("#fHours").focus();
+  if (b.dataset.h === "multi") { if (+$("#fHours").value < 6) setHours(8); }
+  else if (b.dataset.h !== "custom") setHours(b.dataset.h); else $("#fHours").focus();
+  syncMulti();
 }));
 $("#fHours").addEventListener("input", (e) => { setHours(e.target.value); const v = +e.target.value;
-  document.querySelectorAll("#fSeg button").forEach((x) => x.setAttribute("aria-checked", String(x.dataset.h === (v === 4 ? "4" : v === 9 ? "9" : "custom")))); });
+  if (!isMulti()) document.querySelectorAll("#fSeg button").forEach((x) => x.setAttribute("aria-checked", String(x.dataset.h === (v === 4 ? "4" : v === 9 ? "9" : "custom"))));
+  syncMulti(); });
+$("#fDays").addEventListener("input", syncMulti);
 const syncStay = () => { const on = $("#fStay").checked; ["#fStayType", "#fNights", "#fBudget", "#fCheckin"].forEach((q) => ($(q).disabled = !on)); };
 $("#fStay").addEventListener("change", syncStay);
-const updTicket = () => { const v = $("#fDate").value; $("#ticketDate").textContent = v ? dateLabel(v) : ""; };
+const updTicket = () => { const v = $("#fDate").value; if (!v) { $("#ticketDate").textContent = ""; return; }
+  const n = isMulti() ? Math.min(7, Math.max(2, +$("#fDays").value || 3)) : 1;
+  $("#ticketDate").textContent = n > 1 ? `${shortDate(v)} – ${shortDate(addDays(v, n - 1))} · ${n} Tage` : dateLabel(v); };
 $("#fDate").addEventListener("change", updTicket); updTicket();
 
 function readForm() {
@@ -535,12 +565,14 @@ function readForm() {
     from: $("#fFrom").value.trim().slice(0, 120), people: Math.min(10, Math.max(1, +$("#fPeople").value || 2)),
     stay: $("#fStay").checked, stayType: $("#fStayType").value, nights: Math.min(14, Math.max(1, +$("#fNights").value || 1)),
     budget: Math.max(0, +$("#fBudget").value || 0), checkinToday: $("#fStay").checked && $("#fCheckin").checked,
+    days: isMulti() ? Math.min(7, Math.max(2, +$("#fDays").value || 3)) : 1,
   };
 }
 function formError(f) {
   if (!f.city) return ["#fCity", "Gib eine Stadt ein, zum Beispiel Lissabon."];
   if (!f.date || f.date < todayStr()) return ["#fDate", "Wähle heute oder ein Datum in der Zukunft."];
   if (f.date > addDays(todayStr(), 179)) return ["#fDate", "Booking.com plant höchstens 180 Tage im Voraus."];
+  if (f.days > 1 && addDays(f.date, f.days - 1) > addDays(todayStr(), 179)) return ["#fDays", "Das Reiseende liegt mehr als 180 Tage in der Zukunft. Wähle weniger Tage oder ein früheres Datum."];
   if (toMin(f.start) + f.hours * 60 > 24 * 60 + 120) return ["#fStart", "Start plus Dauer reicht zu weit in die Nacht. Starte früher oder plane kürzer."];
   return null;
 }
@@ -557,10 +589,20 @@ function renderPlanHead() {
   const first = p.stops[0], last = p.stops[p.stops.length - 1];
   const badges = h("div", { class: "badges" },
     S.example ? h("span", { class: "badge example" }, "Beispiel") : null,
-    h("span", { class: "badge" }, `${PL().local || F().city} · ${dateLabel(F().date)}`),
+    h("span", { class: "badge" }, `${PL().local || F().city} · ${dateLabel(D())}`),
     h("span", { class: "badge" }, `${fmt(first.arrive)}–${fmt(last.leave)} · ${minsLabel(last.leave - first.arrive)}`),
     h("span", { class: "badge" }, `${p.stops.length} Stopps`));
-  el.append(badges, h("h2", {}, p.title || `Dein Tag in ${PL().local || F().city}`));
+  el.append(badges);
+  if (!S.example && S.daysTotal > 1) {
+    const tabs = h("div", { class: "day-tabs", role: "tablist", "aria-label": "Reisetage" });
+    for (let i = 0; i < S.daysTotal; i++) {
+      const d = S.days[i];
+      tabs.append(d ? h("button", { type: "button", role: "tab", class: "day-tab", "aria-selected": String(i === S.dayIdx), onclick: () => setDay(i) }, h("b", {}, `Tag ${i + 1}`), h("span", {}, shortDate(d.date)))
+        : h("button", { type: "button", class: "day-tab pending", disabled: S.running, onclick: () => resumeDays(i) }, h("b", {}, `Tag ${i + 1}`), h("span", {}, S.running ? "plant …" : "jetzt planen")));
+    }
+    el.append(tabs);
+  }
+  el.append(h("h2", {}, p.title || `Dein Tag in ${PL().local || F().city}`));
   if (S.example) el.append(h("p", { class: "note-box" }, "So sieht ein geplanter halber Tag aus. Gib oben deine Stadt ein und tippe auf „Tag planen“. Dann kommen echte Unterkünfte, Check-in-Zeiten und Tickets dazu."));
   if (p.summary) el.append(h("p", {}, p.summary));
   if (p.transit_tip) el.append(h("p", { class: "note-box" }, h("b", {}, "Ticket-Tipp: "), p.transit_tip));
@@ -571,7 +613,7 @@ function renderPlanHead() {
       h("button", { class: "btn small", type: "submit" }, "Anpassen"));
     el.append(refine, h("div", { class: "actions" },
       h("button", { class: "btn small", type: "button", id: "saveBtn", onclick: saveTrip, hidden: !(caps.db && userId) }, S.savedId ? "Gespeichert ✓" : "Plan speichern"),
-      h("button", { class: "btn small", type: "button", id: "calBtn", onclick: addToCalendar, hidden: !caps.mcp }, "In Google Kalender eintragen"),
+      h("button", { class: "btn small", type: "button", id: "calBtn", onclick: addToCalendar, hidden: !caps.mcp }, calLabel()),
       h("button", { class: "btn small", type: "button", onclick: () => runPlanOnly(null, true) }, "Neu planen")));
   }
 }
@@ -636,8 +678,8 @@ function renderLeg(g, from, to) {
 
 /* ================= Rendering: board, map, hours ================= */
 const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
-const isLive = () => S.simT == null && F().date === todayStr();
-const boardTime = () => (S.simT != null ? S.simT : F().date === todayStr() ? nowMin() : S.plan.stops[0].arrive);
+const isLive = () => S.simT == null && D() === todayStr();
+const boardTime = () => (S.simT != null ? S.simT : D() === todayStr() ? nowMin() : S.plan.stops[0].arrive);
 function situation(t) {
   const p = S.plan, st = p.stops;
   const cur = st.find((x) => t >= x.arrive && t < x.leave);
@@ -678,7 +720,7 @@ function updateBoard() {
     el.append(h("div", { class: "row" }, h("span", { class: "lbl" }, "Danach"), h("span", { class: "big" }, `${fmt(sit.nextAny.depart)} · zu Fuß zu ${byId.get(sit.nextAny.to).name}`)));
   }
   const r = $("#boardRange"); if (r && S.simT == null) r.value = String(Math.min(+r.max, Math.max(+r.min, t)));
-  const lb = $("#liveBtn"); if (lb) lb.hidden = !(F().date === todayStr() && S.simT != null);
+  const lb = $("#liveBtn"); if (lb) lb.hidden = !(D() === todayStr() && S.simT != null);
 }
 function markNow() {
   const sit = situation(boardTime());
@@ -752,7 +794,7 @@ function renderMap() {
 
 function renderHours() {
   const ul = $("#hoursList"); ul.textContent = "";
-  $("#hoursTitle").textContent = `Öffnungszeiten · ${weekday(F().date)}`;
+  $("#hoursTitle").textContent = `Öffnungszeiten · ${weekday(D())}`;
   const t = boardTime();
   const items = [...S.plan.stops.filter((x) => x.kind !== "hotel" && (x.hours || x.opens != null || x.closes != null)).map((x) => ({ name: x.name, kind: KINDS[x.kind], hours: x.hours, opens: x.opens, closes: x.closes })),
     ...S.plan.shops.map((x) => ({ name: x.name, kind: x.kind || "Laden", hours: x.hours, opens: x.opens, closes: x.closes }))];
@@ -916,6 +958,8 @@ function planPrompt(f, place, opts) {
     ``, `REISE`,
     `- Ort: ${place.local} (${place.en})`,
     `- Datum: ${f.date}, ${weekday(f.date)} (beachte Sonn- und Feiertage)`,
+    opts.day && opts.day.total > 1 ? `- Reisetag ${opts.day.n} von ${opts.day.total}${opts.day.n === opts.day.total ? " (letzter Tag)" : ""}` : null,
+    opts.avoid && opts.avoid.length ? `- Schon an anderen Reisetagen geplant, NICHT wiederholen: ${opts.avoid.join("; ")}` : null,
     `- Zeitfenster: ${f.start} bis ${fmt(end)} (${durLabel(f.hours)})`,
     `- Tempo: ${f.pace}; Personen: ${f.people}`,
     `- Schwerpunkte: ${f.chips.map((c) => c[0]).join(", ") || "keine Vorgabe"}`,
@@ -957,9 +1001,9 @@ function planPrompt(f, place, opts) {
 }
 
 async function makePlan(f, place, opts) {
-  let chars = 0;
+  let chars = 0; const pre = opts.day && opts.day.total > 1 ? `Tag ${opts.day.n} von ${opts.day.total}: ` : "";
   const raw = await caps.sample.json(planPrompt(f, place, opts), { modelTier: "complex", cache: false,
-    onText: ({ text }) => { const n = text.length; if (n - chars > 200) { chars = n; setStep("plan", "run", `Claude schreibt den Plan … ${Math.round(n / 100) / 10}k Zeichen`); } } });
+    onText: ({ text }) => { const n = text.length; if (n - chars > 200) { chars = n; setStep("plan", "run", `${pre}Claude schreibt den Plan … ${Math.round(n / 100) / 10}k Zeichen`); } } });
   return cleanPlan(raw);
 }
 
@@ -968,7 +1012,7 @@ async function planTrip(f) {
   $("#planBtn").disabled = true; $("#planBtn").textContent = "Plant …";
   S.steps = ["locate", "attr", "stay", "checkin", "plan"].map((id) => ({ id, state: "idle", detail: "" }));
   $("#progress").hidden = false; renderSteps();
-  $("#progressNote").textContent = `${f.city} · ${dateLabel(f.date)}`;
+  $("#progressNote").textContent = `${f.city} · ${dateLabel(f.date)}${f.days > 1 ? ` · ${f.days} Tage` : ""}`;
   S.forcedStay = null; S.savedId = null;
   try {
     // 1 · place
@@ -986,7 +1030,7 @@ async function planTrip(f) {
     if (caps.mcp) {
       setStep("attr", "run"); S.expState = "run";
       const cats = [...new Set(f.chips.map((c) => c[2]).filter(Boolean))];
-      const aIn = { destination: place.en, user_country_code: cc, user_locale: "de", start_date: f.date, end_date: f.date,
+      const aIn = { destination: place.en, user_country_code: cc, user_locale: "de", start_date: f.date, end_date: addDays(f.date, f.days - 1),
         user_query: `Things to do in ${place.en}${f.chips.length ? ": " + f.chips.map((c) => c[1]).join(", ") : ""}`, ...(cats.length ? { categories: cats } : {}) };
       tasks.push(booking("attractions_search", aIn).then((p) => { S.attractions = cleanAttractions(p); S.expState = "ok"; setStep("attr", "ok", `${S.attractions.length} Erlebnisse gefunden`); markSrc("booking", "ok"); })
         .catch((e) => { S.expState = "err"; S.expErr = mcpMessage(e, "Booking.com"); setStep("attr", "err", S.expErr, consentCodes.has(e?.code) ? { label: "Zugriff erlauben", fn: () => planTrip(readForm()) } : null); markSrc("booking", "err"); }));
@@ -1021,38 +1065,72 @@ async function planTrip(f) {
       setStep("plan", "skip", "Claude ist in dieser Ansicht nicht verfügbar, deshalb gibt es keine Route. Unterkünfte und Erlebnisse siehst du unten.");
       renderStays(); renderExp(); return;
     }
-    setStep("plan", "run", "Claude plant Wege, Linien und Zeiten …");
-    try {
-      const plan = await makePlan(f, place, { stay: null, pickStay: true });
-      S.plan = plan; S.example = false; S.simT = null;
-      setStep("plan", "ok", `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`); markSrc("claude", "ok");
-      renderAll();
-      if (S.steps.every((x) => x.state === "ok" || x.state === "skip" || (x.id === "checkin" && x.state === "run"))) $("#progress").hidden = true;
-      document.querySelector(".results").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
-    } catch (e) {
-      setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => runPlanOnly(null) }); markSrc("claude", "err");
-      renderStays(); renderExp();
-    }
+    S.days = []; S.daysTotal = f.days; S.dayIdx = 0;
+    await planDays(0);
     await ciTask;
   } finally {
-    S.running = false; $("#planBtn").disabled = false; $("#planBtn").textContent = "Tag planen";
+    S.running = false; $("#planBtn").disabled = false; $("#planBtn").textContent = planLabel(); if (!S.example) renderPlanHead();
   }
 }
 
-/* Re-plan only (refine, different start, retry) — reuses Booking.com data */
+/* Plan the trip day by day (one Claude call per day), starting at day index `from` */
+async function planDays(from) {
+  const f = S.form, total = S.daysTotal;
+  for (let d = from; d < total; d++) {
+    const date = addDays(f.date, d), day = { n: d + 1, total };
+    setStep("plan", "run", total > 1 ? `Tag ${d + 1} von ${total}: Claude plant Wege, Linien und Zeiten …` : "Claude plant Wege, Linien und Zeiten …");
+    const stay = d === 0 ? null : chosenStay();
+    try {
+      const plan = await makePlan({ ...f, date, checkinToday: f.checkinToday && d === 0 }, S.place, { stay, pickStay: d === 0, day, avoid: avoidNames(d) });
+      if (d > 0 && stay) plan.stay_id = String(stay.id);
+      S.days[d] = { date, plan }; markSrc("claude", "ok");
+      if (d === 0 || S.example) {
+        S.example = false; S.dayIdx = d; S.plan = plan; S.simT = null; renderAll();
+        document.querySelector(".results").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      } else renderPlanHead();
+    } catch (e) {
+      const msg = e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`;
+      setStep("plan", "err", total > 1 ? `Tag ${d + 1}: ${msg}` : msg, { label: d > 0 ? `Ab Tag ${d + 1} weiterplanen` : "Nochmal", fn: () => resumeDays(d) });
+      markSrc("claude", "err");
+      if (S.example) { renderStays(); renderExp(); } else renderPlanHead();
+      return false;
+    }
+  }
+  const p0 = S.days[0].plan;
+  setStep("plan", "ok", total > 1 ? `${total} Tage geplant` : `${p0.stops.length} Stopps, ${p0.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
+  if (S.steps.every((x) => x.state === "ok" || x.state === "skip" || (x.id === "checkin" && x.state === "run"))) $("#progress").hidden = true;
+  return true;
+}
+async function resumeDays(from) {
+  if (!caps.sample) { toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  if (S.running) { toast("Einen Moment, ich plane noch."); return; }
+  S.running = true; $("#progress").hidden = false; if (!S.example) renderPlanHead();
+  try { await planDays(from); } finally { S.running = false; if (!S.example) renderPlanHead(); }
+}
+
+/* Re-plan only the open day (refine, different start, retry) — reuses Booking.com data */
 async function runPlanOnly(change, variant) {
-  if (S.running || !caps.sample) { if (!caps.sample) toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  if (!caps.sample) { toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  if (S.running) { toast("Einen Moment, ich plane noch."); return; }
   S.running = true; $("#progress").hidden = false;
   if (!S.steps.length) S.steps = [{ id: "plan", state: "idle" }];
-  const f = S.form, stay = S.forcedStay ? S.hotels.find((x) => x.id === S.forcedStay) : null;
-  setStep("plan", "run", stay ? `Neu ab ${stay.name} …` : change ? `Passe an: „${change}“ …` : "Plane neu …");
+  const wasExample = S.example, multi = S.daysTotal > 1, idx = wasExample ? 0 : S.dayIdx;
+  const f = { ...S.form, date: wasExample ? S.form.date : D(), checkinToday: S.form.checkinToday && idx === 0 };
+  const keepStay = multi && idx === 0 && S.forcedStay == null ? chosenStay() : null;   // other days already start there
+  const stay = S.forcedStay != null || idx > 0 ? chosenStay() : keepStay && f.checkinToday ? keepStay : null;
+  const prevStayId = S.days[0]?.plan.stay_id ?? null;
+  setStep("plan", "run", (multi ? `Tag ${idx + 1}: ` : "") + (S.forcedStay != null && stay ? `Neu ab ${stay.name} …` : change ? `Passe an: „${change}“ …` : "Plane neu …"));
   try {
     const prev = S.example ? null : { title: S.plan.title, stops: S.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) };
-    const plan = await makePlan(f, S.place, { stay, pickStay: !stay, previous: change || variant ? prev : null, change });
-    if (stay) plan.stay_id = String(stay.id);
-    S.plan = plan; S.example = false; S.savedId = null;
-    setStep("plan", "ok", `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
-    renderAll(); toast(change ? "Plan angepasst." : "Neuer Plan ist da.");
+    const plan = await makePlan(f, S.place, { stay, pickStay: !stay && !keepStay, previous: change || variant ? prev : null, change,
+      day: multi ? { n: idx + 1, total: S.daysTotal } : null, avoid: avoidNames(idx) });
+    if (stay) plan.stay_id = String(stay.id); else if (keepStay) plan.stay_id = String(keepStay.id);
+    const movedStay = multi && idx === 0 && !wasExample && prevStayId != null && String(plan.stay_id) !== String(prevStayId);
+    if (wasExample) S.days = [];
+    S.days[idx] = { date: f.date, plan }; S.dayIdx = idx; S.plan = plan; S.example = false; S.savedId = null;
+    setStep("plan", "ok", (multi ? `Tag ${idx + 1}: ` : "") + `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
+    renderAll(); toast(movedStay ? "Tag 1 startet an der neuen Unterkunft. Die anderen Tage starten noch an der alten. Plane sie bei Bedarf mit „Neu planen“ neu." : change ? "Plan angepasst." : "Neuer Plan ist da.");
+    if (wasExample && multi) await planDays(1);
   } catch (e) { setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => runPlanOnly(change, variant) }); }
   finally { S.running = false; }
 }
@@ -1067,9 +1145,10 @@ $("#tripForm").addEventListener("submit", (e) => {
 });
 
 /* ================= Calendar ================= */
+const calLabel = () => (S.days.length > 1 ? `Tag ${S.dayIdx + 1} in Google Kalender` : "In Google Kalender eintragen");
 async function addToCalendar() {
   const btn = $("#calBtn"); if (!caps.mcp || !btn) return;
-  const p = S.plan, f = F(), first = p.stops[0], last = p.stops[p.stops.length - 1];
+  const p = S.plan, f = { date: D() }, first = p.stops[0], last = p.stops[p.stops.length - 1];
   const lines = [];
   p.stops.forEach((x, i) => {
     lines.push(`${fmt(x.arrive)}–${fmt(x.leave)}  ${i + 1}. ${x.name}${x.hours ? "  (geöffnet: " + x.hours + ")" : ""}`);
@@ -1077,13 +1156,13 @@ async function addToCalendar() {
       else lines.push(`   ${fmt(g.depart)} ${g.line || MODES[g.mode]}${g.direction ? " Richtung " + g.direction : ""}: ${g.board || "?"} → ${g.alight || "?"} (an ${fmt(g.arrive)})`); });
   });
   const endMin = Math.min(last.leave, 24 * 60 - 1);
-  const input = { summary: `Stadtfaden: ${p.title || S.place.local}`, startTime: `${f.date}T${fmt(first.arrive)}:00`, endTime: `${f.date}T${fmt(endMin)}:00`,
+  const input = { summary: `Stadtfaden${S.days.length > 1 ? ` · Tag ${S.dayIdx + 1}` : ""}: ${p.title || S.place.local}`, startTime: `${f.date}T${fmt(first.arrive)}:00`, endTime: `${f.date}T${fmt(endMin)}:00`,
     location: `${first.name}, ${S.place.local}`, description: [p.summary, "", ...lines, "", p.transit_tip ? "Ticket: " + p.transit_tip : ""].join("\n").slice(0, 7000),
     ...(S.place.tz ? { timeZone: S.place.tz } : {}) };
   btn.disabled = true; btn.textContent = "Trage ein …";
   try { await caps.mcp.callTool("Google Calendar", "create_event", input, { cache: false }); btn.textContent = "Im Kalender ✓"; markSrc("calendar", "ok"); toast("Dein Tag steht im Google Kalender."); }
   catch (e) {
-    btn.disabled = false; btn.textContent = "In Google Kalender eintragen"; markSrc("calendar", "err");
+    btn.disabled = false; btn.textContent = calLabel(); markSrc("calendar", "err");
     const ambiguous = ["server_unavailable", "upstream_error"].includes(e?.code);
     toast(ambiguous ? "Unklar, ob der Termin angelegt wurde. Schau in deinen Kalender, bevor du es erneut versuchst." : mcpMessage(e, "Google Calendar"));
   }
@@ -1094,8 +1173,9 @@ async function saveTrip() {
   const btn = $("#saveBtn"); if (!caps.db || !userId || !btn) return;
   btn.disabled = true;
   const id = "t" + Date.now();
-  const data = { title: S.plan.title || `Tag in ${S.place.local}`, city: S.place.local, date: S.form.date, savedAt: Date.now(),
-    json: JSON.stringify({ form: S.form, place: S.place, plan: S.plan, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins }) };
+  const multi = S.days.length > 1;
+  const data = { title: multi ? `${S.days.length} Tage in ${S.place.local}` : S.plan.title || `Tag in ${S.place.local}`, city: S.place.local, date: S.form.date, savedAt: Date.now(),
+    json: JSON.stringify({ v: 2, form: S.form, place: S.place, days: S.days, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins }) };
   try { await caps.db.collection("data/users/" + userId).doc(id).set(data); S.savedId = id; btn.textContent = "Gespeichert ✓"; toast("Plan gespeichert. Du findest ihn unten unter „Meine Pläne“."); }
   catch { btn.disabled = false; toast("Speichern hat nicht geklappt. Versuche es noch einmal."); }
 }
@@ -1123,14 +1203,20 @@ function renderSaved(msg) {
       h("span", { class: "actions" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
   });
 }
+const t2s = (m) => (typeof m === "number" ? fmt(m) : m ?? null);
+function revivePlan(p) {
+  return cleanPlan({ ...p, stops: (p.stops || []).map((x) => ({ ...x, arrive: t2s(x.arrive), leave: t2s(x.leave), opens: t2s(x.opens), closes: t2s(x.closes) })),
+    legs: (p.legs || []).map((g) => ({ ...g, depart: t2s(g.depart), arrive: t2s(g.arrive) })), shops: (p.shops || []).map((x) => ({ ...x, opens: t2s(x.opens), closes: t2s(x.closes) })) });
+}
 function openSaved(d) {
   try {
     const o = JSON.parse(d.json);
-    const plan = cleanPlan({ ...o.plan, stops: o.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })),
-      legs: o.plan.legs.map((g) => ({ ...g, depart: fmt(g.depart), arrive: fmt(g.arrive) })), shops: (o.plan.shops || []).map((x) => ({ ...x, opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) });
-    S.plan = plan; S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = Array.isArray(o.attractions) ? o.attractions : [];
+    const days = Array.isArray(o.days) ? o.days.filter((x) => x && x.plan).map((x) => ({ date: String(x.date), plan: revivePlan(x.plan) })) : [{ date: o.form.date, plan: revivePlan(o.plan) }];
+    if (!days.length) throw new Error("leer");
+    S.days = days; S.daysTotal = days.length; S.dayIdx = 0; S.plan = days[0].plan;
+    S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = Array.isArray(o.attractions) ? o.attractions : [];
     S.checkins = o.checkins || {}; S.example = false; S.savedId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
-    renderAll(); $("#planHead").scrollIntoView({ block: "start" });
+    renderAll(); document.querySelector(".results").scrollIntoView({ block: "start" });
   } catch { toast("Dieser Plan ließ sich nicht öffnen."); }
 }
 function cleanHotelsSaved(list) { return (Array.isArray(list) ? list : []).filter((x) => x && x.id && x.name).map((x) => ({ ...x, url: safeUrl(x.url, "booking.com"), facilities: Array.isArray(x.facilities) ? x.facilities : [] })); }

@@ -44,3 +44,32 @@ how long places are open, where to stay and when check-in starts.
 Playwright: example renders, map draws, "Jetzt" board responds to the slider, form validation,
 behavior without capabilities (status notices), 400px without horizontal scroll, both themes.
 Plan validation (`cleanPlan`) as a pure function tested against bad inputs.
+
+---
+
+## Increment 2: Multi-day trips
+
+**Problem:** "For as long as you want" ends at one day today, even though the stay search
+already covers several nights. Anyone traveling for 3 days has to plan three times and
+gets repeats.
+
+**Behavior**
+- Time frame gets a 4th option, **"Mehrere Tage"** (several days): 2–7 days, hours per day adjustable
+  (default 8). Nights follow the number of days automatically (days − 1, at least 1).
+- Booking.com is searched **once**: experiences for the whole period, stays for all nights.
+- Claude plans **day by day** (one call per day, so no long reply gets cut off):
+  - Day 1 picks the best stay (`stay_id`); the check-in, if requested, only falls on day 1.
+  - Day 2+ start at that stay.
+  - Every day gets the stops of the other days as a "do not repeat" list.
+- Day tabs show each finished day immediately; days still in progress are marked "plant …" (planning …).
+- If one day fails, the earlier days stay; "Ab Tag N weiterplanen" (continue planning from day N) resumes there.
+- Adjust, "Neu planen" (plan again) and "Tag ab hier planen" (plan the day from here) affect the **open day**; other days stay unchanged
+  and are passed as the "do not repeat" list.
+- Board, opening hours (weekday!), map and calendar refer to the open day.
+- Save stores all days; old saved single-day plans still open.
+
+**Boundaries:** at most 7 days (Booking.com: 90 nights, 180 days ahead). No auto-planning
+of all days on "adjust": only the open day, so a change doesn't overwrite good days.
+
+**Success criteria:** 3-day trip → 3 tabs, 3 plan calls, day 2 starts at the stay,
+no stop of day 1 repeats in the day 2 prompt, error on day 2 keeps day 1.
