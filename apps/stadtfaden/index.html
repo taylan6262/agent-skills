@@ -1,0 +1,1161 @@
+<title>Stadtfaden</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a ticket-style request form on top; below, the day as a vertical "thread" (timeline) on the left,
+   with a departure board, a self-drawn transit-style line map and today's opening hours pinned on the right. */
+:root {
+  --paper: #eef1ec;        /* city-map paper, green-grey bias */
+  --card: #fbfcfa;
+  --ink: #13201a;
+  --muted: #5b6a62;
+  --rule: #d5ddd6;
+  --accent: #0a7a5a;       /* the thread: route + primary actions */
+  --accent-ink: #ffffff;
+  --accent-soft: #dcefe6;
+  --signal: #f5c431;       /* "now" marker, board highlight */
+  --board: #121a22;
+  --board-ink: #f7d35a;
+  --board-dim: #8c99a6;
+  --warn: #a8480f;
+  --warn-bg: #fbebdd;
+  --real: #1c5bd0;         /* badge for real connector data */
+  --m-walk: #8a968f; --m-ubahn: #1c5bd0; --m-sbahn: #23914a; --m-tram: #d0343a; --m-bus: #7b49bc;
+  --m-train: #34404c; --m-ferry: #0b87a0; --m-taxi: #b88a00;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #0e1412; --card: #151e1a; --ink: #e6eee9; --muted: #93a39a; --rule: #27332d;
+  --accent: #3fc79a; --accent-ink: #06140f; --accent-soft: #173229; --board: #0a1016; --board-dim: #7d8a96;
+  --warn: #f0a06a; --warn-bg: #36231a; --real: #6f9cf5;
+  --m-walk: #6f7c75; --m-ubahn: #5b8ff0; --m-sbahn: #4cc274; --m-tram: #f06a6e; --m-bus: #a982e6; --m-train: #b8c4cf; --m-ferry: #3ec0d6; --m-taxi: #e3b53a;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #0e1412; --card: #151e1a; --ink: #e6eee9; --muted: #93a39a; --rule: #27332d;
+  --accent: #3fc79a; --accent-ink: #06140f; --accent-soft: #173229; --board: #0a1016; --board-dim: #7d8a96;
+  --warn: #f0a06a; --warn-bg: #36231a; --real: #6f9cf5;
+  --m-walk: #6f7c75; --m-ubahn: #5b8ff0; --m-sbahn: #4cc274; --m-tram: #f06a6e; --m-bus: #a982e6; --m-train: #b8c4cf; --m-ferry: #3ec0d6; --m-taxi: #e3b53a;
+  color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--paper); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; }
+.page { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 22px 56px; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--display); font-stretch: 112%; margin: 0; text-wrap: balance; line-height: 1.15; }
+h2 { font-size: 1.05rem; font-weight: 750; letter-spacing: .01em; }
+a { color: var(--accent); text-underline-offset: 3px; }
+:focus-visible { outline: 2.5px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.eyebrow { font-family: var(--mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.card { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 18px; min-width: 0; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.btn { border: 1px solid var(--rule); background: var(--card); border-radius: 999px; padding: 8px 15px; font-weight: 700; font-size: .86rem; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; color: var(--ink); line-height: 1.2; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.07); }
+.btn.small { padding: 6px 12px; font-size: .8rem; }
+.btn[disabled] { opacity: .55; cursor: progress; }
+.link { font-weight: 700; font-size: .84rem; }
+
+/* Masthead */
+.masthead { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: space-between; }
+.brand { display: flex; gap: 14px; align-items: center; }
+.brand h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; font-stretch: 125%; letter-spacing: -.01em; }
+.brand p { margin: 2px 0 0; color: var(--muted); }
+.sources { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.src { font-family: var(--mono); font-size: .7rem; border: 1px solid var(--rule); border-radius: 999px; padding: 4px 10px 4px 8px; display: inline-flex; gap: 6px; align-items: center; background: var(--card); }
+.src::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--rule); }
+.src[data-state="ok"]::before { background: var(--accent); }
+.src[data-state="err"]::before { background: var(--warn); }
+.src[data-state="off"] { color: var(--muted); }
+
+/* Ticket form */
+.ticket { position: relative; background: var(--card); border: 1px solid var(--rule); border-radius: 18px; padding: 0; }
+.ticket::before, .ticket::after { content: ""; position: absolute; top: 46px; width: 18px; height: 18px; border-radius: 50%; background: var(--paper); border: 1px solid var(--rule); }
+.ticket::before { left: -10px; clip-path: inset(0 0 0 50%); }
+.ticket::after { right: -10px; clip-path: inset(0 50% 0 0); }
+.ticket-head { display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; border-bottom: 1.5px dashed var(--rule); min-height: 54px; gap: 12px; }
+.ticket-body { padding: 18px 22px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px 16px; }
+.f { display: grid; gap: 5px; font-weight: 700; font-size: .82rem; min-width: 0; }
+.f input, .f select { font: inherit; font-weight: 400; font-size: .95rem; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 10px; padding: 9px 11px; width: 100%; min-width: 0; }
+.f input:focus, .f select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--accent-soft); }
+.f input::placeholder { color: var(--muted); opacity: .8; font-family: var(--body); font-weight: 400; font-stretch: 100%; font-size: .95rem; }
+.f.big input { font-family: var(--display); font-stretch: 110%; font-size: 1.25rem; font-weight: 700; padding: 10px 12px; }
+.c6 { grid-column: span 6; } .c5 { grid-column: span 5; } .c4 { grid-column: span 4; } .c3 { grid-column: span 3; } .c2 { grid-column: span 2; } .c12 { grid-column: span 12; } .c8 { grid-column: span 8; }
+fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+legend { font-weight: 700; font-size: .82rem; padding: 0; margin-bottom: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { border: 1px solid var(--rule); background: var(--paper); border-radius: 999px; padding: 6px 12px; font-size: .84rem; }
+.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); font-weight: 700; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--paper); flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; padding: 8px 13px; font-size: .86rem; border-right: 1px solid var(--rule); }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-checked="true"] { background: var(--ink); color: var(--card); font-weight: 700; }
+.dur-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.range { display: flex; align-items: center; gap: 10px; flex: 1 1 180px; min-width: 0; }
+.range input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.range output { font-family: var(--mono); font-size: .9rem; min-width: 5.5ch; }
+.stay-box { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; }
+.stay-box .f { flex: 1 1 140px; }
+.switch { display: inline-flex; gap: 8px; align-items: center; font-weight: 700; font-size: .86rem; padding-bottom: 8px; }
+.switch input { width: 18px; height: 18px; accent-color: var(--accent); }
+.ticket-foot { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; padding: 14px 22px 18px; border-top: 1.5px dashed var(--rule); }
+.hint { margin: 0; color: var(--muted); font-size: .85rem; max-width: 62ch; }
+.hint.err { color: var(--warn); font-weight: 700; }
+
+/* Progress */
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.step { display: grid; grid-template-columns: 22px 1fr auto; gap: 10px; align-items: start; font-size: .9rem; }
+.step .dot { width: 14px; height: 14px; margin-top: 4px; border-radius: 50%; border: 2px solid var(--rule); }
+.step[data-state="run"] .dot { border-color: var(--accent); border-top-color: transparent; animation: spin .9s linear infinite; }
+.step[data-state="ok"] .dot { background: var(--accent); border-color: var(--accent); }
+.step[data-state="err"] .dot { background: var(--warn); border-color: var(--warn); }
+.step[data-state="skip"] .dot { border-style: dashed; }
+.step small { display: block; color: var(--muted); }
+.step[data-state="err"] small { color: var(--warn); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Results grid */
+.results { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 22px; align-items: start; }
+.col-main, .col-side { display: grid; gap: 18px; min-width: 0; }
+.col-side { position: sticky; top: calc(14px + env(safe-area-inset-top, 0px)); }
+.plan-head { display: grid; gap: 10px; }
+.plan-head h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); font-weight: 800; font-stretch: 118%; }
+.plan-head p { margin: 0; max-width: 65ch; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge { font-family: var(--mono); font-size: .68rem; letter-spacing: .06em; text-transform: uppercase; border-radius: 6px; padding: 3px 7px; border: 1px solid var(--rule); color: var(--muted); background: var(--card); white-space: nowrap; }
+.badge.example { background: var(--signal); color: #1d1600; border-color: transparent; font-weight: 600; }
+.badge.real { color: var(--real); border-color: currentColor; }
+.badge.ok { color: var(--accent); border-color: currentColor; }
+.note-box { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: .9rem; }
+.warn-box { border-left: 3px solid var(--warn); background: var(--warn-bg); padding: 10px 12px; border-radius: 0 10px 10px 0; font-size: .9rem; color: var(--ink); }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.refine { display: flex; gap: 8px; flex-wrap: wrap; }
+.refine input { flex: 1 1 220px; min-width: 0; font: inherit; background: var(--card); color: var(--ink); border: 1px solid var(--rule); border-radius: 999px; padding: 8px 14px; }
+
+/* Timeline — the thread */
+.timeline { list-style: none; margin: 0; padding: 0; }
+.tl { display: grid; grid-template-columns: 58px 30px minmax(0, 1fr); column-gap: 8px; }
+.tl .when { font-family: var(--mono); font-variant-numeric: tabular-nums; text-align: right; padding-top: 14px; font-size: .92rem; font-weight: 600; }
+.tl .when small { display: block; font-weight: 400; color: var(--muted); font-size: .74rem; }
+.tl .rail { position: relative; }
+.tl .rail::before { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; transform: translateX(-50%); background: var(--rail, var(--accent)); border-radius: 2px; }
+.stop .rail::after { content: attr(data-n); position: absolute; left: 50%; top: 12px; transform: translateX(-50%); width: 26px; height: 26px; border-radius: 50%; background: var(--card); border: 3px solid var(--ink); font-family: var(--mono); font-size: .72rem; font-weight: 600; display: grid; place-items: center; box-sizing: border-box; }
+.stop.is-hotel .rail::after { border-radius: 7px; content: "H"; }
+.stop:first-child .rail::before { top: 24px; }
+.stop:last-child .rail::before { bottom: calc(100% - 24px); }
+.stop .body { background: var(--card); border: 1px solid var(--rule); border-radius: var(--r); padding: 14px 16px; margin-block: 6px; display: grid; gap: 7px; min-width: 0; transition: box-shadow .3s; }
+.stop.flash .body { box-shadow: 0 0 0 3px var(--signal); }
+.stop.now .body { border-color: var(--accent); box-shadow: inset 4px 0 0 var(--signal); }
+.stop h3 { font-size: 1.12rem; font-weight: 750; }
+.stop p { margin: 0; }
+.kind { font-family: var(--mono); font-size: .66rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.meta-row { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: .84rem; color: var(--muted); }
+.meta-row b { color: var(--ink); font-weight: 700; }
+.warning { color: var(--warn); font-weight: 700; font-size: .85rem; display: flex; gap: 6px; }
+.tip { font-size: .88rem; color: var(--muted); font-style: italic; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.leg .rail::before { background: var(--rail); width: 6px; }
+.leg.walk .rail::before { background: repeating-linear-gradient(to bottom, var(--m-walk) 0 5px, transparent 5px 10px); width: 4px; }
+.leg .body { padding: 8px 0 8px 4px; font-size: .88rem; display: grid; gap: 4px; min-width: 0; }
+.leg .when { padding-top: 9px; font-size: .8rem; color: var(--muted); font-weight: 400; }
+.line-badge { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.lb { font-family: var(--display); font-stretch: 100%; font-weight: 800; font-size: .82rem; color: #fff; background: var(--rail); border-radius: 5px; padding: 2px 7px; min-width: 2.2em; text-align: center; }
+.leg.walk .lb, .leg.taxi .lb { background: transparent; color: var(--ink); border: 1.5px solid var(--rail); }
+.ride { display: grid; gap: 2px; padding-left: 2px; }
+.ride .on, .ride .off { font-weight: 700; }
+.ride .off { color: var(--accent); }
+details.stations summary { cursor: pointer; color: var(--muted); font-size: .84rem; }
+details.stations ol { margin: 4px 0 2px; padding-left: 20px; color: var(--muted); font-size: .84rem; }
+
+/* Departure board */
+.board { background: var(--board); color: var(--board-ink); border-radius: var(--r); padding: 16px 18px; font-family: var(--mono); display: grid; gap: 12px; }
+.board .lbl { color: var(--board-dim); font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; }
+.board .big { font-size: 1.05rem; font-weight: 600; line-height: 1.35; }
+.board .row { display: grid; gap: 3px; }
+.board-info { display: grid; gap: 12px; }
+.board .count { font-size: 1.6rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.board .sub { color: #e8ecef; font-size: .8rem; line-height: 1.45; }
+.board .clock { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.board input[type=range] { width: 100%; accent-color: var(--board-ink); }
+.board .live-btn { background: transparent; border: 1px solid var(--board-dim); color: var(--board-ink); border-radius: 999px; padding: 3px 10px; font-family: var(--mono); font-size: .7rem; }
+
+/* Map */
+.map-card { display: grid; gap: 10px; }
+.map-wrap { width: 100%; aspect-ratio: 32 / 23; max-width: 100%; background: var(--paper); border-radius: 10px; overflow: hidden; border: 1px solid var(--rule); }
+#map { width: 100%; height: 100%; display: block; }
+#map .lbl { font-family: var(--body); font-size: 12.5px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--paper); stroke-width: 4px; stroke-linejoin: round; }
+#map .num { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--ink); }
+#map .st { cursor: pointer; }
+#map .st:hover circle, #map .st:hover rect { stroke: var(--accent); }
+#map .now-dot { fill: var(--signal); stroke: var(--ink); stroke-width: 2; }
+#map .now-ring { fill: none; stroke: var(--signal); stroke-width: 2; animation: ping 1.8s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes ping { from { transform: scale(.6); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .78rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 5px; border-radius: 3px; background: var(--c); display: inline-block; }
+.legend i.dash { background: repeating-linear-gradient(90deg, var(--m-walk) 0 4px, transparent 4px 7px); }
+
+/* Opening hours list */
+.hours-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.hours-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; padding: 9px 0; border-bottom: 1px solid var(--rule); font-size: .88rem; }
+.hours-list li:last-child { border-bottom: 0; }
+.hours-list .nm { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.hours-list .hr { color: var(--muted); font-size: .8rem; grid-column: 1 / -1; }
+.state { font-family: var(--mono); font-size: .7rem; padding: 2px 7px; border-radius: 5px; white-space: nowrap; align-self: start; }
+.state.open { background: var(--accent-soft); color: var(--accent); }
+.state.closed { background: var(--warn-bg); color: var(--warn); }
+.state.unknown { border: 1px solid var(--rule); color: var(--muted); }
+
+/* Stays & experiences */
+.section-head { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+.section-head p { margin: 0; color: var(--muted); font-size: .86rem; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.stay { display: grid; gap: 8px; align-content: start; }
+.stay.chosen { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+.stay h3 { font-size: 1rem; font-weight: 750; overflow-wrap: anywhere; }
+.price { font-family: var(--display); font-stretch: 105%; font-weight: 800; font-size: 1.25rem; }
+.price small { font-family: var(--body); font-weight: 400; font-size: .78rem; color: var(--muted); }
+.score { font-family: var(--mono); font-size: .78rem; background: var(--ink); color: var(--card); border-radius: 6px 6px 6px 0; padding: 2px 6px; font-weight: 600; }
+.checkin { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+.checkin div { padding: 7px 10px; display: grid; }
+.checkin div + div { border-left: 1px solid var(--rule); }
+.checkin span { font-size: .72rem; color: var(--muted); }
+.checkin b { font-family: var(--mono); font-size: .95rem; }
+.checkin.pending b, .checkin.none b { font-family: var(--body); font-size: .8rem; font-weight: 400; color: var(--muted); }
+.facil { font-size: .8rem; color: var(--muted); }
+.empty { color: var(--muted); font-size: .9rem; border: 1.5px dashed var(--rule); border-radius: var(--r); padding: 18px; }
+.saved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.saved-list li { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; padding: 10px 14px; }
+.saved-list .t { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+footer { color: var(--muted); font-size: .8rem; max-width: 80ch; }
+
+.toast { position: fixed; z-index: 20; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--card); padding: 10px 18px; border-radius: 999px; font-size: .88rem; max-width: calc(100% - 32px); text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+
+@media (max-width: 900px) {
+  .results { grid-template-columns: minmax(0, 1fr); }
+  .col-side { position: static; order: -1; }
+}
+@media (max-width: 640px) {
+  .c6, .c5, .c4, .c3, .c2, .c8 { grid-column: span 12; }
+  .c3.half, .c2.half { grid-column: span 6; }
+  .ticket-head, .ticket-body, .ticket-foot { padding-left: 16px; padding-right: 16px; }
+  .tl { grid-template-columns: 46px 24px minmax(0, 1fr); column-gap: 6px; }
+  .tl .when { font-size: .8rem; }
+  .stop .rail::after { width: 22px; height: 22px; font-size: .64rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .step[data-state="run"] .dot, #map .now-ring { animation: none; }
+}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <div class="brand">
+      <svg width="54" height="40" viewBox="0 0 54 40" aria-hidden="true">
+        <path d="M4 32 L16 20 L30 20 L40 10 L50 10" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="4" cy="32" r="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+        <circle cx="23" cy="20" r="4" fill="var(--card)" stroke="var(--ink)" stroke-width="2.5"/>
+        <circle cx="50" cy="10" r="4" fill="var(--signal)" stroke="var(--ink)" stroke-width="2.5"/>
+      </svg>
+      <div><h1>Stadtfaden</h1><p>Dein Tag als Linie durch die Stadt.</p></div>
+    </div>
+    <ul class="sources" id="sources" aria-label="Datenquellen">
+      <li class="src" data-src="booking" data-state="off">Booking.com</li>
+      <li class="src" data-src="claude" data-state="off">Claude</li>
+      <li class="src" data-src="calendar" data-state="off">Kalender</li>
+      <li class="src" data-src="db" data-state="off">Speichern</li>
+    </ul>
+  </header>
+
+  <form class="ticket" id="tripForm" novalidate>
+    <div class="ticket-head"><span class="eyebrow">Fahrtwunsch</span><span class="eyebrow mono" id="ticketDate"></span></div>
+    <div class="ticket-body">
+      <label class="f big c6">Stadt<input id="fCity" autocomplete="off" placeholder="z. B. Lissabon, Wien, München"></label>
+      <label class="f big c6">Was möchtest du machen?<input id="fWish" autocomplete="off" placeholder="z. B. Altstadt, gutes Essen, ein Aussichtspunkt"></label>
+      <fieldset class="c12"><legend>Schwerpunkte</legend><div class="chips" id="fChips"></div></fieldset>
+      <fieldset class="c8"><legend>Zeitrahmen</legend>
+        <div class="dur-row">
+          <div class="seg" role="radiogroup" aria-label="Zeitrahmen" id="fSeg">
+            <button type="button" role="radio" data-h="4" aria-checked="true">Halber Tag</button>
+            <button type="button" role="radio" data-h="9" aria-checked="false">Ganzer Tag</button>
+            <button type="button" role="radio" data-h="custom" aria-checked="false">Eigene Dauer</button>
+          </div>
+          <div class="range"><input type="range" id="fHours" min="1" max="14" step="0.5" value="4" aria-label="Dauer in Stunden"><output id="fHoursOut" for="fHours">4 Std.</output></div>
+        </div>
+      </fieldset>
+      <label class="f c4">Tempo<select id="fPace"><option value="entspannt">Entspannt, mit Pausen</option><option value="normal" selected>Normal</option><option value="sportlich">Sportlich, viel sehen</option></select></label>
+      <label class="f c3 half">Datum<input type="date" id="fDate"></label>
+      <label class="f c2 half">Start<input type="time" id="fStart" value="10:00"></label>
+      <label class="f c5">Startpunkt<input id="fFrom" autocomplete="off" placeholder="z. B. Hauptbahnhof (leer: Unterkunft)"></label>
+      <label class="f c2 half">Personen<input type="number" id="fPeople" min="1" max="10" value="2"></label>
+      <fieldset class="c12"><legend>Unterkunft</legend>
+        <div class="stay-box">
+          <label class="switch"><input type="checkbox" id="fStay" checked> Unterkunft suchen</label>
+          <label class="f">Art<select id="fStayType"><option value="any">Egal</option><option value="hotel">Hotel</option><option value="apartment">Ferienwohnung (wie Airbnb)</option></select></label>
+          <label class="f">Nächte<input type="number" id="fNights" min="1" max="14" value="1"></label>
+          <label class="f">Max. € pro Nacht<input type="number" id="fBudget" min="0" step="10" placeholder="optional"></label>
+          <label class="switch"><input type="checkbox" id="fCheckin"> Ich checke an diesem Tag ein</label>
+        </div>
+      </fieldset>
+    </div>
+    <div class="ticket-foot">
+      <p class="hint" id="formHint">Hotels, Ferienwohnungen, Check-in-Zeiten und Tickets kommen live von Booking.com. Route, Linien und Öffnungszeiten plant Claude.</p>
+      <button class="btn primary" type="submit" id="planBtn">Tag planen</button>
+    </div>
+  </form>
+
+  <section class="card" id="progress" hidden aria-live="polite">
+    <div class="section-head"><h2>Dein Tag wird geplant</h2><span class="eyebrow" id="progressNote"></span></div>
+    <ol class="steps" id="steps"></ol>
+  </section>
+
+  <main class="results">
+    <div class="col-main">
+      <section class="plan-head" id="planHead"></section>
+      <ol class="timeline" id="timeline" aria-label="Tagesablauf"></ol>
+    </div>
+    <aside class="col-side">
+      <section class="board" id="board" aria-label="Jetzt-Tafel"></section>
+      <section class="card map-card">
+        <div class="section-head" style="margin:0"><h2>Linienplan</h2><a class="link" id="mapLink" target="_blank" rel="noopener">In Google Maps öffnen</a></div>
+        <div class="map-wrap"><svg id="map" viewBox="0 0 640 460" role="img" aria-label="Schematischer Linienplan der Route"></svg></div>
+        <div class="legend" id="legend"></div>
+      </section>
+      <section class="card">
+        <div class="section-head"><h2 id="hoursTitle">Öffnungszeiten</h2><span class="eyebrow">typisch · live in Maps prüfen</span></div>
+        <ul class="hours-list" id="hoursList"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <section id="staysSec">
+    <div class="section-head"><h2>Unterkünfte</h2><p id="staysNote">Live von Booking.com, mit Check-in-Zeiten.</p></div>
+    <div class="grid-cards" id="stayGrid"></div>
+  </section>
+
+  <section id="expSec">
+    <div class="section-head"><h2>Buchbare Erlebnisse</h2><p>Live von Booking.com: Tickets, Touren, Museen.</p></div>
+    <div class="grid-cards" id="expGrid"></div>
+  </section>
+
+  <section id="savedSec">
+    <div class="section-head"><h2>Meine Pläne</h2><p>Nur für dich sichtbar.</p></div>
+    <ul class="saved-list" id="savedList"></ul>
+  </section>
+
+  <footer>
+    Unterkünfte, Preise, Bewertungen, Check-in-Zeiten und Erlebnisse stammen live von Booking.com über deinen Connector.
+    Route, Linien, Haltestellen und Öffnungszeiten plant Claude aus Ortswissen; sie sind typische Werte.
+    Prüfe Abfahrten über „Live-Verbindung prüfen“ und Öffnungszeiten über „In Maps ansehen“, bevor du losgehst.
+  </footer>
+</div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+/* ================= Helpers ================= */
+const $ = (s) => document.querySelector(s);
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "style") el.setAttribute("style", v);
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) { if (c == null || c === false) continue; el.append(c.nodeType ? c : String(c)); }
+  return el;
+}
+const SVGNS = "http://www.w3.org/2000/svg";
+function s(tag, attrs, ...kids) {
+  const el = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) if (v != null) el.setAttribute(k, v);
+  for (const c of kids.flat()) { if (c == null) continue; el.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return el;
+}
+const toMin = (t) => { const m = /^(\d{1,2})[:.](\d{2})$/.exec(String(t ?? "").trim()); if (!m) return null; const v = +m[1] * 60 + +m[2]; return +m[2] < 60 && v < 48 * 60 ? v : null; };
+const fmt = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(((m % 60) + 60) % 60).padStart(2, "0")}`;
+const str = (v, n = 200) => (typeof v === "string" ? v.trim().slice(0, n) : typeof v === "number" ? String(v) : "");
+const num = (v, lo, hi) => { const x = typeof v === "number" ? v : parseFloat(v); return Number.isFinite(x) && x >= lo && x <= hi ? x : null; };
+const safeUrl = (u, host) => { try { const x = new URL(u); return x.protocol === "https:" && (!host || x.hostname.endsWith(host)) ? x.href : null; } catch { return null; } };
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+const addDays = (iso, n) => { const d = new Date(iso + "T12:00:00"); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const WEEKDAYS = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+const weekday = (iso) => WEEKDAYS[new Date(iso + "T12:00:00").getDay()];
+const dateLabel = (iso) => new Date(iso + "T12:00:00").toLocaleDateString("de-DE", { weekday: "long", day: "numeric", month: "long" });
+const durLabel = (h) => (h % 1 ? `${Math.floor(h)},5` : h) + " Std.";
+const minsLabel = (m) => (m < 60 ? `${m} Min.` : `${Math.floor(m / 60)} Std.${m % 60 ? " " + (m % 60) + " Min." : ""}`);
+function haversine(a, b) { const R = 6371, r = Math.PI / 180, dLa = (b.lat - a.lat) * r, dLo = (b.lng - a.lng) * r;
+  const x = Math.sin(dLa / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(x)); }
+let toastT; function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (el.hidden = true), 4500); }
+const gmapsPlace = (q) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+const gmapsDir = (o, d, mode) => `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&travelmode=${mode}`;
+
+/* ================= Plan model & validation ================= */
+const KINDS = { sight: "Sehenswürdigkeit", museum: "Museum", food: "Essen", cafe: "Café", shop: "Einkaufen", park: "Park", viewpoint: "Aussicht", nightlife: "Abends", hotel: "Unterkunft", station: "Bahnhof", experience: "Erlebnis" };
+const MODES = { walk: "Zu Fuß", ubahn: "U-Bahn", sbahn: "S-Bahn", tram: "Tram", bus: "Bus", train: "Zug", ferry: "Fähre", taxi: "Taxi" };
+
+function cleanPlan(raw) {
+  if (!raw || typeof raw !== "object" || !Array.isArray(raw.stops)) throw new Error("Die Antwort enthält keinen Plan.");
+  const stops = [], ids = new Set();
+  raw.stops.slice(0, 12).forEach((x, i) => {
+    if (!x || typeof x !== "object") return;
+    const name = str(x.name, 90), a = toMin(x.arrive), l = toMin(x.leave);
+    if (!name || a == null) return;
+    let id = str(x.id, 20) || "s" + (i + 1); if (ids.has(id)) id += "_" + i; ids.add(id);
+    const lat = num(x.lat, -90, 90), lng = num(x.lng, -180, 180);
+    stops.push({ id, name, kind: KINDS[x.kind] ? x.kind : "sight", arrive: a, leave: l != null && l >= a ? l : a + 30,
+      lat: lat != null && lng != null ? lat : null, lng: lat != null && lng != null ? lng : null,
+      address: str(x.address, 120), why: str(x.why, 260), tip: str(x.tip, 220), hours: str(x.hours, 90),
+      opens: toMin(x.opens), closes: toMin(x.closes), price: str(x.price, 60), booking_id: str(x.booking_id, 40) || null });
+  });
+  if (!stops.length) throw new Error("Der Plan hat keine gültigen Stopps.");
+  stops.sort((p, q) => p.arrive - q.arrive);
+  const byId = new Map(stops.map((x) => [x.id, x]));
+  const legs = [];
+  (Array.isArray(raw.legs) ? raw.legs : []).slice(0, 30).forEach((g) => {
+    if (!g || typeof g !== "object") return;
+    const from = byId.get(str(g.from, 20)), to = byId.get(str(g.to, 20));
+    if (!from || !to || from === to) return;
+    const mode = MODES[g.mode] ? g.mode : "walk";
+    let dep = toMin(g.depart), arr = toMin(g.arrive);
+    if (dep == null) dep = from.leave;
+    if (arr == null || arr < dep) arr = Math.max(dep, to.arrive);
+    legs.push({ from: from.id, to: to.id, mode, line: str(g.line, 14) || null, direction: str(g.direction, 70) || null,
+      board: str(g.board, 70) || null, alight: str(g.alight, 70) || null,
+      stations: (Array.isArray(g.stations) ? g.stations : []).map((q) => str(q, 60)).filter(Boolean).slice(0, 16),
+      depart: dep, arrive: arr, minutes: num(g.minutes, 0, 600) ?? Math.max(1, arr - dep), note: str(g.note, 220) });
+  });
+  for (let i = 0; i < stops.length - 1; i++) {
+    if (!legs.some((g) => g.from === stops[i].id)) legs.push({ from: stops[i].id, to: stops[i + 1].id, mode: "walk", line: null, direction: null, board: null, alight: null,
+      stations: [], depart: stops[i].leave, arrive: stops[i + 1].arrive, minutes: Math.max(1, stops[i + 1].arrive - stops[i].leave), note: "", implicit: true });
+  }
+  legs.sort((p, q) => p.depart - q.depart);
+  const shops = (Array.isArray(raw.shops) ? raw.shops : []).slice(0, 8).map((x) => ({ name: str(x?.name, 80), kind: str(x?.kind, 40), hours: str(x?.hours, 90),
+    opens: toMin(x?.opens), closes: toMin(x?.closes), near: byId.has(str(x?.near, 20)) ? str(x.near, 20) : null })).filter((x) => x.name);
+  return { title: str(raw.title, 90), summary: str(raw.summary, 420), transit_tip: str(raw.transit_tip, 320), evening: str(raw.evening, 320),
+    warnings: (Array.isArray(raw.warnings) ? raw.warnings : []).map((w) => str(w, 220)).filter(Boolean).slice(0, 5),
+    stay_id: raw.stay_id != null && raw.stay_id !== "" && raw.stay_id !== "null" ? String(raw.stay_id).slice(0, 20) : null, stay_reason: str(raw.stay_reason, 220),
+    stops, legs, shops };
+}
+
+/* Closing-time conflicts for one stop */
+function closeAt(o, c) { return c == null ? null : o != null && c <= o ? c + 1440 : c; }
+function stopWarnings(st) {
+  const w = [], c = closeAt(st.opens, st.closes);
+  if (st.opens != null && st.arrive < st.opens) w.push(`Öffnet erst um ${fmt(st.opens)}. Du kommst ${st.opens - st.arrive} Min. zu früh.`);
+  if (c != null) {
+    if (st.arrive >= c) w.push(`Schon geschlossen, wenn du ankommst (schließt ${fmt(st.closes)}).`);
+    else if (st.leave > c) w.push(`Schließt um ${fmt(st.closes)}. Plane, vorher zu gehen.`);
+    else if (c - st.leave < 20) w.push(`Knapp: schließt um ${fmt(st.closes)}.`);
+  }
+  return w;
+}
+const ALWAYS = /rund um die uhr|24\s*(std|h|stunden)|24\/7|immer geöffnet|jederzeit/i;
+function openState(o, c, t, hours) {
+  if (o == null && c == null) return ALWAYS.test(hours || "") ? "open" : "unknown";
+  const cc = closeAt(o, c);
+  if (o != null && t < o) return "closed";
+  if (cc != null && t >= cc) return "closed";
+  return "open";
+}
+
+/* ================= Example (shown until the first real plan) ================= */
+function nextSaturday() { const d = new Date(); d.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7 || 7)); return d.toISOString().slice(0, 10); }
+const EXAMPLE = {
+  form: { city: "München", hours: 4, date: nextSaturday() },
+  place: { local: "München", en: "Munich, Germany", tz: "Europe/Berlin", lat: 48.137, lng: 11.575 },
+  plan: cleanPlan({
+    title: "Altstadt, Markt und Englischer Garten",
+    summary: "Ein entspannter halber Tag: Glockenspiel am Marienplatz, Brotzeit auf dem Viktualienmarkt, dann mit der U-Bahn in den Englischen Garten bis zum Biergarten am Chinesischen Turm.",
+    transit_tip: "Für zwei, drei Fahrten reicht eine Streifenkarte. Wer öfter fährt, nimmt die Tageskarte für die Zone M.",
+    stops: [
+      { id: "s1", name: "Marienplatz & Neues Rathaus", kind: "sight", arrive: "10:30", leave: "11:15", lat: 48.1374, lng: 11.5755, why: "Das Herz der Altstadt. Um 11 Uhr spielt das Glockenspiel im Rathausturm.", tip: "Für den Blick von oben: Rathausturm mit Aufzug, Ticket direkt am Eingang.", hours: "Platz rund um die Uhr", price: "frei" },
+      { id: "s2", name: "Viktualienmarkt", kind: "food", arrive: "11:20", leave: "12:20", lat: 48.1351, lng: 11.5763, why: "Bayerische Brotzeit, Obst und Käse: Mittagessen im Stehen zwischen den Ständen.", tip: "Weißwurst gibt es traditionell nur bis mittags.", hours: "Mo–Sa, Kernzeit ca. 10–18 Uhr, So geschlossen", opens: "10:00", closes: "18:00" },
+      { id: "s3", name: "Englischer Garten & Monopteros", kind: "park", arrive: "12:45", leave: "13:45", lat: 48.1497, lng: 11.5925, why: "Einer der größten Stadtparks der Welt. Vom Monopteros siehst du die Türme der Altstadt.", tip: "Am Südende surfen Leute auf der Eisbachwelle, ein kurzer Abstecher lohnt sich.", hours: "rund um die Uhr" },
+      { id: "s4", name: "Biergarten am Chinesischen Turm", kind: "food", arrive: "13:55", leave: "14:30", lat: 48.1527, lng: 11.5921, why: "Der Klassiker zum Abschluss, mit Blick auf die hölzerne Pagode.", hours: "bei gutem Wetter ab ca. 10 Uhr", opens: "10:00" },
+    ],
+    legs: [
+      { from: "s1", to: "s2", mode: "walk", depart: "11:15", arrive: "11:20", minutes: 5, note: "Am Alten Peter vorbei Richtung Süden." },
+      { from: "s2", to: "s3", mode: "walk", depart: "12:20", arrive: "12:26", minutes: 6, note: "Zurück zum Marienplatz, Abgang zur U-Bahn." },
+      { from: "s2", to: "s3", mode: "ubahn", line: "U6", direction: "Garching, Forschungszentrum", board: "Marienplatz", alight: "Universität", stations: ["Odeonsplatz"], depart: "12:29", arrive: "12:33", minutes: 4, note: "Ausgang Veterinärstraße nehmen." },
+      { from: "s2", to: "s3", mode: "walk", depart: "12:33", arrive: "12:45", minutes: 12, note: "Durch die Veterinärstraße in den Park, dann links zum Monopteros." },
+      { from: "s3", to: "s4", mode: "walk", depart: "13:45", arrive: "13:55", minutes: 10, note: "Den Hauptweg nach Norden." },
+    ],
+    shops: [
+      { name: "Dallmayr Delikatessenhaus", kind: "Feinkost", hours: "Mo–Sa ca. 9:30–19 Uhr", opens: "09:30", closes: "19:00", near: "s1" },
+      { name: "Kaufingerstraße (Fußgängerzone)", kind: "Einkaufsstraße", hours: "Mo–Sa meist 10–20 Uhr", opens: "10:00", closes: "20:00", near: "s1" },
+    ],
+    evening: "Wenn du länger bleibst: Abendessen im Glockenbachviertel.",
+    warnings: [],
+  }),
+};
+
+/* ================= State ================= */
+const S = {
+  example: true, form: { ...EXAMPLE.form }, place: { ...EXAMPLE.place }, plan: EXAMPLE.plan,
+  attractions: [], hotels: [], checkins: {}, checkinRaw: "", staysState: "idle", expState: "idle",
+  forcedStay: null, simT: null, running: false, steps: [], savedId: null,
+};
+const F = () => (S.example ? EXAMPLE.form : S.form), PL = () => (S.example ? EXAMPLE.place : S.place);
+const caps = { mcp: null, sample: null, db: null, user: null }; let userId = null; let servers = new Set();
+
+/* ================= Form ================= */
+const CHIPS = [
+  ["Kultur", "culture and museums", "museums_arts_culture"], ["Essen & Trinken", "food and drinks", "food_drinks"], ["Natur", "parks and nature", "nature_outdoor"],
+  ["Shopping", "shopping", null], ["Aussicht", "viewpoints", null], ["Touren", "guided tours", "tours"], ["Abends", "nightlife", "entertainment_tickets"],
+  ["Mit Kindern", "family friendly", null], ["Geheimtipps", "hidden gems", null],
+];
+CHIPS.forEach(([de]) => $("#fChips").append(h("button", { type: "button", class: "chip", "aria-pressed": "false", onclick: (e) => e.currentTarget.setAttribute("aria-pressed", String(e.currentTarget.getAttribute("aria-pressed") !== "true")) }, de)));
+$("#fDate").value = todayStr(); $("#fDate").min = todayStr(); $("#fDate").max = addDays(todayStr(), 179);
+{ const d = new Date(); const n = d.getHours() + 1; if (n >= 8 && n <= 20) $("#fStart").value = `${String(n).padStart(2, "0")}:00`; }
+const setHours = (v) => { $("#fHours").value = v; $("#fHoursOut").textContent = durLabel(+v); };
+document.querySelectorAll("#fSeg button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("#fSeg button").forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+  if (b.dataset.h !== "custom") setHours(b.dataset.h); else $("#fHours").focus();
+}));
+$("#fHours").addEventListener("input", (e) => { setHours(e.target.value); const v = +e.target.value;
+  document.querySelectorAll("#fSeg button").forEach((x) => x.setAttribute("aria-checked", String(x.dataset.h === (v === 4 ? "4" : v === 9 ? "9" : "custom")))); });
+const syncStay = () => { const on = $("#fStay").checked; ["#fStayType", "#fNights", "#fBudget", "#fCheckin"].forEach((q) => ($(q).disabled = !on)); };
+$("#fStay").addEventListener("change", syncStay);
+const updTicket = () => { const v = $("#fDate").value; $("#ticketDate").textContent = v ? dateLabel(v) : ""; };
+$("#fDate").addEventListener("change", updTicket); updTicket();
+
+function readForm() {
+  const chips = [...document.querySelectorAll("#fChips .chip")].map((b, i) => (b.getAttribute("aria-pressed") === "true" ? CHIPS[i] : null)).filter(Boolean);
+  return {
+    city: $("#fCity").value.trim().slice(0, 80), wish: $("#fWish").value.trim().slice(0, 300), chips,
+    hours: +$("#fHours").value, pace: $("#fPace").value, date: $("#fDate").value, start: $("#fStart").value || "10:00",
+    from: $("#fFrom").value.trim().slice(0, 120), people: Math.min(10, Math.max(1, +$("#fPeople").value || 2)),
+    stay: $("#fStay").checked, stayType: $("#fStayType").value, nights: Math.min(14, Math.max(1, +$("#fNights").value || 1)),
+    budget: Math.max(0, +$("#fBudget").value || 0), checkinToday: $("#fStay").checked && $("#fCheckin").checked,
+  };
+}
+function formError(f) {
+  if (!f.city) return ["#fCity", "Gib eine Stadt ein, zum Beispiel Lissabon."];
+  if (!f.date || f.date < todayStr()) return ["#fDate", "Wähle heute oder ein Datum in der Zukunft."];
+  if (f.date > addDays(todayStr(), 179)) return ["#fDate", "Booking.com plant höchstens 180 Tage im Voraus."];
+  if (toMin(f.start) + f.hours * 60 > 24 * 60 + 120) return ["#fStart", "Start plus Dauer reicht zu weit in die Nacht. Starte früher oder plane kürzer."];
+  return null;
+}
+
+/* ================= Rendering: plan head, timeline ================= */
+function legsFrom(id) { return S.plan.legs.filter((g) => g.from === id).sort((a, b) => a.depart - b.depart); }
+function mainMode(legs) { const t = legs.find((g) => g.mode !== "walk"); return t ? t.mode : "walk"; }
+const modeVar = (m) => `var(--m-${m})`;
+const placeQuery = (st) => `${st.name}, ${st.address || PL().local || F().city}`;
+const stopLoc = (st) => (st.lat != null ? `${st.lat},${st.lng}` : placeQuery(st));
+
+function renderPlanHead() {
+  const p = S.plan, el = $("#planHead"); el.textContent = "";
+  const first = p.stops[0], last = p.stops[p.stops.length - 1];
+  const badges = h("div", { class: "badges" },
+    S.example ? h("span", { class: "badge example" }, "Beispiel") : null,
+    h("span", { class: "badge" }, `${PL().local || F().city} · ${dateLabel(F().date)}`),
+    h("span", { class: "badge" }, `${fmt(first.arrive)}–${fmt(last.leave)} · ${minsLabel(last.leave - first.arrive)}`),
+    h("span", { class: "badge" }, `${p.stops.length} Stopps`));
+  el.append(badges, h("h2", {}, p.title || `Dein Tag in ${PL().local || F().city}`));
+  if (S.example) el.append(h("p", { class: "note-box" }, "So sieht ein geplanter halber Tag aus. Gib oben deine Stadt ein und tippe auf „Tag planen“. Dann kommen echte Unterkünfte, Check-in-Zeiten und Tickets dazu."));
+  if (p.summary) el.append(h("p", {}, p.summary));
+  if (p.transit_tip) el.append(h("p", { class: "note-box" }, h("b", {}, "Ticket-Tipp: "), p.transit_tip));
+  p.warnings.forEach((w) => el.append(h("p", { class: "warn-box" }, w)));
+  if (!S.example) {
+    const refine = h("form", { class: "refine", onsubmit: (e) => { e.preventDefault(); const v = $("#refineIn").value.trim(); if (v) runPlanOnly(v); } },
+      h("input", { id: "refineIn", "aria-label": "Plan anpassen", placeholder: "Anpassen: z. B. „mehr Essen, kein Museum, später starten“", maxlength: "240" }),
+      h("button", { class: "btn small", type: "submit" }, "Anpassen"));
+    el.append(refine, h("div", { class: "actions" },
+      h("button", { class: "btn small", type: "button", id: "saveBtn", onclick: saveTrip, hidden: !(caps.db && userId) }, S.savedId ? "Gespeichert ✓" : "Plan speichern"),
+      h("button", { class: "btn small", type: "button", id: "calBtn", onclick: addToCalendar, hidden: !caps.mcp }, "In Google Kalender eintragen"),
+      h("button", { class: "btn small", type: "button", onclick: () => runPlanOnly(null, true) }, "Neu planen")));
+  }
+}
+
+function renderTimeline() {
+  const ol = $("#timeline"); ol.textContent = "";
+  const p = S.plan, bookById = new Map(S.attractions.map((a) => [a.id, a]));
+  p.stops.forEach((st, i) => {
+    const legs = legsFrom(st.id);
+    const isHotel = st.kind === "hotel";
+    const warns = stopWarnings(st);
+    const booked = st.booking_id ? bookById.get(st.booking_id) : null;
+    const body = h("div", { class: "body" },
+      h("div", { class: "kind" }, KINDS[st.kind] || "Stopp", booked ? " · Ticket über Booking.com" : ""),
+      h("h3", {}, st.name),
+      st.why ? h("p", {}, st.why) : null,
+      h("div", { class: "meta-row" },
+        st.hours ? h("span", {}, "Geöffnet: ", h("b", {}, st.hours)) : null,
+        st.price ? h("span", {}, "Eintritt: ", h("b", {}, st.price)) : null,
+        h("span", {}, "Aufenthalt: ", h("b", {}, minsLabel(st.leave - st.arrive)))),
+      warns.map((w) => h("div", { class: "warning" }, "⚠", h("span", {}, w))),
+      st.tip ? h("p", { class: "tip" }, st.tip) : null,
+      h("div", { class: "links" },
+        h("a", { class: "link", href: gmapsPlace(placeQuery(st)), target: "_blank", rel: "noopener" }, "In Maps ansehen (live Öffnungszeiten)"),
+        booked && booked.url ? h("a", { class: "link", href: booked.url, target: "_blank", rel: "noopener" }, `Tickets ab ${booked.priceLabel}`) : null));
+    ol.append(h("li", { class: `tl stop${isHotel ? " is-hotel" : ""}`, id: "stop-" + st.id },
+      h("div", { class: "when" }, fmt(st.arrive), h("small", {}, "bis " + fmt(st.leave))),
+      h("div", { class: "rail", "data-n": String(i + 1), style: `--rail:${modeVar(i < p.stops.length - 1 ? mainMode(legs) : i ? mainMode(legsFrom(p.stops[i - 1].id)) : "walk")}` }),
+      body));
+    const next = p.stops[i + 1];
+    legs.forEach((g) => ol.append(renderLeg(g, st, next)));
+  });
+}
+
+function renderLeg(g, from, to) {
+  const transit = !["walk", "taxi"].includes(g.mode);
+  const body = h("div", { class: "body" });
+  const head = h("div", { class: "line-badge" },
+    h("span", { class: "lb" }, transit ? g.line || MODES[g.mode] : MODES[g.mode]),
+    transit ? h("span", {}, g.direction ? h("b", {}, "Richtung " + g.direction) : MODES[g.mode]) : null,
+    h("span", { class: "mono", style: "color:var(--muted)" }, minsLabel(Math.round(g.minutes))));
+  body.append(head);
+  if (transit) {
+    const n = g.stations.length + 1;
+    const ride = h("div", { class: "ride" },
+      h("div", {}, h("span", { class: "mono" }, fmt(g.depart)), " Einsteigen: ", h("span", { class: "on" }, g.board || "Haltestelle bei " + from.name)),
+      g.stations.length ? h("details", { class: "stations" }, h("summary", {}, `${n} ${n === 1 ? "Station" : "Stationen"} fahren`), h("ol", {}, g.stations.map((x) => h("li", {}, x)))) : h("div", { style: "color:var(--muted);font-size:.84rem" }, `${n} ${n === 1 ? "Station" : "Stationen"} fahren`),
+      h("div", {}, h("span", { class: "mono" }, fmt(g.arrive)), " Aussteigen: ", h("span", { class: "off" }, g.alight || "Haltestelle bei " + (to ? to.name : "Ziel"))));
+    body.append(ride);
+  }
+  if (g.note) body.append(h("div", { style: "color:var(--muted)" }, g.note));
+  if (transit && to) {
+    const city = PL().local || F().city;
+    const o = g.board ? `${g.board}, ${city}` : stopLoc(from), d = g.alight ? `${g.alight}, ${city}` : stopLoc(to);
+    body.append(h("a", { class: "link", href: gmapsDir(o, d, "transit"), target: "_blank", rel: "noopener" }, "Live-Verbindung prüfen"));
+  } else if (to && g.mode === "walk" && g.minutes >= 8 && !g.implicit) {
+    body.append(h("a", { class: "link", href: gmapsDir(stopLoc(from), stopLoc(to), "walking"), target: "_blank", rel: "noopener" }, "Fußweg anzeigen"));
+  }
+  return h("li", { class: `tl leg ${g.mode}`, style: `--rail:${modeVar(g.mode)}`, "aria-label": `${MODES[g.mode]}${g.line ? " " + g.line : ""} von ${fmt(g.depart)} bis ${fmt(g.arrive)}` },
+    h("div", { class: "when" }, fmt(g.depart)), h("div", { class: "rail" }), body);
+}
+
+/* ================= Rendering: board, map, hours ================= */
+const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+const isLive = () => S.simT == null && F().date === todayStr();
+const boardTime = () => (S.simT != null ? S.simT : F().date === todayStr() ? nowMin() : S.plan.stops[0].arrive);
+function situation(t) {
+  const p = S.plan, st = p.stops;
+  const cur = st.find((x) => t >= x.arrive && t < x.leave);
+  const leg = p.legs.find((g) => t >= g.depart && t < g.arrive);
+  const next = p.legs.find((g) => g.depart >= t && g.mode !== "walk") || null;
+  const nextAny = p.legs.find((g) => g.depart >= t) || null;
+  return { cur, leg, next, nextAny, before: t < st[0].arrive, after: t >= st[st.length - 1].leave };
+}
+function renderBoard() {
+  const el = $("#board"); el.textContent = "";
+  const p = S.plan, lo = p.stops[0].arrive - 30, hi = p.stops[p.stops.length - 1].leave + 30;
+  const range = h("input", { type: "range", id: "boardRange", min: String(lo), max: String(hi), step: "5", "aria-label": "Uhrzeit simulieren" });
+  range.addEventListener("input", () => { S.simT = +range.value; updateBoard(); renderMap(); renderHours(); markNow(); });
+  el.append(h("div", { class: "board-info", id: "boardInfo" }),
+    h("div", { class: "row" }, h("div", { class: "clock" }, h("span", { class: "lbl" }, "Zeit vorspulen"),
+      h("button", { class: "live-btn", type: "button", id: "liveBtn", hidden: true, onclick: () => { S.simT = null; renderLive(); } }, "Zurück zu live")), range));
+  updateBoard();
+}
+function updateBoard() {
+  const el = $("#boardInfo"); if (!el) return; el.textContent = "";
+  const p = S.plan, t = boardTime(), sit = situation(t), byId = new Map(p.stops.map((x) => [x.id, x]));
+  el.append(h("div", { class: "clock" }, h("span", { class: "lbl" }, isLive() ? "Jetzt · live" : "Simulierte Uhrzeit"), h("span", { class: "count" }, fmt(t))));
+  let nowTxt, nowSub = "";
+  if (sit.before) { nowTxt = `Start ${fmt(p.stops[0].arrive)} · ${p.stops[0].name}`; nowSub = `in ${minsLabel(p.stops[0].arrive - t)}`; }
+  else if (sit.after) { nowTxt = "Dein Tag ist geschafft."; nowSub = p.evening || ""; }
+  else if (sit.cur) { nowTxt = sit.cur.name; nowSub = `bis ${fmt(sit.cur.leave)} · noch ${minsLabel(sit.cur.leave - t)}`; }
+  else if (sit.leg) { const to = byId.get(sit.leg.to); nowTxt = sit.leg.mode === "walk" ? `Zu Fuß zu ${to.name}` : `${sit.leg.line || MODES[sit.leg.mode]} Richtung ${sit.leg.direction || to.name}`;
+    nowSub = sit.leg.alight ? `Aussteigen: ${sit.leg.alight} um ${fmt(sit.leg.arrive)}` : `Ankunft ${fmt(sit.leg.arrive)}`; }
+  else { nowTxt = "Kurzer Puffer"; }
+  el.append(h("div", { class: "row" }, h("span", { class: "lbl" }, "Jetzt"), h("span", { class: "big" }, nowTxt), nowSub ? h("span", { class: "sub" }, nowSub) : null));
+  const nx = sit.next;
+  if (nx && !sit.after) {
+    el.append(h("div", { class: "row" }, h("span", { class: "lbl" }, "Nächste Abfahrt"),
+      h("span", { class: "big" }, `${fmt(nx.depart)} · ${nx.line || MODES[nx.mode]}${nx.direction ? " → " + nx.direction : ""}`),
+      h("span", { class: "sub" }, `ab ${nx.board || byId.get(nx.from).name} · ${nx.stations.length + 1} St. · aussteigen ${nx.alight || byId.get(nx.to).name}`),
+      h("span", { class: "sub" }, nx.depart - t <= 0 ? "fährt jetzt" : `in ${minsLabel(nx.depart - t)}`)));
+  } else if (sit.nextAny && !sit.after) {
+    el.append(h("div", { class: "row" }, h("span", { class: "lbl" }, "Danach"), h("span", { class: "big" }, `${fmt(sit.nextAny.depart)} · zu Fuß zu ${byId.get(sit.nextAny.to).name}`)));
+  }
+  const r = $("#boardRange"); if (r && S.simT == null) r.value = String(Math.min(+r.max, Math.max(+r.min, t)));
+  const lb = $("#liveBtn"); if (lb) lb.hidden = !(F().date === todayStr() && S.simT != null);
+}
+function markNow() {
+  const sit = situation(boardTime());
+  document.querySelectorAll("#timeline .stop").forEach((li) => li.classList.toggle("now", !!sit.cur && li.id === "stop-" + sit.cur.id));
+}
+
+function renderMap() {
+  const svg = $("#map"); svg.textContent = "";
+  const W = Math.max(300, Math.round(svg.parentElement.clientWidth || 640)), H = Math.round(W * 23 / 32), P = W < 420 ? 34 : 52;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const pts = S.plan.stops.filter((x) => x.lat != null);
+  const legend = $("#legend"); legend.textContent = "";
+  const linkStops = S.plan.stops;
+  $("#mapLink").href = linkStops.length > 1 ? `https://www.google.com/maps/dir/${linkStops.map((x) => encodeURIComponent(x.lat != null ? `${x.lat},${x.lng}` : placeQuery(x))).join("/")}` : gmapsPlace(placeQuery(linkStops[0]));
+  if (pts.length < 2) { svg.append(s("text", { x: W / 2, y: H / 2, "text-anchor": "middle", class: "lbl" }, "Für die Karte fehlen Koordinaten.")); return; }
+  const lat0 = pts.reduce((a, x) => a + x.lat, 0) / pts.length, k = Math.cos((lat0 * Math.PI) / 180);
+  const xs = pts.map((x) => x.lng * k), ys = pts.map((x) => -x.lat);
+  let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const minSpan = 0.004; if (maxX - minX < minSpan) { const c = (maxX + minX) / 2; minX = c - minSpan / 2; maxX = c + minSpan / 2; }
+  if (maxY - minY < minSpan) { const c = (maxY + minY) / 2; minY = c - minSpan / 2; maxY = c + minSpan / 2; }
+  const labelRoom = W < 420 ? 90 : 140;
+  const sc = Math.min((W - 2 * P - labelRoom) / (maxX - minX), (H - 2 * P) / (maxY - minY));
+  const ox = (W - (maxX - minX) * sc) / 2, oy = (H - (maxY - minY) * sc) / 2;
+  const proj = (x) => [ox + (x.lng * k - minX) * sc, oy + (-x.lat - minY) * sc];
+  // faint grid like map paper
+  const grid = s("g", { stroke: "var(--rule)", "stroke-width": 1, opacity: .7 });
+  for (let gx = 32; gx < W; gx += 32) grid.append(s("line", { x1: gx, y1: 0, x2: gx, y2: H }));
+  for (let gy = 32; gy < H; gy += 32) grid.append(s("line", { x1: 0, y1: gy, x2: W, y2: gy }));
+  svg.append(grid);
+  // scale bar: 500 m
+  const kmPx = sc * (1 / 111.32); const bar = 0.5 * kmPx;
+  if (bar > 20 && bar < 260) svg.append(s("g", {}, s("line", { x1: 20, y1: H - 22, x2: 20 + bar, y2: H - 22, stroke: "var(--muted)", "stroke-width": 3 }),
+    s("text", { x: 20, y: H - 30, class: "num", fill: "var(--muted)" }, "500 m")));
+  const used = new Set();
+  const lines = s("g", {}), stations = s("g", {});
+  const st = S.plan.stops;
+  for (let i = 0; i < st.length - 1; i++) {
+    const a = st[i], b = st[i + 1]; if (a.lat == null || b.lat == null) continue;
+    const mode = mainMode(legsFrom(a.id)); used.add(mode);
+    const [x1, y1] = proj(a), [x2, y2] = proj(b);
+    const dx = x2 - x1, dy = y2 - y1, d = Math.min(Math.abs(dx), Math.abs(dy));
+    const mx = x1 + Math.sign(dx) * d, my = y1 + Math.sign(dy) * d;   // octilinear elbow
+    const path = `M${x1},${y1} L${mx},${my} L${x2},${y2}`;
+    lines.append(s("path", { d: path, fill: "none", stroke: "var(--card)", "stroke-width": 11, "stroke-linecap": "round", "stroke-linejoin": "round" }));
+    lines.append(s("path", { d: path, fill: "none", stroke: modeVar(mode), "stroke-width": mode === "walk" ? 4 : 7, "stroke-linecap": "round", "stroke-linejoin": "round", "stroke-dasharray": mode === "walk" ? "2 8" : null }));
+  }
+  st.forEach((x, i) => {
+    if (x.lat == null) return;
+    const [cx, cy] = proj(x), right = cx < W * 0.62;
+    const g = s("g", { class: "st", tabindex: "0", role: "button", "aria-label": `${i + 1}. ${x.name}` });
+    g.append(x.kind === "hotel" ? s("rect", { x: cx - 11, y: cy - 11, width: 22, height: 22, rx: 5, fill: "var(--card)", stroke: "var(--ink)", "stroke-width": 3 })
+      : s("circle", { cx, cy, r: 11, fill: "var(--card)", stroke: "var(--ink)", "stroke-width": 3 }));
+    g.append(s("text", { x: cx, y: cy + 4, "text-anchor": "middle", class: "num" }, x.kind === "hotel" ? "H" : String(i + 1)));
+    const maxL = W < 420 ? 16 : 24, label = x.name.length > maxL ? x.name.slice(0, maxL - 1) + "…" : x.name;
+    g.append(s("text", { x: right ? cx + 17 : cx - 17, y: cy + 4.5, "text-anchor": right ? "start" : "end", class: "lbl" }, label));
+    const go = () => { const li = document.getElementById("stop-" + x.id); if (li) { li.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "center" }); li.classList.add("flash"); setTimeout(() => li.classList.remove("flash"), 1600); } };
+    g.addEventListener("click", go); g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go(); } });
+    stations.append(g);
+  });
+  svg.append(lines, stations);
+  // live position
+  const t = boardTime(); let pos = null;
+  const cur = st.find((x) => t >= x.arrive && t < x.leave && x.lat != null);
+  if (cur) pos = proj(cur);
+  else for (let i = 0; i < st.length - 1; i++) { const a = st[i], b = st[i + 1];
+    if (t >= a.leave && t < b.arrive && a.lat != null && b.lat != null) { const f = (t - a.leave) / Math.max(1, b.arrive - a.leave); const [x1, y1] = proj(a), [x2, y2] = proj(b); pos = [x1 + (x2 - x1) * f, y1 + (y2 - y1) * f]; } }
+  if (pos) svg.append(s("circle", { cx: pos[0], cy: pos[1], r: 8, class: "now-ring" }), s("circle", { cx: pos[0], cy: pos[1], r: 7, class: "now-dot" }));
+  [...used].forEach((m) => legend.append(h("span", {}, h("i", { class: m === "walk" ? "dash" : "", style: `--c:${modeVar(m)}` }), MODES[m])));
+  legend.append(h("span", {}, h("i", { style: "--c:var(--signal);width:10px;height:10px;border-radius:50%" }), "Deine Position"));
+}
+
+function renderHours() {
+  const ul = $("#hoursList"); ul.textContent = "";
+  $("#hoursTitle").textContent = `Öffnungszeiten · ${weekday(F().date)}`;
+  const t = boardTime();
+  const items = [...S.plan.stops.filter((x) => x.kind !== "hotel" && (x.hours || x.opens != null || x.closes != null)).map((x) => ({ name: x.name, kind: KINDS[x.kind], hours: x.hours, opens: x.opens, closes: x.closes })),
+    ...S.plan.shops.map((x) => ({ name: x.name, kind: x.kind || "Laden", hours: x.hours, opens: x.opens, closes: x.closes }))];
+  if (!items.length) { ul.append(h("li", { class: "empty" }, "Keine Öffnungszeiten im Plan.")); return; }
+  items.forEach((x) => {
+    const stt = openState(x.opens, x.closes, t, x.hours);
+    const label = stt === "open" ? (x.closes != null ? `offen bis ${fmt(x.closes)}` : "geöffnet") : stt === "closed" ? (x.opens != null && t < x.opens ? `öffnet ${fmt(x.opens)}` : "geschlossen") : "prüfen";
+    ul.append(h("li", {}, h("span", { class: "nm" }, x.name), h("span", { class: `state ${stt}` }, label), h("span", { class: "hr" }, [x.kind, x.hours].filter(Boolean).join(" · "))));
+  });
+}
+
+/* ================= Rendering: stays, experiences ================= */
+function planCenter() { const p = S.plan.stops.filter((x) => x.lat != null && x.kind !== "hotel"); if (!p.length) return null; return { lat: p.reduce((a, x) => a + x.lat, 0) / p.length, lng: p.reduce((a, x) => a + x.lng, 0) / p.length }; }
+function renderStays() {
+  const g = $("#stayGrid"); g.textContent = "";
+  if (S.staysState === "run") { g.append(h("p", { class: "empty" }, "Unterkünfte werden bei Booking.com gesucht …")); return; }
+  if (S.staysState === "err") { g.append(h("p", { class: "empty" }, S.staysErr)); return; }
+  if (!S.hotels.length) { g.append(h("p", { class: "empty" }, S.staysState === "ok" ? "Booking.com hat für diese Suche nichts Freies gefunden. Versuche ein anderes Datum oder ein höheres Budget." : S.staysState === "skip" ? "Unterkunftssuche ist ausgeschaltet." : "Plane einen Tag mit „Unterkunft suchen“: Hier erscheinen dann freie Hotels und Ferienwohnungen mit Preis, Bewertung und Check-in-Zeit.")); return; }
+  const c = planCenter(), chosen = S.forcedStay || S.plan.stay_id;
+  S.hotels.forEach((x) => {
+    const ci = S.checkins[x.id];
+    const dist = c && x.lat != null ? haversine(c, x) : null;
+    const isChosen = String(x.id) === String(chosen);
+    const ciBox = ci ? h("div", { class: "checkin" }, h("div", {}, h("span", {}, "Check-in"), h("b", {}, ci.in ? `ab ${ci.in}${ci.inUntil ? "–" + ci.inUntil : ""}` : "–")), h("div", {}, h("span", {}, "Check-out"), h("b", {}, ci.out ? `bis ${ci.out}` : "–")))
+      : S.checkinState === "run" ? h("div", { class: "checkin pending" }, h("div", {}, h("span", {}, "Check-in"), h("b", {}, "wird abgefragt …")), h("div", {}, h("span", {}, "Check-out"), h("b", {}, "…")))
+      : h("div", { class: "checkin none" }, h("div", {}, h("span", {}, "Check-in"), h("b", {}, "auf Booking.com prüfen")), h("div", {}, h("span", {}, "Check-out"), h("b", {}, "auf Booking.com prüfen")));
+    g.append(h("article", { class: `card stay${isChosen ? " chosen" : ""}` },
+      h("div", { class: "badges" }, h("span", { class: "badge real" }, "Booking.com"), isChosen ? h("span", { class: "badge ok" }, S.forcedStay ? "Dein Start" : "Empfohlen") : null, x.type ? h("span", { class: "badge" }, x.type) : null),
+      h("h3", {}, x.name),
+      h("div", { class: "meta-row" }, x.score != null ? h("span", { class: "score" }, x.score.toFixed(1).replace(".", ",")) : null, x.reviews ? h("span", {}, `${x.reviews.toLocaleString("de-DE")} Bewertungen`) : null, x.stars ? h("span", {}, "★".repeat(x.stars)) : null),
+      h("div", { class: "meta-row" }, x.district || x.city ? h("span", {}, x.district || x.city) : null, dist != null ? h("span", {}, h("b", {}, dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1).replace(".", ",")} km`), " zur Route") : null),
+      x.price != null ? h("div", { class: "price" }, `${Math.round(x.price).toLocaleString("de-DE")} ${x.currency === "EUR" ? "€" : x.currency}`, h("small", {}, ` gesamt · ${S.form.nights || 1} ${S.form.nights > 1 ? "Nächte" : "Nacht"}`)) : null,
+      ciBox,
+      isChosen && S.plan.stay_reason && !S.forcedStay ? h("p", { class: "facil" }, S.plan.stay_reason) : null,
+      x.facilities.length ? h("p", { class: "facil" }, x.facilities.join(" · ")) : null,
+      h("div", { class: "actions" },
+        x.url ? h("a", { class: "btn small primary", href: x.url, target: "_blank", rel: "noopener" }, "Auf Booking.com ansehen") : null,
+        caps.sample && !isChosen ? h("button", { class: "btn small", type: "button", onclick: () => { S.forcedStay = x.id; runPlanOnly(null); } }, "Tag ab hier planen") : null)));
+  });
+  if (S.checkinState === "err") g.append(h("p", { class: "empty" }, S.checkinErr));
+}
+function renderExp() {
+  const g = $("#expGrid"); g.textContent = "";
+  if (S.expState === "run") { g.append(h("p", { class: "empty" }, "Erlebnisse werden bei Booking.com gesucht …")); return; }
+  if (S.expState === "err") { g.append(h("p", { class: "empty" }, S.expErr)); return; }
+  if (!S.attractions.length) { g.append(h("p", { class: "empty" }, S.expState === "ok" ? "Booking.com hat hier keine buchbaren Erlebnisse gefunden." : "Nach dem Planen erscheinen hier Touren, Museen und Tickets mit Preis und Bewertung.")); return; }
+  const inPlan = new Set(S.plan.stops.map((x) => x.booking_id).filter(Boolean));
+  S.attractions.forEach((a) => g.append(h("article", { class: "card stay" },
+    h("div", { class: "badges" }, h("span", { class: "badge real" }, "Booking.com"), inPlan.has(a.id) ? h("span", { class: "badge ok" }, "Im Plan") : null),
+    h("h3", {}, a.name),
+    h("div", { class: "meta-row" }, a.score != null ? h("span", { class: "score" }, a.score.toFixed(1).replace(".", ",") + " / 5") : null, a.reviews ? h("span", {}, `${a.reviews.toLocaleString("de-DE")} Bewertungen`) : null),
+    a.address ? h("p", { class: "facil" }, a.address) : null,
+    h("div", { class: "actions" }, a.priceLabel ? h("span", { class: "price" }, a.priceLabel) : null, a.url ? h("a", { class: "btn small primary", href: a.url, target: "_blank", rel: "noopener" }, "Tickets ansehen") : null))));
+}
+
+function renderAll() { renderPlanHead(); renderTimeline(); renderBoard(); renderMap(); renderHours(); renderStays(); renderExp(); markNow(); }
+function renderLive() { updateBoard(); renderMap(); renderHours(); markNow(); }
+setInterval(() => { if (isLive()) renderLive(); }, 30000);
+let rsT; addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(renderMap, 150); });
+
+/* ================= Progress steps ================= */
+const STEP_LABELS = { locate: "Ort erkennen", attr: "Erlebnisse bei Booking.com suchen", stay: "Unterkünfte bei Booking.com suchen", checkin: "Check-in-Zeiten bei Booking.com abfragen", plan: "Route, Linien und Zeiten berechnen" };
+function setStep(id, state, detail, action) { const x = S.steps.find((q) => q.id === id); if (x) Object.assign(x, { state, detail: detail || "", action: action || null }); renderSteps(); }
+function renderSteps() {
+  const ol = $("#steps"); ol.textContent = "";
+  S.steps.forEach((x) => ol.append(h("li", { class: "step", "data-state": x.state }, h("span", { class: "dot", "aria-hidden": "true" }),
+    h("div", {}, STEP_LABELS[x.id], x.detail ? h("small", {}, x.detail) : null),
+    x.action ? h("button", { class: "btn small", type: "button", onclick: x.action.fn }, x.action.label) : h("span", { class: "eyebrow" }, { idle: "", run: "läuft", ok: "fertig", err: "Problem", skip: "übersprungen" }[x.state]))));
+}
+
+/* ================= Connector + Claude plumbing ================= */
+function mcpMessage(e, server) {
+  switch (e?.code) {
+    case "server_not_connected": case "server_not_found": return `${server} ist nicht verbunden. Füge es in claude.ai unter Einstellungen → Connectors hinzu.`;
+    case "needs_reauth": return `${server} muss neu verbunden werden: claude.ai → Einstellungen → Connectors.`;
+    case "not_in_manifest": case "approval_required": case "consent_required": return `Der Zugriff auf ${server} wurde für diese Seite nicht erlaubt.`;
+    case "selection_required": return `Wähle in claude.ai aus, welcher ${server}-Connector genutzt werden soll.`;
+    case "blocked_by_policy": return `Deine Organisation erlaubt ${server} hier nicht.`;
+    case "tool_error": return `${server} meldet: ${String(e.message || "Fehler").slice(0, 160)}`;
+    case "not_granted": case "capability_disabled": case "capability_removed": return "Connectoren sind in dieser Ansicht nicht verfügbar. Öffne die Seite in claude.ai.";
+    case "server_unavailable": case "rate_limited": return `${server} antwortet gerade nicht. Versuche es gleich noch einmal.`;
+    default: return `${server} hat nicht geantwortet. Versuche es noch einmal.`;
+  }
+}
+const consentCodes = new Set(["not_in_manifest", "approval_required", "consent_required"]);
+async function booking(tool, input) {
+  const call = () => caps.mcp.callTool("Booking.com", tool, input, { cache: { staleTime: 10 * 60e3, gcTime: 60 * 60e3 } });
+  try { return (await call()).payload; }
+  catch (e) {
+    if (e?.retryable) { await sleep(e.retryAfterMs ?? 700 + Math.random() * 900); return (await call()).payload; }
+    throw e;
+  }
+}
+function sampleMessage(e) {
+  switch (e?.code) {
+    case "not_granted": case "sampling_disabled": case "not_declared": case "capability_disabled": return "Claude ist in dieser Ansicht nicht verfügbar. Öffne die Seite in claude.ai.";
+    case "rate_limited": case "queue_overflow": return "Gerade zu viele Anfragen an Claude. Warte einen Moment und versuche es erneut.";
+    case "invalid_json": case "empty_completion": return "Claude hat keinen lesbaren Plan geliefert. Versuche es noch einmal.";
+    case "refused": return "Claude wollte diesen Plan nicht erstellen. Formuliere den Wunsch anders.";
+    case "session_expired": return "Deine Sitzung ist abgelaufen. Lade die Seite neu.";
+    case "cancelled": return "Abgebrochen.";
+    default: return "Claude hat nicht geantwortet. Versuche es noch einmal.";
+  }
+}
+function countryCode() { const m = /^[a-z]{2}[-_]([a-z]{2})$/i.exec(navigator.language || ""); const c = (m ? m[1] : "de").toLowerCase(); return ["ir", "ru", "by", "cu", "kp", "sy"].includes(c) ? "de" : c; }
+
+function cleanHotels(payload) {
+  const list = Array.isArray(payload?.accommodations) ? payload.accommodations : [];
+  return list.slice(0, 12).map((x) => {
+    const id = num(x?.id, 1, Number.MAX_SAFE_INTEGER); if (id == null || !str(x?.name)) return null;
+    const loc = x.location || {}, co = loc.coordinates || {};
+    const lat = num(co.latitude, -90, 90), lng = num(co.longitude, -180, 180);
+    return { id, name: str(x.name, 100), url: safeUrl(x.url, "booking.com"), price: num(x.price?.book, 0, 1e7), currency: str(x.price?.currency, 4) || "EUR",
+      score: num(x.rating?.review_score, 0, 10), reviews: num(x.rating?.number_of_reviews, 0, 1e8), stars: Math.round(num(x.rating?.stars, 0, 5) || 0),
+      type: str(x.accommodationType, 30), district: str(loc.district_name, 60), city: str(loc.city_name, 60), address: str(loc.address, 100),
+      lat: lat != null && lng != null ? lat : null, lng: lat != null && lng != null ? lng : null,
+      facilities: (Array.isArray(x.facilities) ? x.facilities : []).map((f) => str(f, 40)).filter(Boolean).slice(0, 5) };
+  }).filter(Boolean);
+}
+function cleanAttractions(payload) {
+  const list = Array.isArray(payload?.attractions) ? payload.attractions : [];
+  return list.slice(0, 12).map((x) => {
+    const id = str(x?.id, 40), name = str(x?.name, 120); if (!id || !name) return null;
+    const amt = num(x.price?.amount, 0, 1e6), cur = str(x.price?.currency, 4) || "EUR";
+    return { id, name, url: safeUrl(x.url, "booking.com"), price: amt, priceLabel: amt != null ? `${amt.toLocaleString("de-DE", { maximumFractionDigits: 2 })} ${cur === "EUR" ? "€" : cur}` : "",
+      score: num(x.ratings?.score, 0, 5), reviews: num(x.ratings?.number_of_reviews, 0, 1e8), address: str(x.location?.address, 120) };
+  }).filter(Boolean);
+}
+function parseCheckins(answer, hotels) {
+  const norm = (t) => String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const T = norm(answer), out = {};
+  const pos = hotels.map((x) => { const key = norm(x.name).slice(0, 18); return { x, i: key ? T.indexOf(key) : -1 }; }).filter((p) => p.i >= 0).sort((a, b) => a.i - b.i);
+  const tm = (v) => (v ? v.replace(".", ":").padStart(5, "0") : null);
+  pos.forEach((p, k) => {
+    const seg = T.slice(p.i, k + 1 < pos.length ? pos[k + 1].i : undefined);
+    const ci = /check-?in[^0-9\n]{0,40}(\d{1,2}[:.]\d{2})(?:\s*(?:-|–|to|bis|and|until)\s*(\d{1,2}[:.]\d{2}))?/.exec(seg);
+    const co = /check-?out[^0-9\n]{0,40}(\d{1,2}[:.]\d{2})/.exec(seg);
+    if (ci || co) out[p.x.id] = { in: ci ? tm(ci[1]) : null, inUntil: ci && ci[2] ? tm(ci[2]) : null, out: co ? tm(co[1]) : null };
+  });
+  return out;
+}
+
+/* ================= Pipeline ================= */
+async function locate(f) {
+  if (!caps.sample) return { local: f.city, en: f.city, tz: null, lat: null, lng: null, cc: null };
+  const r = await caps.sample.json(
+    `Bestimme den Ort für eine Reiseplanung. Eingabe des Nutzers: ${JSON.stringify(f.city)}\n` +
+    `Antworte nur mit JSON wie {"known":true,"local_name":"München","destination_en":"Munich, Germany","country_code":"de","timezone":"Europe/Berlin","lat":48.137,"lng":11.575}.\n` +
+    `destination_en: kanonischer englischer Name mit Land. known=false, wenn es keinen passenden Ort gibt.`, { modelTier: "quick" });
+  if (!r || r.known === false) throw Object.assign(new Error("unknown"), { code: "unknown_place" });
+  return { local: str(r.local_name, 60) || f.city, en: str(r.destination_en, 100) || f.city, tz: /^[A-Za-z_]+\/[A-Za-z_\/+-]+$/.test(r.timezone || "") ? r.timezone : null,
+    lat: num(r.lat, -90, 90), lng: num(r.lng, -180, 180), cc: /^[a-z]{2}$/.test(r.country_code || "") ? r.country_code : null };
+}
+
+function planPrompt(f, place, opts) {
+  const end = toMin(f.start) + Math.round(f.hours * 60);
+  const maxStops = f.hours <= 3 ? 4 : f.hours <= 5 ? 5 : f.hours <= 8 ? 7 : 8;
+  const stay = opts.stay;
+  const lines = [
+    `Du bist ein lokaler Reiseplaner und kennst den Nahverkehr von ${place.local} genau. Plane einen realistischen Ausflug.`,
+    ``, `REISE`,
+    `- Ort: ${place.local} (${place.en})`,
+    `- Datum: ${f.date}, ${weekday(f.date)} (beachte Sonn- und Feiertage)`,
+    `- Zeitfenster: ${f.start} bis ${fmt(end)} (${durLabel(f.hours)})`,
+    `- Tempo: ${f.pace}; Personen: ${f.people}`,
+    `- Schwerpunkte: ${f.chips.map((c) => c[0]).join(", ") || "keine Vorgabe"}`,
+    `- Wunsch in eigenen Worten: ${f.wish ? JSON.stringify(f.wish) : "keiner"}`,
+    stay ? `- Startpunkt: Unterkunft ${JSON.stringify(stay.name)}, ${stay.address || ""}${stay.lat != null ? ` (${stay.lat},${stay.lng})` : ""}. Mache sie zu Stopp s1 mit kind "hotel"${stay.lat != null ? " und genau diesen Koordinaten" : ""}.`
+      : f.from ? `- Startpunkt: ${JSON.stringify(f.from)}` : `- Startpunkt: zentraler Punkt der Stadt`,
+    f.checkinToday && stay ? `- Check-in heute: ${S.checkins[stay.id]?.in ? "ab " + S.checkins[stay.id].in : "Zeit unbekannt, nimm 15:00 an"}. Plane Gepäckabgabe am Anfang und den Check-in passend ein.` : null,
+    ``,
+  ];
+  if (S.attractions.length) {
+    lines.push(`BUCHBARE ERLEBNISSE (echte Daten von Booking.com; nur einbauen, wenn sie zeitlich passen; Tagesausflüge nur bei ganztägigen Plänen; dann booking_id setzen):`);
+    S.attractions.slice(0, 10).forEach((a) => lines.push(`- id=${a.id} | ${a.name} | ${a.priceLabel || "?"} | Bewertung ${a.score ?? "?"}/5 | ${a.address}`));
+    lines.push("");
+  }
+  if (!stay && S.hotels.length && opts.pickStay) {
+    lines.push(`UNTERKÜNFTE (echte Daten von Booking.com). Wähle die am besten zur Route passende als stay_id (Lage, Bewertung, Preis), begründe in stay_reason.`);
+    lines.push(f.checkinToday ? `Der Nutzer checkt heute ein: baue die gewählte Unterkunft als Stopp mit kind "hotel" und ihren Koordinaten ein, zu Beginn zur Gepäckabgabe und zum Check-in ab der angegebenen Zeit (unbekannt: 15:00).` : `Die Unterkunft ist kein Stopp im Plan.`);
+    S.hotels.slice(0, 8).forEach((x) => lines.push(`- id=${x.id} | ${x.name} | ${x.district || x.city} | ${x.lat},${x.lng} | ${x.price != null ? Math.round(x.price) + " " + x.currency : "?"} | Bewertung ${x.score ?? "?"}/10${S.checkins[x.id]?.in ? " | Check-in ab " + S.checkins[x.id].in : ""}`));
+    lines.push("");
+  }
+  if (opts.previous) {
+    lines.push(`BISHERIGER PLAN (JSON):`, JSON.stringify(opts.previous).slice(0, 12000), "");
+    if (opts.change) lines.push(`ÄNDERUNGSWUNSCH DES NUTZERS: ${JSON.stringify(opts.change)}. Übernimm, was passt, und ändere den Rest.`, "");
+    else lines.push(`Erstelle eine spürbar andere Variante.`, "");
+  }
+  lines.push(
+    `REGELN`,
+    `- Höchstens ${maxStops} Stopps, realistische Wege und Aufenthalte; bei mehr als 4 Stunden eine Mahlzeit einplanen.`,
+    `- Öffnungszeiten am ${weekday(f.date)} beachten. hours = typische Öffnungszeiten an diesem Tag, opens/closes als HH:MM oder null.`,
+    `- Nahverkehr: echte Linien, Richtung (Endhaltestelle), Einstieg, Ausstieg und Zwischenhalte in richtiger Reihenfolge. Unter 15 Min. Fußweg zu Fuß gehen.`,
+    `- legs: pro Übergang zwischen zwei Stopps ein oder mehrere Abschnitte in Reihenfolge (z. B. zu Fuß zur Station, Fahrt, zu Fuß). mode ∈ walk, ubahn, sbahn, tram, bus, train, ferry, taxi.`,
+    `- stations: nur die Halte zwischen board und alight. Uhrzeiten 24h als HH:MM.`,
+    `- shops: bis zu 5 Läden, Märkte oder Feinkost an der Route mit Öffnungszeiten an diesem Tag; near = id des nächsten Stopps.`,
+    `- Koordinaten (lat/lng) für jeden Stopp, so genau du kannst. Alle Texte auf Deutsch, kurz und konkret.`,
+    ``,
+    `Antworte nur mit JSON in genau dieser Form:`,
+    `{"title":"…","summary":"…","transit_tip":"Welches Ticket lohnt sich","stay_id":null,"stay_reason":"","stops":[{"id":"s1","name":"…","kind":"sight|museum|food|cafe|shop|park|viewpoint|nightlife|hotel|station|experience","arrive":"10:00","leave":"10:45","lat":0,"lng":0,"address":"…","why":"…","tip":"…","hours":"…","opens":"10:00","closes":"18:00","price":"…","booking_id":null}],"legs":[{"from":"s1","to":"s2","mode":"ubahn","line":"U3","direction":"…","board":"…","alight":"…","stations":["…"],"depart":"10:50","arrive":"10:58","minutes":8,"note":"…"}],"shops":[{"name":"…","kind":"…","hours":"…","opens":"10:00","closes":"20:00","near":"s2"}],"evening":null,"warnings":[]}`);
+  return lines.filter((x) => x != null).join("\n");
+}
+
+async function makePlan(f, place, opts) {
+  let chars = 0;
+  const raw = await caps.sample.json(planPrompt(f, place, opts), { modelTier: "complex", cache: false,
+    onText: ({ text }) => { const n = text.length; if (n - chars > 200) { chars = n; setStep("plan", "run", `Claude schreibt den Plan … ${Math.round(n / 100) / 10}k Zeichen`); } } });
+  return cleanPlan(raw);
+}
+
+async function planTrip(f) {
+  if (S.running) return; S.running = true;
+  $("#planBtn").disabled = true; $("#planBtn").textContent = "Plant …";
+  S.steps = ["locate", "attr", "stay", "checkin", "plan"].map((id) => ({ id, state: "idle", detail: "" }));
+  $("#progress").hidden = false; renderSteps();
+  $("#progressNote").textContent = `${f.city} · ${dateLabel(f.date)}`;
+  S.forcedStay = null; S.savedId = null;
+  try {
+    // 1 · place
+    setStep("locate", "run");
+    let place;
+    try { place = await locate(f); setStep("locate", "ok", caps.sample ? `${place.local} · ${place.en}` : "Ohne Claude: Eingabe wird direkt verwendet."); }
+    catch (e) {
+      if (e.code === "unknown_place") { setStep("locate", "err", `„${f.city}“ wurde nicht als Ort erkannt. Prüfe die Schreibweise.`); ["attr", "stay", "checkin", "plan"].forEach((x) => setStep(x, "skip")); return; }
+      place = { local: f.city, en: f.city, tz: null, lat: null, lng: null, cc: null }; setStep("locate", "err", sampleMessage(e) + " Ich suche mit deiner Eingabe weiter.");
+    }
+    // 2 · Booking.com in parallel
+    const cc = countryCode();
+    const tasks = [];
+    S.attractions = []; S.hotels = []; S.checkins = {}; S.checkinState = "idle";
+    if (caps.mcp) {
+      setStep("attr", "run"); S.expState = "run";
+      const cats = [...new Set(f.chips.map((c) => c[2]).filter(Boolean))];
+      const aIn = { destination: place.en, user_country_code: cc, user_locale: "de", start_date: f.date, end_date: f.date,
+        user_query: `Things to do in ${place.en}${f.chips.length ? ": " + f.chips.map((c) => c[1]).join(", ") : ""}`, ...(cats.length ? { categories: cats } : {}) };
+      tasks.push(booking("attractions_search", aIn).then((p) => { S.attractions = cleanAttractions(p); S.expState = "ok"; setStep("attr", "ok", `${S.attractions.length} Erlebnisse gefunden`); markSrc("booking", "ok"); })
+        .catch((e) => { S.expState = "err"; S.expErr = mcpMessage(e, "Booking.com"); setStep("attr", "err", S.expErr, consentCodes.has(e?.code) ? { label: "Zugriff erlauben", fn: () => planTrip(readForm()) } : null); markSrc("booking", "err"); }));
+      if (f.stay) {
+        setStep("stay", "run"); S.staysState = "run";
+        const types = f.stayType === "hotel" ? ["HOTEL"] : f.stayType === "apartment" ? ["APARTMENT", "HOLIDAY_HOME"] : null;
+        const sIn = { destination: place.en, checkin_date: f.date, checkout_date: addDays(f.date, f.nights), number_of_adults: f.people, user_country_code: cc, user_locale: "de",
+          user_query: `${f.stayType === "apartment" ? "Apartment or holiday home" : f.stayType === "hotel" ? "Hotel" : "Place to stay"} in ${place.en}${f.budget ? ` under ${f.budget} per night` : ""}`,
+          ...(types ? { accommodation_types: types } : {}), ...(f.budget ? { price: { maximum: f.budget } } : {}) };
+        tasks.push(booking("accommodations_search", sIn).then((p) => { S.hotels = cleanHotels(p); S.staysState = "ok"; setStep("stay", "ok", `${S.hotels.length} freie Unterkünfte`); markSrc("booking", "ok"); })
+          .catch((e) => { S.staysState = "err"; S.staysErr = mcpMessage(e, "Booking.com"); setStep("stay", "err", S.staysErr); markSrc("booking", "err"); }));
+      } else { S.staysState = "skip"; setStep("stay", "skip", "Unterkunftssuche ist ausgeschaltet."); setStep("checkin", "skip"); }
+    } else {
+      S.expState = "err"; S.expErr = "Booking.com ist in dieser Ansicht nicht verfügbar."; S.staysState = "err"; S.staysErr = S.expErr;
+      ["attr", "stay", "checkin"].forEach((x) => setStep(x, "skip", "Connectoren sind in dieser Ansicht nicht verfügbar."));
+    }
+    await Promise.all(tasks);
+    // 3 · check-in times (Booking.com Q&A); wait for it only if the plan depends on it
+    let ciTask = Promise.resolve();
+    if (S.hotels.length) {
+      setStep("checkin", "run"); S.checkinState = "run";
+      ciTask = booking("answer_property_qa_by_ids_v2", { hotel_ids: S.hotels.slice(0, 6).map((x) => x.id),
+        user_question: "What are the check-in and check-out times of each property? Answer with one line per property in exactly this format: <property name> | check-in from HH:MM | check-out until HH:MM" })
+        .then((p) => { const ans = typeof p === "string" ? p : str(p?.answer, 4000); S.checkins = parseCheckins(ans, S.hotels); S.checkinState = "ok";
+          const n = Object.keys(S.checkins).length; setStep("checkin", n ? "ok" : "err", n ? `Zeiten für ${n} Unterkünfte` : "Booking.com hat keine Zeiten genannt. Prüfe sie auf der Hotelseite."); renderStays(); })
+        .catch((e) => { S.checkinState = "err"; S.checkinErr = mcpMessage(e, "Booking.com"); setStep("checkin", "err", S.checkinErr); renderStays(); });
+      if (f.checkinToday) await ciTask;
+    } else if (f.stay && caps.mcp) setStep("checkin", "skip", "Keine Unterkünfte zum Abfragen.");
+    // 4 · plan
+    S.form = f; S.place = place;
+    if (!caps.sample) {
+      setStep("plan", "skip", "Claude ist in dieser Ansicht nicht verfügbar, deshalb gibt es keine Route. Unterkünfte und Erlebnisse siehst du unten.");
+      renderStays(); renderExp(); return;
+    }
+    setStep("plan", "run", "Claude plant Wege, Linien und Zeiten …");
+    try {
+      const plan = await makePlan(f, place, { stay: null, pickStay: true });
+      S.plan = plan; S.example = false; S.simT = null;
+      setStep("plan", "ok", `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`); markSrc("claude", "ok");
+      renderAll();
+      if (S.steps.every((x) => x.state === "ok" || x.state === "skip" || (x.id === "checkin" && x.state === "run"))) $("#progress").hidden = true;
+      document.querySelector(".results").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+    } catch (e) {
+      setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => runPlanOnly(null) }); markSrc("claude", "err");
+      renderStays(); renderExp();
+    }
+    await ciTask;
+  } finally {
+    S.running = false; $("#planBtn").disabled = false; $("#planBtn").textContent = "Tag planen";
+  }
+}
+
+/* Re-plan only (refine, different start, retry) — reuses Booking.com data */
+async function runPlanOnly(change, variant) {
+  if (S.running || !caps.sample) { if (!caps.sample) toast("Claude ist in dieser Ansicht nicht verfügbar."); return; }
+  S.running = true; $("#progress").hidden = false;
+  if (!S.steps.length) S.steps = [{ id: "plan", state: "idle" }];
+  const f = S.form, stay = S.forcedStay ? S.hotels.find((x) => x.id === S.forcedStay) : null;
+  setStep("plan", "run", stay ? `Neu ab ${stay.name} …` : change ? `Passe an: „${change}“ …` : "Plane neu …");
+  try {
+    const prev = S.example ? null : { title: S.plan.title, stops: S.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) };
+    const plan = await makePlan(f, S.place, { stay, pickStay: !stay, previous: change || variant ? prev : null, change });
+    if (stay) plan.stay_id = String(stay.id);
+    S.plan = plan; S.example = false; S.savedId = null;
+    setStep("plan", "ok", `${plan.stops.length} Stopps, ${plan.legs.filter((g) => g.mode !== "walk").length} Fahrten`);
+    renderAll(); toast(change ? "Plan angepasst." : "Neuer Plan ist da.");
+  } catch (e) { setStep("plan", "err", e?.code ? sampleMessage(e) : `Der Plan war unvollständig: ${e.message}`, { label: "Nochmal", fn: () => runPlanOnly(change, variant) }); }
+  finally { S.running = false; }
+}
+
+$("#tripForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const f = readForm(), err = formError(f), hint = $("#formHint");
+  if (err) { hint.textContent = err[1]; hint.classList.add("err"); $(err[0]).focus(); return; }
+  hint.classList.remove("err"); hint.textContent = "Hotels, Ferienwohnungen, Check-in-Zeiten und Tickets kommen live von Booking.com. Route, Linien und Öffnungszeiten plant Claude.";
+  if (!caps.mcp && !caps.sample) { hint.textContent = "Hier fehlen Booking.com und Claude. Öffne die Seite in claude.ai, um echte Pläne zu bekommen."; hint.classList.add("err"); return; }
+  planTrip(f);
+});
+
+/* ================= Calendar ================= */
+async function addToCalendar() {
+  const btn = $("#calBtn"); if (!caps.mcp || !btn) return;
+  const p = S.plan, f = F(), first = p.stops[0], last = p.stops[p.stops.length - 1];
+  const lines = [];
+  p.stops.forEach((x, i) => {
+    lines.push(`${fmt(x.arrive)}–${fmt(x.leave)}  ${i + 1}. ${x.name}${x.hours ? "  (geöffnet: " + x.hours + ")" : ""}`);
+    legsFrom(x.id).forEach((g) => { if (g.mode === "walk") lines.push(`   ${fmt(g.depart)} zu Fuß, ${Math.round(g.minutes)} Min.`);
+      else lines.push(`   ${fmt(g.depart)} ${g.line || MODES[g.mode]}${g.direction ? " Richtung " + g.direction : ""}: ${g.board || "?"} → ${g.alight || "?"} (an ${fmt(g.arrive)})`); });
+  });
+  const endMin = Math.min(last.leave, 24 * 60 - 1);
+  const input = { summary: `Stadtfaden: ${p.title || S.place.local}`, startTime: `${f.date}T${fmt(first.arrive)}:00`, endTime: `${f.date}T${fmt(endMin)}:00`,
+    location: `${first.name}, ${S.place.local}`, description: [p.summary, "", ...lines, "", p.transit_tip ? "Ticket: " + p.transit_tip : ""].join("\n").slice(0, 7000),
+    ...(S.place.tz ? { timeZone: S.place.tz } : {}) };
+  btn.disabled = true; btn.textContent = "Trage ein …";
+  try { await caps.mcp.callTool("Google Calendar", "create_event", input, { cache: false }); btn.textContent = "Im Kalender ✓"; markSrc("calendar", "ok"); toast("Dein Tag steht im Google Kalender."); }
+  catch (e) {
+    btn.disabled = false; btn.textContent = "In Google Kalender eintragen"; markSrc("calendar", "err");
+    const ambiguous = ["server_unavailable", "upstream_error"].includes(e?.code);
+    toast(ambiguous ? "Unklar, ob der Termin angelegt wurde. Schau in deinen Kalender, bevor du es erneut versuchst." : mcpMessage(e, "Google Calendar"));
+  }
+}
+
+/* ================= Saving (private per person) ================= */
+async function saveTrip() {
+  const btn = $("#saveBtn"); if (!caps.db || !userId || !btn) return;
+  btn.disabled = true;
+  const id = "t" + Date.now();
+  const data = { title: S.plan.title || `Tag in ${S.place.local}`, city: S.place.local, date: S.form.date, savedAt: Date.now(),
+    json: JSON.stringify({ form: S.form, place: S.place, plan: S.plan, hotels: S.hotels, attractions: S.attractions, checkins: S.checkins }) };
+  try { await caps.db.collection("data/users/" + userId).doc(id).set(data); S.savedId = id; btn.textContent = "Gespeichert ✓"; toast("Plan gespeichert. Du findest ihn unten unter „Meine Pläne“."); }
+  catch { btn.disabled = false; toast("Speichern hat nicht geklappt. Versuche es noch einmal."); }
+}
+let savedDocs = [];
+function loadSaved() {
+  markSrc("db", "ok");
+  let timer = setTimeout(() => renderSaved("Gespeicherte Pläne laden gerade nicht."), 10000);
+  caps.db.collection("data/users/" + userId).orderBy("savedAt", "desc").limit(20).onSnapshot((snap) => {
+    clearTimeout(timer); savedDocs = snap.docs.map((d) => ({ id: d.id, ...(d.data() || {}) })).filter((d) => typeof d.json === "string"); renderSaved();
+  }, () => { clearTimeout(timer); renderSaved("Gespeicherte Pläne konnten nicht geladen werden."); });
+}
+function renderSaved(msg) {
+  const ul = $("#savedList"); ul.textContent = "";
+  if (msg) { ul.append(h("li", { class: "empty" }, msg)); return; }
+  if (!caps.db || !userId) { ul.append(h("li", { class: "empty" }, "Melde dich in claude.ai an, um Pläne zu speichern.")); return; }
+  if (!savedDocs.length) { ul.append(h("li", { class: "empty" }, "Noch nichts gespeichert. Nach dem Planen: „Plan speichern“.")); return; }
+  savedDocs.forEach((d) => {
+    let confirm = false;
+    const del = h("button", { class: "btn small", type: "button" }, "Löschen");
+    del.addEventListener("click", async () => {
+      if (!confirm) { confirm = true; del.textContent = "Wirklich löschen?"; setTimeout(() => { confirm = false; del.textContent = "Löschen"; }, 4000); return; }
+      try { await caps.db.collection("data/users/" + userId).doc(d.id).delete(); toast("Gelöscht."); } catch { toast("Löschen hat nicht geklappt."); }
+    });
+    ul.append(h("li", {}, h("span", { class: "t" }, `${str(d.title, 80)} `, h("span", { class: "eyebrow" }, `${str(d.city, 40)} · ${d.date ? dateLabel(String(d.date)) : ""}`)),
+      h("span", { class: "actions" }, h("button", { class: "btn small primary", type: "button", onclick: () => openSaved(d) }, "Öffnen"), del)));
+  });
+}
+function openSaved(d) {
+  try {
+    const o = JSON.parse(d.json);
+    const plan = cleanPlan({ ...o.plan, stops: o.plan.stops.map((x) => ({ ...x, arrive: fmt(x.arrive), leave: fmt(x.leave), opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })),
+      legs: o.plan.legs.map((g) => ({ ...g, depart: fmt(g.depart), arrive: fmt(g.arrive) })), shops: (o.plan.shops || []).map((x) => ({ ...x, opens: x.opens != null ? fmt(x.opens) : null, closes: x.closes != null ? fmt(x.closes) : null })) });
+    S.plan = plan; S.form = o.form; S.place = o.place; S.hotels = cleanHotelsSaved(o.hotels); S.attractions = Array.isArray(o.attractions) ? o.attractions : [];
+    S.checkins = o.checkins || {}; S.example = false; S.savedId = d.id; S.simT = null; S.staysState = "ok"; S.expState = "ok"; S.checkinState = "ok"; S.forcedStay = null;
+    renderAll(); $("#planHead").scrollIntoView({ block: "start" });
+  } catch { toast("Dieser Plan ließ sich nicht öffnen."); }
+}
+function cleanHotelsSaved(list) { return (Array.isArray(list) ? list : []).filter((x) => x && x.id && x.name).map((x) => ({ ...x, url: safeUrl(x.url, "booking.com"), facilities: Array.isArray(x.facilities) ? x.facilities : [] })); }
+
+/* ================= Capabilities ================= */
+function markSrc(id, state) { const el = document.querySelector(`.src[data-src="${id}"]`); if (el) el.dataset.state = state; }
+async function initCaps() {
+  if (!window.claude?.use) { renderSaved(); return; }
+  const [mcp, sample, db, user] = await Promise.all(["mcp", "sample", "db", "user"].map((n) => claude.use(n).catch(() => null)));
+  Object.assign(caps, { mcp, sample, db, user });
+  if (sample) markSrc("claude", "ok");
+  if (mcp) {
+    try { const r = await mcp.listTools(); servers = new Set(r.servers.filter((x) => x.authStatus !== "needs_reauth").map((x) => x.server)); }
+    catch { servers = new Set(["Booking.com", "Google Calendar"]); }
+    markSrc("booking", servers.has("Booking.com") ? "ok" : "err");
+    markSrc("calendar", servers.has("Google Calendar") ? "ok" : "err");
+  }
+  if (user) { try { userId = await user.id(); } catch { userId = null; } }
+  if (db && userId) loadSaved(); else renderSaved();
+  if (!S.example) renderPlanHead();
+}
+
+/* ================= Start ================= */
+syncStay(); setHours(4);
+S.staysState = "idle"; S.expState = "idle";
+renderAll(); renderSaved();
+initCaps();
+</script>
