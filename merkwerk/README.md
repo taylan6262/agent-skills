@@ -17,7 +17,8 @@ vollständig im Browser, ist installierbar und offline spielbar – ohne Konto, 
 - Freies Training, Onboarding mit Einstufungstest, Einstellungen (Ton, Haptik, Animationen, Farbmuster)
 
 Gestaltung: Bauhaus-Formenlehre auf Papier – fünf Farben, lokale Schriften (League Spartan, Atkinson
-Hyperlegible), eigene SVG-Icons, per Web Audio API erzeugte Klänge. Konzept: [docs/KONZEPT.md](docs/KONZEPT.md).
+Hyperlegible), eigene SVG-Icons, per Web Audio API erzeugte Klänge. Konzept: [docs/KONZEPT.md](docs/KONZEPT.md),
+Qualitätsnachweise (Tests, Lighthouse, Barrierefreiheit): [docs/QUALITAET.md](docs/QUALITAET.md).
 
 ## Schnellstart
 
