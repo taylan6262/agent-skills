@@ -96,6 +96,16 @@ test('Onboarding, Level 1 spielen, Ergebnis – Fortschritt bleibt nach dem Neul
   await expect(page.getByRole('heading', { level: 1, name: 'Meisterhaft' })).toBeVisible();
   await expect(page.getByRole('img', { name: '3 von 3 Sternen' })).toBeVisible();
   await expect(page.getByText('Erster Schritt')).toBeVisible();
+  // Genau eine Runde verbucht – kein doppeltes Speichern
+  const stored = await page.evaluate(
+    () =>
+      JSON.parse(localStorage.getItem('merkwerk.spielstand') ?? '{}') as {
+        player: { gamesPlayed: number };
+        levels: Record<string, { plays: number; stars: number }>;
+      },
+  );
+  expect(stored.player.gamesPlayed).toBe(1);
+  expect(stored.levels['w1-1']).toMatchObject({ plays: 1, stars: 3 });
   await page.getByRole('button', { name: 'Weiter' }).click();
   await expect(page).toHaveURL(/\/level\/w1-2$/);
 

@@ -25,7 +25,11 @@ function svg(scale) {
 }
 
 const targets = [
-  ...[48, 72, 96, 128, 144, 152, 192, 256, 384, 512].map((size) => ({ file: `icon-${size}.png`, size, scale: 0.84 })),
+  ...[48, 72, 96, 128, 144, 152, 192, 256, 384, 512].map((size) => ({
+    file: `icon-${size}.png`,
+    size,
+    scale: 0.84,
+  })),
   { file: 'maskable-192.png', size: 192, scale: 0.62 },
   { file: 'maskable-512.png', size: 512, scale: 0.62 },
   { file: 'apple-touch-icon.png', size: 180, scale: 0.78 },

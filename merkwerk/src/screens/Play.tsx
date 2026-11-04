@@ -1,4 +1,4 @@
-import { Suspense, useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import type { RouteProps } from '../App';
 import { dailyChallenge } from '../game/daily';
 import { effectiveDifficulty, type PlayKind } from '../game/adaptive';
@@ -58,15 +58,19 @@ function GameRunner({ config }: { config: PlayConfig }) {
     };
   }, []);
 
+  // Jede Runde wird genau einmal verbucht – auch wenn Klick und Auto-Weiter gleichzeitig auslösen.
+  const recordedRun = useRef<number | null>(null);
   const onFinish = useCallback(
     (result: GameResult) => {
+      if (recordedRun.current === run) return;
+      recordedRun.current = run;
       recordResult(result, {
         kind: config.kind,
         ...(config.levelId ? { levelId: config.levelId } : {}),
       });
       navigate('/ergebnis', { replace: true });
     },
-    [config.kind, config.levelId],
+    [config.kind, config.levelId, run],
   );
 
   const restart = () => {
