@@ -11,6 +11,8 @@ import './styles/games.css';
 import './styles/pages.css';
 import './styles/motion.css';
 
+document.documentElement.lang = 'de';
+
 const root = document.getElementById('root');
 if (root) {
   createRoot(root).render(

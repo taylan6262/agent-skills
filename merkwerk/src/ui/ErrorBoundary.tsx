@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { restartApp } from '../lib/router';
 import { LogoMark } from './Logo';
 
 interface State {
@@ -41,11 +42,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
           >
             <span>Neu laden</span>
           </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => window.location.assign('/')}
-          >
+          <button type="button" className="btn btn-secondary" onClick={restartApp}>
             <span>Zur Startseite</span>
           </button>
         </div>

@@ -1,4 +1,5 @@
 dist
+dist-artifact
 dev-dist
 coverage
 node_modules

@@ -19,7 +19,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "icons": "node scripts/generate-icons.mjs",
-    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run format:check && npm run test",
+    "build:artifact": "vite build --mode artifact --outDir dist-artifact --emptyOutDir && node scripts/inline-artifact.mjs"
   },
   "dependencies": {
     "react": "19.3.1",

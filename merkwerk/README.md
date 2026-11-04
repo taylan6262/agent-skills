@@ -84,6 +84,16 @@ keinen Cache für Service Worker/HTML und Sicherheits-Header (CSP ohne externe Q
 
 Ohne Git geht es auch: `npm run build` und den Ordner `dist/` per Drag-and-drop bei Netlify hochladen.
 
+## Vorschau als Einzeldatei (claude.ai-Artifact)
+
+```bash
+npm run build:artifact
+```
+
+Erzeugt `dist-artifact/merkwerk.html`: JS, CSS und Schriften eingebettet, Verlauf im Speicher statt in der
+Adresszeile, ohne Service Worker. Gedacht zum Ausprobieren in eingebetteten Vorschauen; für den echten Betrieb
+(installierbar, offline) gilt der normale Build oben.
+
 ## Vor dem Livegang ausfüllen
 
 Die Rechtstexte sind **Vorlagen** in [`src/screens/Legal.tsx`](src/screens/Legal.tsx). Platzhalter stehen in eckigen

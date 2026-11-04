@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
@@ -17,13 +18,15 @@ const securityHeaders = {
 
 const iconSizes = [48, 72, 96, 128, 144, 152, 192, 256, 384, 512];
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },
   plugins: [
     react(),
     VitePWA({
+      // Im Artifact-Build (eingebettete Vorschau auf claude.ai) sind Service Worker nicht erlaubt.
+      disable: mode === 'artifact',
       registerType: 'prompt',
       injectRegister: false,
       includeAssets: ['favicon.svg', 'icons/apple-touch-icon.png', 'robots.txt'],
@@ -70,10 +73,22 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: (mode === 'artifact'
+      ? {
+          'virtual:pwa-register/react': fileURLToPath(
+            new URL('./src/pwa-stub.ts', import.meta.url),
+          ),
+        }
+      : {}) as Record<string, string>,
+  },
   build: {
     target: 'es2022',
     sourcemap: true,
-    chunkSizeWarningLimit: 400,
+    chunkSizeWarningLimit: mode === 'artifact' ? 1200 : 400,
+    ...(mode === 'artifact'
+      ? { sourcemap: false, rollupOptions: { output: { inlineDynamicImports: true } } }
+      : {}),
   },
   preview: {
     headers: securityHeaders,
@@ -82,4 +97,4 @@ export default defineConfig({
     environment: 'node',
     include: ['src/**/*.test.ts'],
   },
-});
+}));

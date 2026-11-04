@@ -5,7 +5,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from 'react';
-import { goBack, navigate } from '../lib/router';
+import { goBack, hrefFor, navigate } from '../lib/router';
 import { feedback } from '../lib/feedback';
 import { Icon, StarIcon, type IconName } from './icons';
 import type { Stars as StarCount } from '../game/types';
@@ -73,7 +73,7 @@ export function Link({
 >) {
   return (
     <a
-      href={to}
+      href={hrefFor(to)}
       className={className}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
         if (
