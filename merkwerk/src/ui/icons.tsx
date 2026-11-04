@@ -291,11 +291,10 @@ export function StarIcon({ filled, size = 24, className }: { filled: boolean; si
     <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" className={className}>
       <polygon
         points={STAR}
-        fill={filled ? 'var(--yellow)' : 'none'}
-        stroke="var(--ink)"
-        strokeWidth={filled ? 1.8 : 1.6}
-        strokeLinejoin="miter"
-        strokeDasharray={filled ? undefined : '2.2 1.6'}
+        fill={filled ? 'var(--yellow)' : 'var(--paper-deep)'}
+        stroke={filled ? 'var(--ink)' : 'var(--ink-soft)'}
+        strokeWidth={filled ? 1.8 : 1.4}
+        strokeLinejoin="round"
       />
     </svg>
   );

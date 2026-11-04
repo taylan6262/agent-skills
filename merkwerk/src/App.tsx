@@ -58,12 +58,30 @@ function resolve(pathname: string): { component: ComponentType<RouteProps>; para
   return { component: NotFound, params: {} };
 }
 
+const SPLASH_KEY = 'merkwerk.startbild';
+
+/** Das Startbild erscheint einmal pro Sitzung, nicht bei jedem Neuladen. */
+function shouldShowSplash(): boolean {
+  try {
+    return sessionStorage.getItem(SPLASH_KEY) === null;
+  } catch {
+    return true;
+  }
+}
+
 export function App() {
   const location = useLocation();
   const save = useSave();
   const reducedMotion = useReducedMotion();
-  const [splash, setSplash] = useState(true);
-  const hideSplash = useCallback(() => setSplash(false), []);
+  const [splash, setSplash] = useState(shouldShowSplash);
+  const hideSplash = useCallback(() => {
+    setSplash(false);
+    try {
+      sessionStorage.setItem(SPLASH_KEY, '1');
+    } catch {
+      // ohne sessionStorage erscheint das Startbild eben bei jedem Laden
+    }
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.motion = reducedMotion ? 'reduced' : 'full';

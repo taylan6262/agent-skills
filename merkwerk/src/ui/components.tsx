@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ButtonHTMLAttributes, type MouseEvent, type ReactNode } from 'react';
+import { useEffect, useRef, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
 import { goBack, navigate } from '../lib/router';
 import { feedback } from '../lib/feedback';
 import { Icon, StarIcon, type IconName } from './icons';
@@ -6,15 +6,17 @@ import type { Stars as StarCount } from '../game/types';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'blue' | 'yellow';
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: Variant;
   icon?: IconName;
   iconRight?: IconName;
   block?: boolean;
   size?: 'md' | 'lg';
+  /** Ohne Klick-Ton (wenn die Aktion selbst einen Ton auslöst). */
+  quiet?: boolean;
 }
 
-export function Button({ variant = 'secondary', icon, iconRight, block, size = 'md', className, children, onClick, ...rest }: ButtonProps) {
+export function Button({ variant = 'secondary', icon, iconRight, block, size = 'md', quiet, className, children, onClick, ...rest }: ButtonProps) {
   const classes = ['btn', `btn-${variant}`, block ? 'btn-block' : '', size === 'lg' ? 'btn-lg' : '', className ?? '']
     .filter(Boolean)
     .join(' ');
@@ -23,7 +25,7 @@ export function Button({ variant = 'secondary', icon, iconRight, block, size = '
       type="button"
       className={classes}
       onClick={(event) => {
-        feedback('tap');
+        if (!quiet) feedback('tap');
         onClick?.(event);
       }}
       {...rest}

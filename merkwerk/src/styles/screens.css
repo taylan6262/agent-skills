@@ -844,6 +844,11 @@
   padding-top: var(--s2);
 }
 
+.result-actions .btn {
+  padding: 0 var(--s3);
+  white-space: nowrap;
+}
+
 .not-found-shapes {
   display: flex;
   gap: var(--s3);
