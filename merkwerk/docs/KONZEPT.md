@@ -15,7 +15,7 @@ Tempo, Lernen (Wiederholung) und Allgemeinwissen trainieren. Ehrliches Versprech
 |--------|-----------|-------------------------------------------|
 | Papier | `#F4EEE1` | Hintergrund, Flächen                      |
 | Tinte  | `#1B1A17` | Text, Konturen                            |
-| Rot    | `#C8371F` | Akzent: Primäraktion, Fehler (mit Symbol) |
+| Rot    | `#B8331D` | Akzent: Primäraktion, Fehler (mit Symbol) |
 | Blau   | `#1E4FA3` | Info, richtig (immer mit Häkchen)         |
 | Gelb   | `#F2B807` | Sterne, Hervorhebung (nur als Fläche)     |
 

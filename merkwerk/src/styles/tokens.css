@@ -1,0 +1,40 @@
+/* Merkwerk – Gestaltungsgrundlagen. Fünf Farben, alles andere sind Mischungen daraus. */
+:root {
+  --paper: #f4eee1;
+  --ink: #1b1a17;
+  --red: #b8331d;
+  --blue: #1e4fa3;
+  --yellow: #f2b807;
+
+  /* Mischungen aus Tinte und Papier (keine neuen Farbtöne) */
+  --ink-soft: color-mix(in srgb, var(--ink) 72%, var(--paper)); /* 6,4:1 auf Papier */
+  --ink-line: color-mix(in srgb, var(--ink) 22%, var(--paper));
+  --ink-faint: color-mix(in srgb, var(--ink) 9%, var(--paper));
+  --paper-deep: color-mix(in srgb, var(--ink) 6%, var(--paper));
+
+  --font-display: 'League Spartan Variable', 'Avenir Next', 'Futura', 'Trebuchet MS', sans-serif;
+  --font-text: 'Atkinson Hyperlegible', 'Verdana', 'Segoe UI', sans-serif;
+
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 0.75rem;
+  --s4: 1rem;
+  --s5: 1.5rem;
+  --s6: 2rem;
+  --s7: 3rem;
+  --s8: 4rem;
+
+  --line: 2px;
+  --line-bold: 3px;
+  --radius: 2px;
+  --press: 3px;
+
+  --tabbar-h: 4.25rem;
+  --topbar-h: 3.5rem;
+  --content-max: 56rem;
+
+  --ease-out: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  color-scheme: light;
+}
