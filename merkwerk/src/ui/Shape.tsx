@@ -2,7 +2,6 @@ import type { PaletteColor } from '../game/levels';
 import type { ShapeId } from '../game/symbols';
 import { COLOR_VAR } from './colors';
 
-
 function geometry(shape: ShapeId, props: { fill: string; stroke: string; strokeWidth: number }) {
   switch (shape) {
     case 'kreis':
@@ -41,7 +40,14 @@ export interface ShapeProps {
 }
 
 /** Eine Grundform als Spielstein. Konturen in Tinte sichern den Kontrast auch für Gelb. */
-export function Shape({ shape, color, size = '100%', patterned = false, className, label }: ShapeProps) {
+export function Shape({
+  shape,
+  color,
+  size = '100%',
+  patterned = false,
+  className,
+  label,
+}: ShapeProps) {
   const base = { fill: COLOR_VAR[color], stroke: 'var(--ink)', strokeWidth: 4 };
   return (
     <svg
@@ -67,7 +73,13 @@ export function PatternDefs() {
   return (
     <svg className="svg-defs" aria-hidden="true" focusable="false">
       <defs>
-        <pattern id="muster-rot" width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <pattern
+          id="muster-rot"
+          width="14"
+          height="14"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
           <rect width="5" height="14" fill="var(--paper)" />
         </pattern>
         <pattern id="muster-blau" width="16" height="16" patternUnits="userSpaceOnUse">

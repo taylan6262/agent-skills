@@ -43,22 +43,42 @@ function TrialView({ trial, patterned }: { trial: TempoTrial; patterned: boolean
       </div>
     );
   }
-  const token = TOKENS.find((t) => t.shape === trial.token) ?? { shape: trial.token, color: 'tinte' as const };
+  const token = TOKENS.find((t) => t.shape === trial.token) ?? {
+    shape: trial.token,
+    color: 'tinte' as const,
+  };
   return (
     <div className="same-token">
-      <Shape shape={token.shape} color={token.color} patterned={patterned} size={150} label={tokenLabel(token)} />
+      <Shape
+        shape={token.shape}
+        color={token.color}
+        patterned={patterned}
+        size={150}
+        label={tokenLabel(token)}
+      />
     </div>
   );
 }
 
 function trialDescription(trial: TempoTrial): string {
-  if (trial.kind === 'farbwort') return `Wort ${COLOR_WORDS[trial.word]} auf ${trial.fill === 'tinte' ? 'schwarzer' : trial.fill === 'rot' ? 'roter' : trial.fill === 'blau' ? 'blauer' : 'gelber'} Fläche`;
+  if (trial.kind === 'farbwort')
+    return `Wort ${COLOR_WORDS[trial.word]} auf ${trial.fill === 'tinte' ? 'schwarzer' : trial.fill === 'rot' ? 'roter' : trial.fill === 'blau' ? 'blauer' : 'gelber'} Fläche`;
   if (trial.kind === 'formwort') return `Wort ${SHAPE_WORDS[trial.word] ?? ''} neben einer Form`;
   return '';
 }
 
-export default function TempoGame({ difficulty, seed, paused, colorPatterns, onFinish, onProgress }: GameProps) {
-  const params = useMemo(() => tempoParams(difficulty, createRng(seed), colorPatterns), [difficulty, seed, colorPatterns]);
+export default function TempoGame({
+  difficulty,
+  seed,
+  paused,
+  colorPatterns,
+  onFinish,
+  onProgress,
+}: GameProps) {
+  const params = useMemo(
+    () => tempoParams(difficulty, createRng(seed), colorPatterns),
+    [difficulty, seed, colorPatterns],
+  );
   const stream = useMemo(() => createTrialStream(params, createRng(seed + 1)), [params, seed]);
   const [trial, setTrial] = useState<TempoTrial>(() => stream.next());
   const [trialNo, setTrialNo] = useState(0);
@@ -107,7 +127,11 @@ export default function TempoGame({ difficulty, seed, paused, colorPatterns, onF
       const isIntro = trial.kind === 'gleich' && trial.intro;
       if (isIntro && now - trialStart.current > 900) {
         nextTrial(now);
-      } else if (!isIntro && params.trialLimitMs !== null && now - trialStart.current > params.trialLimitMs) {
+      } else if (
+        !isIntro &&
+        params.trialLimitMs !== null &&
+        now - trialStart.current > params.trialLimitMs
+      ) {
         register(false, now, true);
       }
       frame = requestAnimationFrame(tick);
@@ -127,7 +151,12 @@ export default function TempoGame({ difficulty, seed, paused, colorPatterns, onF
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  usePausableTimeout(() => setFlash(null), flash ? 260 : null, paused, `flash-${trialNo}-${flash ?? ''}`);
+  usePausableTimeout(
+    () => setFlash(null),
+    flash ? 260 : null,
+    paused,
+    `flash-${trialNo}-${flash ?? ''}`,
+  );
 
   function nextTrial(now: number) {
     setTrial(stream.next());
@@ -207,7 +236,10 @@ export default function TempoGame({ difficulty, seed, paused, colorPatterns, onF
         </div>
       </div>
       <div className="timer-track" aria-hidden="true">
-        <div className="timer-fill" style={{ transform: `scaleX(${remainingMs / params.durationMs})` }} />
+        <div
+          className="timer-fill"
+          style={{ transform: `scaleX(${remainingMs / params.durationMs})` }}
+        />
       </div>
       <p className="visually-hidden" aria-live="polite">
         {seconds % 10 === 0 && phase === 'running' ? `Noch ${seconds} Sekunden` : ''}
@@ -238,10 +270,23 @@ export default function TempoGame({ difficulty, seed, paused, colorPatterns, onF
             ) : null}
           </div>
           <div className="yes-no">
-            <Button quiet size="lg" icon="close" onClick={() => answer(false)} disabled={isIntro || phase !== 'running'}>
+            <Button
+              quiet
+              size="lg"
+              icon="close"
+              onClick={() => answer(false)}
+              disabled={isIntro || phase !== 'running'}
+            >
               Nein
             </Button>
-            <Button quiet size="lg" variant="blue" icon="check" onClick={() => answer(true)} disabled={isIntro || phase !== 'running'}>
+            <Button
+              quiet
+              size="lg"
+              variant="blue"
+              icon="check"
+              onClick={() => answer(true)}
+              disabled={isIntro || phase !== 'running'}
+            >
               Ja
             </Button>
           </div>

@@ -23,7 +23,9 @@ export const TEMPO_DURATION_MS = 30_000;
  */
 export function tempoParams(difficulty: number, rng: Rng, colorAssist = false): TempoParams {
   const d = clamp(Math.round(difficulty), 1, 20);
-  const available: TempoKind[] = colorAssist ? ['formwort', 'gleich'] : ['farbwort', 'gleich', 'formwort'];
+  const available: TempoKind[] = colorAssist
+    ? ['formwort', 'gleich']
+    : ['farbwort', 'gleich', 'formwort'];
   const n = d <= 3 ? 1 : d <= 8 ? 2 : 3;
   return {
     durationMs: TEMPO_DURATION_MS,

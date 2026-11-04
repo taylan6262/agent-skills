@@ -1,7 +1,8 @@
 import { getSave } from '../state/store';
 
 /** Soundeffekte werden zur Laufzeit per Web Audio API erzeugt – keine Audiodateien. */
-export type SoundId = 'tap' | 'correct' | 'wrong' | 'combo' | 'star' | 'levelup' | 'tick' | 'start' | 'flip';
+export type SoundId =
+  'tap' | 'correct' | 'wrong' | 'combo' | 'star' | 'levelup' | 'tick' | 'start' | 'flip';
 
 type AudioCtor = typeof AudioContext;
 let ctx: AudioContext | null = null;
@@ -77,12 +78,25 @@ const SOUNDS: Record<SoundId, (step: number) => Tone[]> = {
     { freq: 196, to: 130, dur: 0.22, type: 'sawtooth', gain: 0.35 },
     { freq: 185, to: 123, dur: 0.22, type: 'square', gain: 0.12 },
   ],
-  combo: (step) => [0, 4, 7, 12].map((semi, i) => ({ freq: 523 * 2 ** ((semi + step) / 12), at: i * 0.05, dur: 0.12, type: 'triangle' as const, gain: 0.6 })),
+  combo: (step) =>
+    [0, 4, 7, 12].map((semi, i) => ({
+      freq: 523 * 2 ** ((semi + step) / 12),
+      at: i * 0.05,
+      dur: 0.12,
+      type: 'triangle' as const,
+      gain: 0.6,
+    })),
   star: (step) => [
     { freq: 784 * 2 ** ((step * 4) / 12), dur: 0.35, type: 'sine' },
     { freq: 1568 * 2 ** ((step * 4) / 12), dur: 0.25, type: 'triangle', gain: 0.25 },
   ],
-  levelup: () => [523, 659, 784, 1047].map((freq, i) => ({ freq, at: i * 0.09, dur: 0.22, type: 'triangle' as const })),
+  levelup: () =>
+    [523, 659, 784, 1047].map((freq, i) => ({
+      freq,
+      at: i * 0.09,
+      dur: 0.22,
+      type: 'triangle' as const,
+    })),
 };
 
 export function playSound(id: SoundId, step = 0): void {

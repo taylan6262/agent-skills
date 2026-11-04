@@ -55,7 +55,11 @@ export function prepareRound(
   return questions.map((question) => ({ question, order: rng.shuffle([0, 1, 2, 3]) }));
 }
 
-export function pointsForAnswer(correct: boolean, remainingMs: number | null, limitMs: number | null): number {
+export function pointsForAnswer(
+  correct: boolean,
+  remainingMs: number | null,
+  limitMs: number | null,
+): number {
   if (!correct) return 0;
   if (remainingMs === null || limitMs === null || limitMs <= 0) return 100;
   return 100 + Math.round(50 * clamp(remainingMs / limitMs, 0, 1));

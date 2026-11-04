@@ -25,7 +25,12 @@ export const ADAPTIVE_RULES = {
 } as const;
 
 export function defaultAdaptive(rating = 1): AdaptiveState {
-  return { offset: 0, rating: clamp(rating, MIN_DIFFICULTY, MAX_DIFFICULTY), winStreak: 0, failStreak: 0 };
+  return {
+    offset: 0,
+    rating: clamp(rating, MIN_DIFFICULTY, MAX_DIFFICULTY),
+    winStreak: 0,
+    failStreak: 0,
+  };
 }
 
 export interface AdaptiveStep {
@@ -35,7 +40,11 @@ export interface AdaptiveStep {
 }
 
 /** Reine Regel: Wer zweimal in Folge sehr gut ist, bekommt +1; wer zweimal scheitert, −1. */
-export function adaptiveStep(winStreak: number, failStreak: number, performance: number): AdaptiveStep {
+export function adaptiveStep(
+  winStreak: number,
+  failStreak: number,
+  performance: number,
+): AdaptiveStep {
   if (performance >= ADAPTIVE_RULES.winThreshold) {
     const wins = winStreak + 1;
     if (wins >= ADAPTIVE_RULES.streakLength) return { delta: 1, winStreak: 0, failStreak: 0 };
@@ -57,7 +66,11 @@ export interface AdaptiveUpdate {
   change: -1 | 0 | 1;
 }
 
-export function updateAdaptive(state: AdaptiveState, performance: number, kind: PlayKind): AdaptiveUpdate {
+export function updateAdaptive(
+  state: AdaptiveState,
+  performance: number,
+  kind: PlayKind,
+): AdaptiveUpdate {
   const step = adaptiveStep(state.winStreak, state.failStreak, performance);
   let { offset, rating } = state;
   if (kind === 'level') {

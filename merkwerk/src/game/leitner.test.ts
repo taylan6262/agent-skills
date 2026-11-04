@@ -1,21 +1,51 @@
 import { describe, expect, it } from 'vitest';
 import { createRng } from '../lib/rng';
-import { isDue, isLearnedFromMistake, reviewCard, selectQuestions, summarizeLeitner, type LeitnerCard } from './leitner';
+import {
+  isDue,
+  isLearnedFromMistake,
+  reviewCard,
+  selectQuestions,
+  summarizeLeitner,
+  type LeitnerCard,
+} from './leitner';
 import type { Question } from './types';
 
 const TODAY = '2026-11-04';
 
-function q(id: string, difficulty: 1 | 2 | 3 = 1, category: Question['category'] = 'geografie'): Question {
-  return { id, category, difficulty, question: `Frage ${id}?`, answers: ['a', 'b', 'c', 'd'], explanation: 'x' };
+function q(
+  id: string,
+  difficulty: 1 | 2 | 3 = 1,
+  category: Question['category'] = 'geografie',
+): Question {
+  return {
+    id,
+    category,
+    difficulty,
+    question: `Frage ${id}?`,
+    answers: ['a', 'b', 'c', 'd'],
+    explanation: 'x',
+  };
 }
 
 describe('reviewCard', () => {
   it('legt eine neue, richtig beantwortete Frage in Fach 2, fällig morgen', () => {
-    expect(reviewCard(undefined, true, TODAY)).toEqual({ box: 2, due: '2026-11-05', seen: 1, correct: 1, wrong: 0 });
+    expect(reviewCard(undefined, true, TODAY)).toEqual({
+      box: 2,
+      due: '2026-11-05',
+      seen: 1,
+      correct: 1,
+      wrong: 0,
+    });
   });
 
   it('legt eine neue, falsch beantwortete Frage in Fach 1, heute erneut fällig', () => {
-    expect(reviewCard(undefined, false, TODAY)).toEqual({ box: 1, due: TODAY, seen: 1, correct: 0, wrong: 1 });
+    expect(reviewCard(undefined, false, TODAY)).toEqual({
+      box: 1,
+      due: TODAY,
+      seen: 1,
+      correct: 0,
+      wrong: 1,
+    });
   });
 
   it('befördert bei richtiger Antwort ein Fach weiter mit wachsendem Abstand', () => {
@@ -60,7 +90,12 @@ describe('selectQuestions', () => {
       q3: { box: 1, due: TODAY, seen: 1, correct: 0, wrong: 1 },
       q6: { box: 2, due: '2026-12-01', seen: 1, correct: 1, wrong: 0 },
     };
-    const chosen = selectQuestions(pool, cards, { count: 5, today: TODAY, rng: createRng(1), reviewShare: 0.4 });
+    const chosen = selectQuestions(pool, cards, {
+      count: 5,
+      today: TODAY,
+      rng: createRng(1),
+      reviewShare: 0.4,
+    });
     const ids = chosen.map((c) => c.id);
     expect(ids).toHaveLength(5);
     expect(ids).toContain('q0');
@@ -69,14 +104,22 @@ describe('selectQuestions', () => {
   });
 
   it('füllt mit neuen Fragen im erlaubten Schwierigkeitsbereich auf', () => {
-    const chosen = selectQuestions(pool, {}, { count: 5, today: TODAY, rng: createRng(2), minDifficulty: 1, maxDifficulty: 1 });
+    const chosen = selectQuestions(
+      pool,
+      {},
+      { count: 5, today: TODAY, rng: createRng(2), minDifficulty: 1, maxDifficulty: 1 },
+    );
     expect(chosen.every((c) => c.difficulty === 1)).toBe(true);
     expect(new Set(chosen.map((c) => c.id)).size).toBe(5);
   });
 
   it('beschränkt sich auf die gewählten Kategorien', () => {
     const mixed = [...pool, q('n1', 1, 'natur'), q('n2', 1, 'natur')];
-    const chosen = selectQuestions(mixed, {}, { count: 5, today: TODAY, rng: createRng(3), categories: ['natur'] });
+    const chosen = selectQuestions(
+      mixed,
+      {},
+      { count: 5, today: TODAY, rng: createRng(3), categories: ['natur'] },
+    );
     expect(chosen.map((c) => c.id).sort()).toEqual(['n1', 'n2']);
   });
 
@@ -86,7 +129,9 @@ describe('selectQuestions', () => {
       a: { box: 5, due: '2026-12-30', seen: 5, correct: 5, wrong: 0 },
       b: { box: 4, due: '2026-12-01', seen: 4, correct: 4, wrong: 0 },
     };
-    expect(selectQuestions(small, cards, { count: 2, today: TODAY, rng: createRng(4) })).toHaveLength(2);
+    expect(
+      selectQuestions(small, cards, { count: 2, today: TODAY, rng: createRng(4) }),
+    ).toHaveLength(2);
   });
 });
 

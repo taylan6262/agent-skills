@@ -25,7 +25,11 @@ export function intervalForBox(box: number): number {
   return BOX_INTERVAL_DAYS[Math.min(Math.max(box, 1), LEITNER_BOXES)] ?? 0;
 }
 
-export function reviewCard(card: LeitnerCard | undefined, correct: boolean, today: DayKey): LeitnerCard {
+export function reviewCard(
+  card: LeitnerCard | undefined,
+  correct: boolean,
+  today: DayKey,
+): LeitnerCard {
   const currentBox = card ? Math.max(1, card.box) : 1;
   const box = correct ? Math.min(LEITNER_BOXES, currentBox + 1) : 1;
   return {
@@ -96,18 +100,28 @@ export function selectQuestions(
   };
 
   const due = rng
-    .shuffle(candidates.filter((q) => cards[q.id] !== undefined && isDue(cards[q.id] as LeitnerCard, today)))
+    .shuffle(
+      candidates.filter(
+        (q) => cards[q.id] !== undefined && isDue(cards[q.id] as LeitnerCard, today),
+      ),
+    )
     .sort(byUrgency(cards));
   take(due, Math.min(count, Math.ceil(count * reviewShare)));
 
   const fresh = candidates.filter((q) => cards[q.id] === undefined);
-  const freshInRange = rng.shuffle(fresh.filter((q) => q.difficulty >= minD && q.difficulty <= maxD));
+  const freshInRange = rng.shuffle(
+    fresh.filter((q) => q.difficulty >= minD && q.difficulty <= maxD),
+  );
   take(freshInRange, count);
 
   // Falls nicht genug neue Fragen da sind: weitere fällige, dann bald fällige Fragen.
   take(due, count);
   const notDue = rng
-    .shuffle(candidates.filter((q) => cards[q.id] !== undefined && !isDue(cards[q.id] as LeitnerCard, today)))
+    .shuffle(
+      candidates.filter(
+        (q) => cards[q.id] !== undefined && !isDue(cards[q.id] as LeitnerCard, today),
+      ),
+    )
     .sort((a, b) => {
       const da = cards[a.id]?.due ?? '';
       const db = cards[b.id]?.due ?? '';

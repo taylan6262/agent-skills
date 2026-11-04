@@ -48,7 +48,9 @@ export interface BlitzbildRound {
 
 export function generateRound(params: BlitzbildParams, rng: Rng): BlitzbildRound {
   const cellCount = params.size * params.size;
-  const positions = rng.shuffle(Array.from({ length: cellCount }, (_, i) => i)).slice(0, params.count);
+  const positions = rng
+    .shuffle(Array.from({ length: cellCount }, (_, i) => i))
+    .slice(0, params.count);
   const kinds =
     params.variant === 'positionen'
       ? (['quadrat'] as ShapeId[])
@@ -80,7 +82,11 @@ export interface RoundEvaluation {
   score: number;
 }
 
-export function evaluateRound(round: BlitzbildRound, answer: Board, variant: BlitzbildVariant): RoundEvaluation {
+export function evaluateRound(
+  round: BlitzbildRound,
+  answer: Board,
+  variant: BlitzbildVariant,
+): RoundEvaluation {
   let correct = 0;
   let wrong = 0;
   let missed = 0;
@@ -101,7 +107,8 @@ export function evaluateRound(round: BlitzbildRound, answer: Board, variant: Bli
       missed += 1;
     }
   });
-  const accuracy = target === 0 ? 0 : clamp((correct - (variant === 'positionen' ? wrong : 0)) / target, 0, 1);
+  const accuracy =
+    target === 0 ? 0 : clamp((correct - (variant === 'positionen' ? wrong : 0)) / target, 0, 1);
   const score = Math.max(0, correct * 10 * round.size - wrong * 5);
   return { correct, wrong, missed, accuracy, perfect: correct === target && wrong === 0, score };
 }

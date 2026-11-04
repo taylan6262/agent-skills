@@ -48,7 +48,10 @@ describe('updateAdaptive', () => {
   it('begrenzt Versatz auf ±2 und Stufe auf 1 bis 20', () => {
     const maxed = { offset: 2, rating: 20, winStreak: 1, failStreak: 0 };
     expect(updateAdaptive(maxed, 1, 'level')).toMatchObject({ change: 0, state: { offset: 2 } });
-    expect(updateAdaptive(maxed, 1, 'training')).toMatchObject({ change: 0, state: { rating: 20 } });
+    expect(updateAdaptive(maxed, 1, 'training')).toMatchObject({
+      change: 0,
+      state: { rating: 20 },
+    });
     const floor = { offset: -2, rating: 1, winStreak: 0, failStreak: 1 };
     expect(updateAdaptive(floor, 0, 'level').state.offset).toBe(-2);
     expect(updateAdaptive(floor, 0, 'daily').state.rating).toBe(1);

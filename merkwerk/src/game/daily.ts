@@ -12,7 +12,10 @@ export interface DailyChallenge {
 }
 
 /** Die Tagesaufgabe ergibt sich aus dem Datum – für alle gleich im Modus, in der Stufe angepasst. */
-export function dailyChallenge(day: DayKey, adaptive: Readonly<Record<ModeId, AdaptiveState>>): DailyChallenge {
+export function dailyChallenge(
+  day: DayKey,
+  adaptive: Readonly<Record<ModeId, AdaptiveState>>,
+): DailyChallenge {
   const seed = hashString(`merkwerk:${day}`);
   const rng = createRng(seed);
   const mode = rng.pick(MODE_IDS);

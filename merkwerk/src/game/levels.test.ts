@@ -17,7 +17,9 @@ function withStars(entries: Record<string, Stars>) {
 }
 
 function allLevelsWith(stars: Stars, worlds: number[]) {
-  return withStars(Object.fromEntries(LEVELS.filter((l) => worlds.includes(l.world)).map((l) => [l.id, stars])));
+  return withStars(
+    Object.fromEntries(LEVELS.filter((l) => worlds.includes(l.world)).map((l) => [l.id, stars])),
+  );
 }
 
 describe('Level-Struktur', () => {
@@ -47,7 +49,8 @@ describe('Level-Struktur', () => {
   });
 
   it('gibt jedem Wissens-Level eine Kategorie', () => {
-    for (const level of LEVELS.filter((l) => l.mode === 'wissen')) expect(level.category).toBeDefined();
+    for (const level of LEVELS.filter((l) => l.mode === 'wissen'))
+      expect(level.category).toBeDefined();
   });
 
   it('liefert das nächste Level über Weltgrenzen hinweg', () => {
@@ -69,7 +72,15 @@ describe('Freischaltung', () => {
   });
 
   it('öffnet Welten über die Gesamtsterne', () => {
-    const almost = withStars({ 'w1-1': 3, 'w1-2': 3, 'w1-3': 3, 'w1-4': 3, 'w1-5': 3, 'w1-6': 3, 'w1-7': 1 });
+    const almost = withStars({
+      'w1-1': 3,
+      'w1-2': 3,
+      'w1-3': 3,
+      'w1-4': 3,
+      'w1-5': 3,
+      'w1-6': 3,
+      'w1-7': 1,
+    });
     expect(totalStars(almost)).toBe(19);
     expect(isWorldUnlocked(2, almost)).toBe(false);
     const enough = { ...almost, ...withStars({ 'w1-7': 2 }) };

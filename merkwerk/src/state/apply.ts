@@ -13,7 +13,14 @@ import {
 } from '../game/levels';
 import { registerActivity } from '../game/progression';
 import { levelFromXp, skillIndex, starsFor, xpFor, type XpBreakdown } from '../game/scoring';
-import { MODE_IDS, MODE_SKILL, type GameResult, type ModeId, type SkillId, type Stars } from '../game/types';
+import {
+  MODE_IDS,
+  MODE_SKILL,
+  type GameResult,
+  type ModeId,
+  type SkillId,
+  type Stars,
+} from '../game/types';
 import type { SaveData } from './schema';
 
 export interface PlayContext {
@@ -78,7 +85,12 @@ export function factsFromSave(save: SaveData): AchievementFacts {
   };
 }
 
-function addDayStat(save: SaveData, today: DayKey, skill: SkillId, value: number): SaveData['stats']['days'] {
+function addDayStat(
+  save: SaveData,
+  today: DayKey,
+  skill: SkillId,
+  value: number,
+): SaveData['stats']['days'] {
   const entry = { ...(save.stats.days[today] ?? {}) };
   const current = entry[skill] ?? { sum: 0, n: 0 };
   entry[skill] = { sum: current.sum + value, n: current.n + 1 };
@@ -90,11 +102,17 @@ function addDayStat(save: SaveData, today: DayKey, skill: SkillId, value: number
 const formatNumber = (n: number): string => n.toLocaleString('de-DE');
 
 /** Verrechnet ein Spielergebnis mit dem Spielstand. Reine Funktion: gibt einen neuen Spielstand zurück. */
-export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext): { save: SaveData; outcome: Outcome } {
+export function applyResult(
+  save: SaveData,
+  result: GameResult,
+  ctx: PlayContext,
+): { save: SaveData; outcome: Outcome } {
   const today = toDayKey(ctx.now);
   const stars = starsFor(result.performance);
   const improvements: string[] = [];
-  const unlockedWorldsBefore = WORLDS.filter((w) => isWorldUnlocked(w.id, save.levels)).map((w) => w.id);
+  const unlockedWorldsBefore = WORLDS.filter((w) => isWorldUnlocked(w.id, save.levels)).map(
+    (w) => w.id,
+  );
 
   // Level-Fortschritt
   let levels = save.levels;
@@ -115,9 +133,12 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
       },
     };
     if (previousStars === 0 && stars > 0) improvements.push('Level zum ersten Mal bestanden');
-    else if (newStars > 0) improvements.push(`+${newStars} ${newStars === 1 ? 'Stern' : 'Sterne'} in diesem Level`);
+    else if (newStars > 0)
+      improvements.push(`+${newStars} ${newStars === 1 ? 'Stern' : 'Sterne'} in diesem Level`);
     if (prev && prev.plays > 0 && result.score > prev.bestScore) {
-      improvements.push(`Neue Bestpunktzahl im Level: ${formatNumber(result.score)} (vorher ${formatNumber(prev.bestScore)})`);
+      improvements.push(
+        `Neue Bestpunktzahl im Level: ${formatNumber(result.score)} (vorher ${formatNumber(prev.bestScore)})`,
+      );
     }
   }
 
@@ -136,7 +157,8 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
     playTimeMs: save.player.playTimeMs + Math.max(0, Math.round(result.durationMs)),
   };
   const playerLevelAfter = levelFromXp(player.xp).level;
-  if (playerLevelAfter > playerLevelBefore) improvements.push(`Spielerlevel ${playerLevelAfter} erreicht`);
+  if (playerLevelAfter > playerLevelBefore)
+    improvements.push(`Spielerlevel ${playerLevelAfter} erreicht`);
 
   // Serie
   const streak = registerActivity(save.streak, today);
@@ -175,7 +197,9 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
       );
     }
     if (masteredNow > 0) {
-      improvements.push(`${masteredNow} ${masteredNow === 1 ? 'Frage' : 'Fragen'} jetzt sicher gelernt (Fach ${MASTERED_BOX}+)`);
+      improvements.push(
+        `${masteredNow} ${masteredNow === 1 ? 'Frage' : 'Fragen'} jetzt sicher gelernt (Fach ${MASTERED_BOX}+)`,
+      );
     }
   }
 
@@ -183,42 +207,69 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
   const b = { ...save.bests };
   const m = result.metrics;
   if (m.perfectGrid !== undefined && m.perfectGrid > b.perfectGrid) {
-    if (b.perfectGrid > 0) improvements.push(`Neuer Rekord: ${m.perfectGrid}×${m.perfectGrid}-Raster fehlerfrei`);
+    if (b.perfectGrid > 0)
+      improvements.push(`Neuer Rekord: ${m.perfectGrid}×${m.perfectGrid}-Raster fehlerfrei`);
     b.perfectGrid = m.perfectGrid;
   }
   if (m.perfectScenes) b.perfectScenes += m.perfectScenes;
   if (m.spanForward !== undefined && m.spanForward > b.spanForward) {
-    if (b.spanForward > 0) improvements.push(`Neuer Rekord: ${m.spanForward} Ziffern vorwärts (vorher ${b.spanForward})`);
+    if (b.spanForward > 0)
+      improvements.push(
+        `Neuer Rekord: ${m.spanForward} Ziffern vorwärts (vorher ${b.spanForward})`,
+      );
     b.spanForward = m.spanForward;
   }
   if (m.spanBackward !== undefined && m.spanBackward > b.spanBackward) {
-    if (b.spanBackward > 0) improvements.push(`Neuer Rekord: ${m.spanBackward} Ziffern rückwärts (vorher ${b.spanBackward})`);
+    if (b.spanBackward > 0)
+      improvements.push(
+        `Neuer Rekord: ${m.spanBackward} Ziffern rückwärts (vorher ${b.spanBackward})`,
+      );
     b.spanBackward = m.spanBackward;
   }
   if (result.mode === 'tempo') {
     if (m.bestCombo !== undefined && m.bestCombo > b.tempoCombo) {
-      if (b.tempoCombo > 0) improvements.push(`Beste Combo: ${m.bestCombo} (vorher ${b.tempoCombo})`);
+      if (b.tempoCombo > 0)
+        improvements.push(`Beste Combo: ${m.bestCombo} (vorher ${b.tempoCombo})`);
       b.tempoCombo = m.bestCombo;
     }
     if (result.score > b.tempoScore) {
       if (b.tempoScore > 0) improvements.push(`Tempo-Rekord: ${formatNumber(result.score)} Punkte`);
       b.tempoScore = result.score;
     }
-    if (m.medianRtMs !== undefined && result.correct >= 8 && (b.tempoRtMs === null || m.medianRtMs < b.tempoRtMs)) {
+    if (
+      m.medianRtMs !== undefined &&
+      result.correct >= 8 &&
+      (b.tempoRtMs === null || m.medianRtMs < b.tempoRtMs)
+    ) {
       if (b.tempoRtMs !== null) {
-        improvements.push(`Reaktionszeit ${Math.round(m.medianRtMs)} ms – ${Math.round(b.tempoRtMs - m.medianRtMs)} ms schneller als bisher`);
+        improvements.push(
+          `Reaktionszeit ${Math.round(m.medianRtMs)} ms – ${Math.round(b.tempoRtMs - m.medianRtMs)} ms schneller als bisher`,
+        );
       }
       b.tempoRtMs = Math.round(m.medianRtMs);
     }
   }
 
   // Statistik pro Fähigkeit
-  let days = addDayStat(save, today, MODE_SKILL[result.mode], skillIndex(result.difficulty, result.performance));
+  let days = addDayStat(
+    save,
+    today,
+    MODE_SKILL[result.mode],
+    skillIndex(result.difficulty, result.performance),
+  );
   if (result.mode === 'wissen') {
-    days = addDayStat({ ...save, stats: { ...save.stats, days } }, today, 'lernen', learningIndex(leitner));
+    days = addDayStat(
+      { ...save, stats: { ...save.stats, days } },
+      today,
+      'lernen',
+      learningIndex(leitner),
+    );
   }
 
-  const modeCounts = { ...save.stats.modeCounts, [result.mode]: save.stats.modeCounts[result.mode] + 1 };
+  const modeCounts = {
+    ...save.stats.modeCounts,
+    [result.mode]: save.stats.modeCounts[result.mode] + 1,
+  };
 
   let next: SaveData = {
     ...save,
@@ -234,7 +285,8 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
 
   // Freigeschaltete Welt
   const unlockedWorld =
-    WORLDS.find((w) => !unlockedWorldsBefore.includes(w.id) && isWorldUnlocked(w.id, next.levels))?.id ?? null;
+    WORLDS.find((w) => !unlockedWorldsBefore.includes(w.id) && isWorldUnlocked(w.id, next.levels))
+      ?.id ?? null;
   if (unlockedWorld !== null) {
     const name = WORLDS.find((w) => w.id === unlockedWorld)?.name ?? '';
     improvements.push(`Welt „${name}“ freigeschaltet`);
@@ -245,7 +297,10 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
   if (newAchievements.length > 0) {
     next = {
       ...next,
-      achievements: { ...next.achievements, ...Object.fromEntries(newAchievements.map((id) => [id, today])) },
+      achievements: {
+        ...next.achievements,
+        ...Object.fromEntries(newAchievements.map((id) => [id, today])),
+      },
     };
   }
 
@@ -278,4 +333,3 @@ export function applyResult(save: SaveData, result: GameResult, ctx: PlayContext
     },
   };
 }
-

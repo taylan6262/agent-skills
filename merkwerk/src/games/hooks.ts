@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 
 /** Timeout, der bei Pause anhält und danach mit der Restzeit weiterläuft. `delay = null` deaktiviert ihn. */
-export function usePausableTimeout(callback: () => void, delay: number | null, paused: boolean, resetKey: unknown = 0): void {
+export function usePausableTimeout(
+  callback: () => void,
+  delay: number | null,
+  paused: boolean,
+  resetKey: unknown = 0,
+): void {
   const callbackRef = useRef(callback);
   const remaining = useRef<number | null>(delay);
 
@@ -44,7 +49,9 @@ export function useActiveClock(paused: boolean): () => number {
   }, [paused]);
 
   return useCallback(
-    () => accumulated.current + (startedAt.current === null ? 0 : performance.now() - startedAt.current),
+    () =>
+      accumulated.current +
+      (startedAt.current === null ? 0 : performance.now() - startedAt.current),
     [],
   );
 }

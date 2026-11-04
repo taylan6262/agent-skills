@@ -35,7 +35,14 @@ export function xpFor(input: XpInput): XpBreakdown {
   const difficulty = Math.round(clamp(input.difficulty, MIN_DIFFICULTY, MAX_DIFFICULTY) * 2);
   const firstClear = Math.max(0, input.newStars) * 10;
   const daily = input.dailyCompleted ? 50 + input.stars * 25 : 0;
-  return { base, stars, difficulty, firstClear, daily, total: base + stars + difficulty + firstClear + daily };
+  return {
+    base,
+    stars,
+    difficulty,
+    firstClear,
+    daily,
+    total: base + stars + difficulty + firstClear + daily,
+  };
 }
 
 /** XP, die man von Spielerlevel `level` zu `level + 1` braucht. */

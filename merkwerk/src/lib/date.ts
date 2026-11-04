@@ -31,7 +31,20 @@ export function diffDays(from: DayKey, to: DayKey): number {
   return Math.round(ms / 86_400_000);
 }
 
-const MONTHS = ['Jan.', 'Feb.', 'März', 'Apr.', 'Mai', 'Juni', 'Juli', 'Aug.', 'Sep.', 'Okt.', 'Nov.', 'Dez.'];
+const MONTHS = [
+  'Jan.',
+  'Feb.',
+  'März',
+  'Apr.',
+  'Mai',
+  'Juni',
+  'Juli',
+  'Aug.',
+  'Sep.',
+  'Okt.',
+  'Nov.',
+  'Dez.',
+];
 
 export function formatDayShort(key: DayKey): string {
   const date = fromDayKey(key);

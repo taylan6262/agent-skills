@@ -1,5 +1,12 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { blitzbildParams, evaluateRound, generateRound, trayFor, type Board, type RoundEvaluation } from '../game/modes/blitzbild';
+import {
+  blitzbildParams,
+  evaluateRound,
+  generateRound,
+  trayFor,
+  type Board,
+  type RoundEvaluation,
+} from '../game/modes/blitzbild';
 import { TOKENS, tokenLabel, type ShapeId } from '../game/symbols';
 import { feedback, playSound } from '../lib/feedback';
 import { createRng } from '../lib/rng';
@@ -17,7 +24,14 @@ function tokenOf(shape: ShapeId) {
   return TOKEN_BY_SHAPE.get(shape) ?? { shape, color: 'tinte' as const };
 }
 
-export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns, onFinish, onProgress }: GameProps) {
+export default function BlitzbildGame({
+  difficulty,
+  seed,
+  paused,
+  colorPatterns,
+  onFinish,
+  onProgress,
+}: GameProps) {
   const params = useMemo(() => blitzbildParams(difficulty), [difficulty]);
   const rounds = useMemo(() => {
     const rng = createRng(seed);
@@ -27,7 +41,9 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
 
   const [roundIndex, setRoundIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('ready');
-  const [answer, setAnswer] = useState<Board>(() => new Array<ShapeId | null>(cellCount).fill(null));
+  const [answer, setAnswer] = useState<Board>(() =>
+    new Array<ShapeId | null>(cellCount).fill(null),
+  );
   const [selected, setSelected] = useState<ShapeId | null>(null);
   const [evaluations, setEvaluations] = useState<RoundEvaluation[]>([]);
   const [focusIndex, setFocusIndex] = useState(0);
@@ -39,7 +55,8 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
   const placed = answer.filter(Boolean).length;
   const evaluation = phase === 'feedback' ? evaluations[evaluations.length - 1] : undefined;
 
-  const remainingOf = (shape: ShapeId): number => (tray.get(shape) ?? 0) - answer.filter((a) => a === shape).length;
+  const remainingOf = (shape: ShapeId): number =>
+    (tray.get(shape) ?? 0) - answer.filter((a) => a === shape).length;
 
   useEffect(() => {
     onProgress(`Runde ${roundIndex + 1} von ${params.rounds}`);
@@ -68,7 +85,12 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
     `show-${roundIndex}`,
   );
 
-  usePausableTimeout(() => advance(), phase === 'feedback' ? 2000 : null, paused, `fb-${roundIndex}`);
+  usePausableTimeout(
+    () => advance(),
+    phase === 'feedback' ? 2000 : null,
+    paused,
+    `fb-${roundIndex}`,
+  );
 
   if (!round) return null;
 
@@ -114,7 +136,9 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
       if (!selected || remainingOf(selected) <= 0) return;
       next[index] = selected;
       if (remainingOf(selected) - 1 <= 0) {
-        const other = [...tray.keys()].find((s) => s !== selected && (tray.get(s) ?? 0) - next.filter((a) => a === s).length > 0);
+        const other = [...tray.keys()].find(
+          (s) => s !== selected && (tray.get(s) ?? 0) - next.filter((a) => a === s).length > 0,
+        );
         setSelected(other ?? null);
       }
     }
@@ -132,7 +156,12 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
 
   function onGridKey(event: KeyboardEvent<HTMLButtonElement>) {
     const size = params.size;
-    const moves: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: size, ArrowUp: -size };
+    const moves: Record<string, number> = {
+      ArrowRight: 1,
+      ArrowLeft: -1,
+      ArrowDown: size,
+      ArrowUp: -size,
+    };
     const delta = moves[event.key];
     if (delta === undefined) return;
     event.preventDefault();
@@ -157,16 +186,20 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
     const position = `Zeile ${row}, Spalte ${col}`;
     const expected = round?.board[index] ?? null;
     const given = answer[index] ?? null;
-    if (phase === 'show') return `${position}: ${expected ? tokenLabel(tokenOf(expected)) : 'leer'}`;
+    if (phase === 'show')
+      return `${position}: ${expected ? tokenLabel(tokenOf(expected)) : 'leer'}`;
     if (phase === 'feedback') {
-      if (expected && given === expected) return `${position}: richtig, ${tokenLabel(tokenOf(expected))}`;
+      if (expected && given === expected)
+        return `${position}: richtig, ${tokenLabel(tokenOf(expected))}`;
       if (expected && params.variant === 'positionen' && given) return `${position}: richtig`;
       if (given) return `${position}: falsch`;
       if (expected) return `${position}: übersehen, hier war ${tokenLabel(tokenOf(expected))}`;
       return `${position}: leer`;
     }
     if (!given) return `${position}: leer`;
-    return params.variant === 'positionen' ? `${position}: markiert` : `${position}: ${tokenLabel(tokenOf(given))}`;
+    return params.variant === 'positionen'
+      ? `${position}: markiert`
+      : `${position}: ${tokenLabel(tokenOf(given))}`;
   }
 
   const ready = placed === params.count;
@@ -193,7 +226,10 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
 
       <div className="timer-track" aria-hidden="true">
         {phase === 'show' ? (
-          <div className={`timer-bar ${paused ? 'is-paused' : ''}`} style={{ animationDuration: `${params.showMs}ms` }} />
+          <div
+            className={`timer-bar ${paused ? 'is-paused' : ''}`}
+            style={{ animationDuration: `${params.showMs}ms` }}
+          />
         ) : null}
       </div>
 
@@ -238,7 +274,14 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
               onKeyDown={onGridKey}
               onClick={() => toggle(index)}
             >
-              {token ? <Shape shape={token.shape} color={token.color} patterned={colorPatterns} className="cell-shape" /> : null}
+              {token ? (
+                <Shape
+                  shape={token.shape}
+                  color={token.color}
+                  patterned={colorPatterns}
+                  className="cell-shape"
+                />
+              ) : null}
               {state.includes('cell-correct') ? (
                 <span className="cell-badge badge-ok">
                   <Icon name="check" size={14} />
@@ -270,7 +313,12 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
                 onKeyDown={onTrayKey}
                 onClick={() => setSelected(shape)}
               >
-                <Shape shape={token.shape} color={token.color} patterned={colorPatterns} size={34} />
+                <Shape
+                  shape={token.shape}
+                  color={token.color}
+                  patterned={colorPatterns}
+                  size={34}
+                />
                 <span className="tray-count">×{left}</span>
               </button>
             );
@@ -284,7 +332,14 @@ export default function BlitzbildGame({ difficulty, seed, paused, colorPatterns,
             <p className="game-counter" aria-live="polite">
               {placed} / {params.count} gesetzt
             </p>
-            <Button variant="primary" size="lg" block disabled={!ready} onClick={check} icon="check">
+            <Button
+              variant="primary"
+              size="lg"
+              block
+              disabled={!ready}
+              onClick={check}
+              icon="check"
+            >
               Prüfen
             </Button>
           </>

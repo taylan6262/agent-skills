@@ -1,6 +1,8 @@
 import { useSyncExternalStore } from 'react';
-import type { GameResult } from '../game/types';
-import { applyResult, type Outcome, type PlayContext } from './apply';
+import { MODE_IDS, type GameResult, type ModeId } from '../game/types';
+import { newlyAchieved } from '../game/achievements';
+import { toDayKey } from '../lib/date';
+import { applyResult, factsFromSave, type Outcome, type PlayContext } from './apply';
 import { createDefaultSave, type SaveData, type Settings } from './schema';
 import { browserStorage, clearSave, loadSave, writeSave, type LoadStatus } from './storage';
 
@@ -14,7 +16,22 @@ const listeners = new Set<() => void>();
 
 export const loadStatus: LoadStatus = initial.status;
 
-if (initial.status === 'migriert' || initial.status === 'repariert' || initial.status === 'defekt') {
+// Erfolge, die nach einer Migration bereits erfüllt sind, nachtragen.
+const missing = newlyAchieved(factsFromSave(save), save.achievements);
+if (missing.length > 0) {
+  const today = toDayKey(new Date());
+  save = {
+    ...save,
+    achievements: { ...save.achievements, ...Object.fromEntries(missing.map((id) => [id, today])) },
+  };
+}
+
+if (
+  missing.length > 0 ||
+  initial.status === 'migriert' ||
+  initial.status === 'repariert' ||
+  initial.status === 'defekt'
+) {
   persistOk = writeSave(storage, save);
 }
 
@@ -71,4 +88,28 @@ export function resetProgress(): void {
   lastOutcome = null;
   persistOk = writeSave(storage, save);
   emit();
+}
+
+/** Schließt das Onboarding ab und übernimmt – falls vorhanden – das Ergebnis des Einstufungstests. */
+export function completeOnboarding(
+  span: number | null,
+  ratings?: Partial<Record<ModeId, number>>,
+  memoryOffset = 0,
+): void {
+  updateSave((s) => {
+    const adaptive = { ...s.adaptive };
+    if (ratings) {
+      for (const mode of MODE_IDS) {
+        const rating = ratings[mode];
+        if (rating === undefined) continue;
+        const memory = mode === 'blitzbild' || mode === 'detailblick' || mode === 'zahlenspur';
+        adaptive[mode] = {
+          ...adaptive[mode],
+          rating,
+          offset: memory ? memoryOffset : adaptive[mode].offset,
+        };
+      }
+    }
+    return { ...s, onboardingDone: true, placementSpan: span, adaptive };
+  });
 }

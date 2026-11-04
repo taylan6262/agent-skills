@@ -20,7 +20,10 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 
   override render(): ReactNode {
     if (!this.state.error) return this.props.children;
-    const chunkFailed = /dynamically imported module|Loading chunk|Importing a module script failed/i.test(this.state.error.message);
+    const chunkFailed =
+      /dynamically imported module|Loading chunk|Importing a module script failed/i.test(
+        this.state.error.message,
+      );
     return (
       <main className="error-page">
         <LogoMark size={72} />
@@ -31,10 +34,18 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
             : 'Ein unerwarteter Fehler ist aufgetreten. Dein Spielstand ist sicher gespeichert.'}
         </p>
         <div className="error-actions">
-          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
             <span>Neu laden</span>
           </button>
-          <button type="button" className="btn btn-secondary" onClick={() => window.location.assign('/')}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => window.location.assign('/')}
+          >
             <span>Zur Startseite</span>
           </button>
         </div>

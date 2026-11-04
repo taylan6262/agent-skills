@@ -16,11 +16,38 @@ export function Splash({ onDone }: { onDone: () => void }) {
   }, [onDone]);
 
   return (
-    <div className={`splash ${leaving ? 'splash-leave' : ''}`} aria-hidden="true" data-testid="splash">
+    <div
+      className={`splash ${leaving ? 'splash-leave' : ''}`}
+      aria-hidden="true"
+      data-testid="splash"
+    >
       <svg viewBox="0 0 64 64" className="splash-mark" focusable="false">
-        <rect className="splash-square" x="4" y="22" width="26" height="38" fill="var(--blue)" stroke="var(--ink)" strokeWidth="3" />
-        <circle className="splash-circle" cx="44" cy="20" r="16" fill="var(--red)" stroke="var(--ink)" strokeWidth="3" />
-        <polygon className="splash-triangle" points="30,60 46,32 62,60" fill="var(--yellow)" stroke="var(--ink)" strokeWidth="3" />
+        <rect
+          className="splash-square"
+          x="4"
+          y="22"
+          width="26"
+          height="38"
+          fill="var(--blue)"
+          stroke="var(--ink)"
+          strokeWidth="3"
+        />
+        <circle
+          className="splash-circle"
+          cx="44"
+          cy="20"
+          r="16"
+          fill="var(--red)"
+          stroke="var(--ink)"
+          strokeWidth="3"
+        />
+        <polygon
+          className="splash-triangle"
+          points="30,60 46,32 62,60"
+          fill="var(--yellow)"
+          stroke="var(--ink)"
+          strokeWidth="3"
+        />
       </svg>
       <Wordmark className="splash-word" />
       <p className="splash-claim">Werkstatt für Gedächtnis, Tempo und Wissen</p>

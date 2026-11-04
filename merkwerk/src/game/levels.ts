@@ -28,12 +28,48 @@ export interface LevelDef {
 export const LEVELS_PER_WORLD = 12;
 
 export const WORLDS: readonly World[] = [
-  { id: 1, name: 'Punkt', subtitle: 'Der Anfang: kleine Raster, viel Zeit.', requiredStars: 0, color: 'rot' },
-  { id: 2, name: 'Linie', subtitle: 'Folgen werden länger, Bilder kürzer.', requiredStars: 20, color: 'blau' },
-  { id: 3, name: 'Fläche', subtitle: 'Größere Raster, mehr Details.', requiredStars: 45, color: 'gelb' },
-  { id: 4, name: 'Raum', subtitle: 'Rückwärts denken, schneller entscheiden.', requiredStars: 70, color: 'tinte' },
-  { id: 5, name: 'Rhythmus', subtitle: 'Tempo und Wechsel im Takt.', requiredStars: 95, color: 'rot' },
-  { id: 6, name: 'Komposition', subtitle: 'Alles zusammen – das Meisterstück.', requiredStars: 120, color: 'blau' },
+  {
+    id: 1,
+    name: 'Punkt',
+    subtitle: 'Der Anfang: kleine Raster, viel Zeit.',
+    requiredStars: 0,
+    color: 'rot',
+  },
+  {
+    id: 2,
+    name: 'Linie',
+    subtitle: 'Folgen werden länger, Bilder kürzer.',
+    requiredStars: 20,
+    color: 'blau',
+  },
+  {
+    id: 3,
+    name: 'Fläche',
+    subtitle: 'Größere Raster, mehr Details.',
+    requiredStars: 45,
+    color: 'gelb',
+  },
+  {
+    id: 4,
+    name: 'Raum',
+    subtitle: 'Rückwärts denken, schneller entscheiden.',
+    requiredStars: 70,
+    color: 'tinte',
+  },
+  {
+    id: 5,
+    name: 'Rhythmus',
+    subtitle: 'Tempo und Wechsel im Takt.',
+    requiredStars: 95,
+    color: 'rot',
+  },
+  {
+    id: 6,
+    name: 'Komposition',
+    subtitle: 'Alles zusammen – das Meisterstück.',
+    requiredStars: 120,
+    color: 'blau',
+  },
 ];
 
 /** Reihenfolge, in der die Modi in Welt 1 eingeführt werden; spätere Welten verschieben sie. */

@@ -279,16 +279,33 @@ function starPoints(cx: number, cy: number, outer: number, inner: number): strin
   for (let i = 0; i < 10; i++) {
     const r = i % 2 === 0 ? outer : inner;
     const angle = -Math.PI / 2 + (i * Math.PI) / 5;
-    points.push(`${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`);
+    points.push(
+      `${(cx + r * Math.cos(angle)).toFixed(2)},${(cy + r * Math.sin(angle)).toFixed(2)}`,
+    );
   }
   return points.join(' ');
 }
 
 const STAR = starPoints(12, 12.6, 10.5, 4.4);
 
-export function StarIcon({ filled, size = 24, className }: { filled: boolean; size?: number; className?: string }) {
+export function StarIcon({
+  filled,
+  size = 24,
+  className,
+}: {
+  filled: boolean;
+  size?: number;
+  className?: string;
+}) {
   return (
-    <svg viewBox="0 0 24 24" width={size} height={size} aria-hidden="true" focusable="false" className={className}>
+    <svg
+      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      focusable="false"
+      className={className}
+    >
       <polygon
         points={STAR}
         fill={filled ? 'var(--yellow)' : 'var(--paper-deep)'}

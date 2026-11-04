@@ -23,7 +23,13 @@ export const MIGRATIONS: Record<number, (data: Raw) => Raw> = {
     for (const [id, card] of Object.entries(oldCards)) {
       if (!isObj(card)) continue;
       const box = typeof card.box === 'number' ? card.box : 1;
-      leitner[id] = { box, due: card.due, seen: 1, correct: box > 1 ? 1 : 0, wrong: box === 1 ? 1 : 0 };
+      leitner[id] = {
+        box,
+        due: card.due,
+        seen: 1,
+        correct: box > 1 ? 1 : 0,
+        wrong: box === 1 ? 1 : 0,
+      };
     }
     const settings = isObj(data.settings) ? data.settings : {};
     return {
@@ -46,7 +52,8 @@ export interface MigrationResult {
 }
 
 export function migrate(input: Raw, targetVersion: number): MigrationResult {
-  const fromVersion = typeof input.version === 'number' && Number.isInteger(input.version) ? input.version : 1;
+  const fromVersion =
+    typeof input.version === 'number' && Number.isInteger(input.version) ? input.version : 1;
   let data = input;
   let version = fromVersion;
   while (version < targetVersion) {

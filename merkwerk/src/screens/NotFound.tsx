@@ -12,7 +12,9 @@ export function NotFound() {
         <Shape shape="dreieck" color="gelb" size={64} />
       </div>
       <PageTitle>Diese Seite gibt es nicht.</PageTitle>
-      <p className="lead">Vielleicht hat sich ein Buchstabe verirrt. Auf der Startseite geht es weiter.</p>
+      <p className="lead">
+        Vielleicht hat sich ein Buchstabe verirrt. Auf der Startseite geht es weiter.
+      </p>
       <Link to="/" className="btn btn-primary">
         <span>Zur Startseite</span>
       </Link>

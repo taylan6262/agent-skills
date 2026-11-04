@@ -1,18 +1,20 @@
 # Merkwerk – Konzept
 
 ## Idee
+
 Merkwerk ist eine Werkstatt für den Kopf: kurze Denkspiele, die visuelles Gedächtnis,
 Tempo, Lernen (Wiederholung) und Allgemeinwissen trainieren. Ehrliches Versprechen:
 „Trainiere dein visuelles Gedächtnis“, keine Aussagen über IQ oder „fotografisches Gedächtnis“.
 
 ## Designrichtung: Bauhaus-Formenlehre auf Papier
+
 - Flache Flächen, keine Verläufe, kein Glas, keine Emojis.
 - Grundformen Kreis, Quadrat, Dreieck sind Logo, Icons, Spielsteine und Kartenknoten zugleich.
 - Harte Tintenkonturen (2–3 px), kaum Rundungen (2 px), Raster-Hintergrund wie ein Druckbogen.
 - Layout linksbündig und redaktionell, große Display-Ziffern statt Karten-Dashboards.
 
 | Token  | Farbe     | Einsatz                                   |
-|--------|-----------|-------------------------------------------|
+| ------ | --------- | ----------------------------------------- |
 | Papier | `#F4EEE1` | Hintergrund, Flächen                      |
 | Tinte  | `#1B1A17` | Text, Konturen                            |
 | Rot    | `#B8331D` | Akzent: Primäraktion, Fehler (mit Symbol) |
@@ -22,6 +24,7 @@ Tempo, Lernen (Wiederholung) und Allgemeinwissen trainieren. Ehrliches Versprech
 Schriften (OFL, lokal): **League Spartan** (Display, 700–900), **Atkinson Hyperlegible** (Text).
 
 ## Spielmodi
+
 1. **Blitzbild**: Raster 3×3 bis 6×6, Formen kurz zeigen, Positionen bzw. Formen wiederherstellen.
 2. **Detailblick**: generierte SVG-Szene, danach Fragen (Anzahl, Ecke, Farbe, Existenz).
 3. **Zahlenspur**: Ziffernfolgen vorwärts, ab Stufe 6 auch rückwärts; Länge passt sich pro Folge an.
@@ -31,16 +34,19 @@ Schriften (OFL, lokal): **League Spartan** (Display, 700–900), **Atkinson Hype
 Adaptiv: zwei sehr gute Runden in Folge → +1 Stufe, zwei Fehlschläge in Folge → −1 Stufe (pro Modus).
 
 ## Progression
+
 - 6 Welten × 12 Level = 72 Level: Punkt, Linie, Fläche, Raum, Rhythmus, Komposition.
 - Sterne: 1★ ab 50 %, 2★ ab 75 %, 3★ ab 90 % Leistung. Welten öffnen über Gesamtsterne (0/20/45/70/95/120).
 - XP und Spielerlevel, Tagesaufgabe (aus dem Datum abgeleitet), Serie (Tage in Folge), 25 Erfolge.
 - Statistik: Leistungsindex pro Fähigkeit über Zeit, Bestwerte, Lernstand (Leitner-Fächer).
 
 ## Screens
+
 Splash → Onboarding (3 Schritte, inkl. Einstufung per Zahlenspur) → Start → Karte → Level-Intro →
 Spiel (Pause-Menü) → Ergebnis → Statistik → Erfolge → Training → Einstellungen → Impressum/Datenschutz.
 
 ## Dateistruktur
+
 ```
 src/
   game/          reine Spiellogik (kein React): Wertung, Adaptiv, Leitner, Level, Erfolge, Modi

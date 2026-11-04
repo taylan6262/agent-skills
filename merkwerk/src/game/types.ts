@@ -1,10 +1,17 @@
 export type ModeId = 'blitzbild' | 'detailblick' | 'zahlenspur' | 'tempo' | 'wissen';
-export const MODE_IDS: readonly ModeId[] = ['blitzbild', 'detailblick', 'zahlenspur', 'tempo', 'wissen'];
+export const MODE_IDS: readonly ModeId[] = [
+  'blitzbild',
+  'detailblick',
+  'zahlenspur',
+  'tempo',
+  'wissen',
+];
 
 export type SkillId = 'gedaechtnis' | 'tempo' | 'lernen' | 'wissen';
 export const SKILL_IDS: readonly SkillId[] = ['gedaechtnis', 'tempo', 'lernen', 'wissen'];
 
-export type CategoryId = 'geografie' | 'natur' | 'wissenschaft' | 'geschichte' | 'sprache' | 'mathe';
+export type CategoryId =
+  'geografie' | 'natur' | 'wissenschaft' | 'geschichte' | 'sprache' | 'mathe';
 export const CATEGORY_IDS: readonly CategoryId[] = [
   'geografie',
   'natur',

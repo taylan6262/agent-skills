@@ -10,7 +10,13 @@ import {
   type ShapeId,
 } from '../symbols';
 
-export const SCENE_SHAPES: readonly ShapeId[] = ['kreis', 'quadrat', 'dreieck', 'raute', 'halbkreis'];
+export const SCENE_SHAPES: readonly ShapeId[] = [
+  'kreis',
+  'quadrat',
+  'dreieck',
+  'raute',
+  'halbkreis',
+];
 export const SCENE_COLORS: readonly PaletteColor[] = ['rot', 'blau', 'gelb', 'tinte'];
 
 export interface DetailblickParams {

@@ -41,7 +41,8 @@ if (typeof window !== 'undefined') {
 
 export function navigate(to: string, options: { replace?: boolean } = {}): void {
   const target = new URL(to, window.location.origin);
-  if (target.pathname === current.pathname && target.search === current.search && !options.replace) return;
+  if (target.pathname === current.pathname && target.search === current.search && !options.replace)
+    return;
   const idx = readIdx() + (options.replace ? 0 : 1);
   if (options.replace) window.history.replaceState({ idx }, '', to);
   else window.history.pushState({ idx }, '', to);

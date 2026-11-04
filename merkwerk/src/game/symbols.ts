@@ -1,14 +1,7 @@
 import type { PaletteColor } from './levels';
 
 export type ShapeId =
-  | 'kreis'
-  | 'quadrat'
-  | 'dreieck'
-  | 'halbkreis'
-  | 'raute'
-  | 'ring'
-  | 'kreuz'
-  | 'viertel';
+  'kreis' | 'quadrat' | 'dreieck' | 'halbkreis' | 'raute' | 'ring' | 'kreuz' | 'viertel';
 
 export type Gender = 'm' | 'n' | 'f';
 

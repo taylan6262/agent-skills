@@ -14,6 +14,7 @@ import { createRng } from '../lib/rng';
 import { Button } from '../ui/components';
 import { Icon } from '../ui/icons';
 import { useActiveClock, usePausableTimeout } from './hooks';
+import { Keypad } from './Keypad';
 import type { GameProps } from './types';
 
 type Phase = 'ready' | 'show' | 'input' | 'feedback';
@@ -23,9 +24,13 @@ interface Trial {
   direction: Direction;
 }
 
-const KEYS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
-
-export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onProgress }: GameProps) {
+export default function ZahlenspurGame({
+  difficulty,
+  seed,
+  paused,
+  onFinish,
+  onProgress,
+}: GameProps) {
   const params = useMemo(() => zahlenspurParams(difficulty), [difficulty]);
   const trialSeeds = useMemo(() => {
     const rng = createRng(seed);
@@ -47,7 +52,9 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
   const [shownDigit, setShownDigit] = useState(-1);
   const [digitVisible, setDigitVisible] = useState(false);
   const [input, setInput] = useState<number[]>([]);
-  const [evaluations, setEvaluations] = useState<(TrialEvaluation & { length: number; direction: Direction })[]>([]);
+  const [evaluations, setEvaluations] = useState<
+    (TrialEvaluation & { length: number; direction: Direction })[]
+  >([]);
   const okRef = useRef<HTMLButtonElement>(null);
   const elapsed = useActiveClock(paused);
 
@@ -92,18 +99,12 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
     `show-${trialIndex}-${shownDigit}-${digitVisible ? 'on' : 'off'}`,
   );
 
-  usePausableTimeout(() => advance(), phase === 'feedback' ? 2200 : null, paused, `fb-${trialIndex}`);
-
-  useEffect(() => {
-    if (phase !== 'input' || paused) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (/^[0-9]$/.test(event.key)) type(Number(event.key));
-      else if (event.key === 'Backspace') erase();
-      else if (event.key === 'Enter') submit();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  });
+  usePausableTimeout(
+    () => advance(),
+    phase === 'feedback' ? 2200 : null,
+    paused,
+    `fb-${trialIndex}`,
+  );
 
   function type(digit: number) {
     if (phase !== 'input' || input.length >= trial.sequence.length) return;
@@ -121,7 +122,10 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
   function submit() {
     if (phase !== 'input' || input.length !== trial.sequence.length) return;
     const result = evaluateTrial(trial.sequence, trial.direction, input);
-    setEvaluations([...evaluations, { ...result, length: trial.sequence.length, direction: trial.direction }]);
+    setEvaluations([
+      ...evaluations,
+      { ...result, length: trial.sequence.length, direction: trial.direction },
+    ]);
     setPhase('feedback');
     feedback(result.perfect ? 'correct' : 'wrong', trialIndex);
   }
@@ -129,8 +133,12 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
   function advance() {
     if (!last) return;
     if (trialIndex + 1 >= params.trials) {
-      const perfectForward = evaluations.filter((e) => e.perfect && e.direction === 'vorwaerts').map((e) => e.length);
-      const perfectBackward = evaluations.filter((e) => e.perfect && e.direction === 'rueckwaerts').map((e) => e.length);
+      const perfectForward = evaluations
+        .filter((e) => e.perfect && e.direction === 'vorwaerts')
+        .map((e) => e.length);
+      const perfectBackward = evaluations
+        .filter((e) => e.perfect && e.direction === 'rueckwaerts')
+        .map((e) => e.length);
       onFinish({
         mode: 'zahlenspur',
         difficulty,
@@ -189,16 +197,27 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
         ) : phase === 'show' ? (
           <span className="digit-dot" aria-hidden="true" />
         ) : null}
-        {phase === 'ready' ? <span className="digit-count numeral">{trial.sequence.length}</span> : null}
+        {phase === 'ready' ? (
+          <span className="digit-count numeral">{trial.sequence.length}</span>
+        ) : null}
         {phase === 'input' || phase === 'feedback' ? (
           <ol className="slots" aria-label="Deine Eingabe">
             {expected.map((digit, i) => {
               const given = input[i];
-              const state = phase === 'feedback' ? (given === digit ? 'is-correct' : 'is-wrong') : i === input.length ? 'is-next' : '';
+              const state =
+                phase === 'feedback'
+                  ? given === digit
+                    ? 'is-correct'
+                    : 'is-wrong'
+                  : i === input.length
+                    ? 'is-next'
+                    : '';
               return (
                 <li key={i} className={`slot ${state}`}>
                   <span className="numeral">{given ?? ''}</span>
-                  {phase === 'feedback' && given !== digit ? <span className="slot-expected">{digit}</span> : null}
+                  {phase === 'feedback' && given !== digit ? (
+                    <span className="slot-expected">{digit}</span>
+                  ) : null}
                 </li>
               );
             })}
@@ -210,29 +229,14 @@ export default function ZahlenspurGame({ difficulty, seed, paused, onFinish, onP
       ) : null}
 
       {phase === 'input' ? (
-        <div className="keypad" role="group" aria-label="Ziffern-Tastenfeld">
-          {KEYS.map((k) => (
-            <button key={k} type="button" className="key numeral" onClick={() => type(k)}>
-              {k}
-            </button>
-          ))}
-          <button type="button" className="key key-muted" onClick={erase} aria-label="Letzte Ziffer löschen">
-            <Icon name="backspace" />
-          </button>
-          <button type="button" className="key numeral" onClick={() => type(0)}>
-            0
-          </button>
-          <button
-            ref={okRef}
-            type="button"
-            className="key key-ok"
-            onClick={submit}
-            disabled={input.length !== trial.sequence.length}
-            aria-label="Eingabe prüfen"
-          >
-            <Icon name="check" />
-          </button>
-        </div>
+        <Keypad
+          onDigit={type}
+          onErase={erase}
+          onSubmit={submit}
+          canSubmit={input.length === trial.sequence.length}
+          listen={!paused}
+          okRef={okRef}
+        />
       ) : null}
 
       {phase === 'feedback' ? (

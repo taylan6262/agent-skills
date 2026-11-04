@@ -1,4 +1,10 @@
-import { useEffect, useRef, type ComponentPropsWithRef, type MouseEvent, type ReactNode } from 'react';
+import {
+  useEffect,
+  useRef,
+  type ComponentPropsWithRef,
+  type MouseEvent,
+  type ReactNode,
+} from 'react';
 import { goBack, navigate } from '../lib/router';
 import { feedback } from '../lib/feedback';
 import { Icon, StarIcon, type IconName } from './icons';
@@ -16,8 +22,25 @@ export interface ButtonProps extends ComponentPropsWithRef<'button'> {
   quiet?: boolean;
 }
 
-export function Button({ variant = 'secondary', icon, iconRight, block, size = 'md', quiet, className, children, onClick, ...rest }: ButtonProps) {
-  const classes = ['btn', `btn-${variant}`, block ? 'btn-block' : '', size === 'lg' ? 'btn-lg' : '', className ?? '']
+export function Button({
+  variant = 'secondary',
+  icon,
+  iconRight,
+  block,
+  size = 'md',
+  quiet,
+  className,
+  children,
+  onClick,
+  ...rest
+}: ButtonProps) {
+  const classes = [
+    'btn',
+    `btn-${variant}`,
+    block ? 'btn-block' : '',
+    size === 'lg' ? 'btn-lg' : '',
+    className ?? '',
+  ]
     .filter(Boolean)
     .join(' ');
   return (
@@ -53,7 +76,15 @@ export function Link({
       href={to}
       className={className}
       onClick={(event: MouseEvent<HTMLAnchorElement>) => {
-        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        if (
+          event.defaultPrevented ||
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return;
         event.preventDefault();
         feedback('tap');
         navigate(to, { replace: replace ?? false });
@@ -106,7 +137,11 @@ export function TopBar({
 }) {
   return (
     <header className="topbar">
-      {back ? <IconButton icon="back" label="Zurück" onClick={() => goBack(back)} /> : <span className="topbar-spacer" />}
+      {back ? (
+        <IconButton icon="back" label="Zurück" onClick={() => goBack(back)} />
+      ) : (
+        <span className="topbar-spacer" />
+      )}
       <div className="topbar-title">
         {eyebrow ? <span className="label muted">{eyebrow}</span> : null}
         <span className="topbar-heading">{title}</span>
@@ -129,20 +164,56 @@ export function PageTitle({ children, className }: { children: ReactNode; classN
   );
 }
 
-export function StarRow({ stars, size = 20, animate = false, label }: { stars: StarCount; size?: number; animate?: boolean; label?: string }) {
+export function StarRow({
+  stars,
+  size = 20,
+  animate = false,
+  label,
+}: {
+  stars: StarCount;
+  size?: number;
+  animate?: boolean;
+  label?: string;
+}) {
   return (
-    <span className={`star-row ${animate ? 'star-row-animate' : ''}`} role="img" aria-label={label ?? `${stars} von 3 Sternen`}>
+    <span
+      className={`star-row ${animate ? 'star-row-animate' : ''}`}
+      role="img"
+      aria-label={label ?? `${stars} von 3 Sternen`}
+    >
       {[1, 2, 3].map((i) => (
-        <StarIcon key={i} filled={i <= stars} size={size} className={i <= stars ? 'star-on' : 'star-off'} />
+        <StarIcon
+          key={i}
+          filled={i <= stars}
+          size={size}
+          className={i <= stars ? 'star-on' : 'star-off'}
+        />
       ))}
     </span>
   );
 }
 
-export function Meter({ value, max, label, color = 'blue' }: { value: number; max: number; label: string; color?: 'blue' | 'red' | 'yellow' | 'ink' }) {
+export function Meter({
+  value,
+  max,
+  label,
+  color = 'blue',
+}: {
+  value: number;
+  max: number;
+  label: string;
+  color?: 'blue' | 'red' | 'yellow' | 'ink';
+}) {
   const pct = max <= 0 ? 0 : Math.min(100, Math.max(0, (value / max) * 100));
   return (
-    <div className={`meter meter-${color}`} role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={max} aria-valuenow={value}>
+    <div
+      className={`meter meter-${color}`}
+      role="meter"
+      aria-label={label}
+      aria-valuemin={0}
+      aria-valuemax={max}
+      aria-valuenow={value}
+    >
       <div className="meter-fill" style={{ width: `${pct}%` }} />
     </div>
   );

@@ -87,10 +87,23 @@ export const MODE_META: Record<ModeId, ModeMeta> = {
   },
 };
 
-export const SKILL_META: Record<SkillId, { name: string; description: string; color: PaletteColor; shape: ShapeId }> = {
-  gedaechtnis: { name: 'Gedächtnis', description: 'Blitzbild, Detailblick, Zahlenspur', color: 'blau', shape: 'quadrat' },
+export const SKILL_META: Record<
+  SkillId,
+  { name: string; description: string; color: PaletteColor; shape: ShapeId }
+> = {
+  gedaechtnis: {
+    name: 'Gedächtnis',
+    description: 'Blitzbild, Detailblick, Zahlenspur',
+    color: 'blau',
+    shape: 'quadrat',
+  },
   tempo: { name: 'Tempo', description: 'Tempo-Duell', color: 'rot', shape: 'dreieck' },
-  lernen: { name: 'Lernen', description: 'Lernstand im Leitner-System', color: 'tinte', shape: 'raute' },
+  lernen: {
+    name: 'Lernen',
+    description: 'Lernstand im Leitner-System',
+    color: 'tinte',
+    shape: 'raute',
+  },
   wissen: { name: 'Wissen', description: 'Trefferquote nach Stufe', color: 'gelb', shape: 'kreis' },
 };
 

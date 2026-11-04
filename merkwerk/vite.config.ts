@@ -2,6 +2,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import pkg from './package.json' with { type: 'json' };
 
 // Gleiche Sicherheits-Header wie in vercel.json / netlify.toml, damit Preview und E2E-Tests
 // unter Produktionsbedingungen laufen (keine externen Requests, keine Inline-Skripte).
@@ -17,6 +18,9 @@ const securityHeaders = {
 const iconSizes = [48, 72, 96, 128, 144, 152, 192, 256, 384, 512];
 
 export default defineConfig({
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [
     react(),
     VitePWA({

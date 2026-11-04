@@ -15,7 +15,15 @@ import type { GameProps } from './types';
 const LETTERS = ['A', 'B', 'C', 'D'] as const;
 const LEVEL_NAMES = { 1: 'leicht', 2: 'mittel', 3: 'schwer' } as const;
 
-export default function WissenGame({ difficulty, seed, paused, category, reviewOnly, onFinish, onProgress }: GameProps) {
+export default function WissenGame({
+  difficulty,
+  seed,
+  paused,
+  category,
+  reviewOnly,
+  onFinish,
+  onProgress,
+}: GameProps) {
   const params = useMemo(() => wissenParams(difficulty), [difficulty]);
   const [round] = useState(() =>
     prepareRound(QUESTIONS, getSave().leitner, params, createRng(seed), {
@@ -56,7 +64,16 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
   useEffect(() => {
     if (paused) return;
     const onKey = (event: KeyboardEvent) => {
-      const map: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3, a: 0, b: 1, c: 2, d: 3 };
+      const map: Record<string, number> = {
+        '1': 0,
+        '2': 1,
+        '3': 2,
+        '4': 3,
+        a: 0,
+        b: 1,
+        c: 2,
+        d: 3,
+      };
       const pick = map[event.key.toLowerCase()];
       if (pick !== undefined && !answered) choose(pick);
     };
@@ -115,7 +132,11 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
       {params.timeLimitMs !== null ? (
         <div className="timer-track" aria-hidden="true">
           {!answered ? (
-            <div className={`timer-bar ${paused ? 'is-paused' : ''}`} key={index} style={{ animationDuration: `${params.timeLimitMs}ms` }} />
+            <div
+              className={`timer-bar ${paused ? 'is-paused' : ''}`}
+              key={index}
+              style={{ animationDuration: `${params.timeLimitMs}ms` }}
+            />
           ) : null}
         </div>
       ) : null}
@@ -129,7 +150,13 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
             const text = question.answers[answerIndex] ?? '';
             const isCorrect = displayIndex === correctDisplay;
             const isChosen = displayIndex === chosen;
-            const state = answered ? (isCorrect ? 'is-correct' : isChosen ? 'is-wrong' : 'is-dim') : '';
+            const state = answered
+              ? isCorrect
+                ? 'is-correct'
+                : isChosen
+                  ? 'is-wrong'
+                  : 'is-dim'
+              : '';
             return (
               <button
                 key={text}
@@ -142,8 +169,12 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
                   {LETTERS[displayIndex]}
                 </span>
                 <span className="option-text">{text}</span>
-                {answered && isCorrect ? <Icon name="check" size={20} label="richtige Antwort" /> : null}
-                {answered && isChosen && !isCorrect ? <Icon name="close" size={20} label="deine Antwort, falsch" /> : null}
+                {answered && isCorrect ? (
+                  <Icon name="check" size={20} label="richtige Antwort" />
+                ) : null}
+                {answered && isChosen && !isCorrect ? (
+                  <Icon name="close" size={20} label="deine Antwort, falsch" />
+                ) : null}
               </button>
             );
           })}
@@ -153,7 +184,9 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
           <div className={`explanation ${wasCorrect ? 'good' : 'bad'} feedback-pop`} role="status">
             <p className="explanation-head">
               <Icon name={wasCorrect ? 'check' : 'close'} size={20} />
-              <strong>{wasCorrect ? 'Richtig!' : timedOut ? 'Zeit abgelaufen.' : 'Nicht ganz.'}</strong>
+              <strong>
+                {wasCorrect ? 'Richtig!' : timedOut ? 'Zeit abgelaufen.' : 'Nicht ganz.'}
+              </strong>
               {!wasCorrect ? <span> Richtig ist: {question.answers[0]}</span> : null}
             </p>
             <p>{question.explanation}</p>
@@ -162,7 +195,14 @@ export default function WissenGame({ difficulty, seed, paused, category, reviewO
         ) : null}
 
         {answered ? (
-          <Button ref={nextRef} variant="primary" size="lg" block iconRight="arrow" onClick={advance}>
+          <Button
+            ref={nextRef}
+            variant="primary"
+            size="lg"
+            block
+            iconRight="arrow"
+            onClick={advance}
+          >
             {index + 1 < round.length ? 'Nächste Frage' : 'Zum Ergebnis'}
           </Button>
         ) : null}

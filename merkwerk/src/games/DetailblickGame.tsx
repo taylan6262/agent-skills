@@ -60,7 +60,8 @@ function SceneView({ scene, patterned }: { scene: Scene; patterned: boolean }) {
       <ul className="visually-hidden">
         {scene.objects.map((o) => (
           <li key={o.cell}>
-            {positionName(scene, o.col, o.row)}: {colorShapeLabel(o.color, o.shape)}, {o.big ? 'groß' : 'klein'}
+            {positionName(scene, o.col, o.row)}: {colorShapeLabel(o.color, o.shape)},{' '}
+            {o.big ? 'groß' : 'klein'}
           </li>
         ))}
       </ul>
@@ -68,7 +69,14 @@ function SceneView({ scene, patterned }: { scene: Scene; patterned: boolean }) {
   );
 }
 
-export default function DetailblickGame({ difficulty, seed, paused, colorPatterns, onFinish, onProgress }: GameProps) {
+export default function DetailblickGame({
+  difficulty,
+  seed,
+  paused,
+  colorPatterns,
+  onFinish,
+  onProgress,
+}: GameProps) {
   const params = useMemo(() => detailblickParams(difficulty), [difficulty]);
   const rounds = useMemo<Round[]>(() => {
     const rng = createRng(seed);
@@ -172,23 +180,42 @@ export default function DetailblickGame({ difficulty, seed, paused, colorPattern
       </p>
       <div className="timer-track" aria-hidden="true">
         {phase === 'show' ? (
-          <div className={`timer-bar ${paused ? 'is-paused' : ''}`} style={{ animationDuration: `${params.showMs}ms` }} />
+          <div
+            className={`timer-bar ${paused ? 'is-paused' : ''}`}
+            style={{ animationDuration: `${params.showMs}ms` }}
+          />
         ) : null}
       </div>
 
       {phase === 'show' ? <SceneView scene={round.scene} patterned={colorPatterns} /> : null}
-      {phase === 'ready' ? <div className="scene scene-blank" style={{ aspectRatio: `${round.scene.cols} / ${round.scene.rows}` }} /> : null}
+      {phase === 'ready' ? (
+        <div
+          className="scene scene-blank"
+          style={{ aspectRatio: `${round.scene.cols} / ${round.scene.rows}` }}
+        />
+      ) : null}
 
       {phase === 'question' || phase === 'answered' ? (
         <div className="quiz" key={`${roundIndex}-${questionIndex}`}>
           <h2 className="quiz-question" id="frage">
             {question.text}
           </h2>
-          <div className={`options options-${question.options.length}`} role="group" aria-labelledby="frage">
+          <div
+            className={`options options-${question.options.length}`}
+            role="group"
+            aria-labelledby="frage"
+          >
             {question.options.map((option, i) => {
               const isCorrect = i === question.correctIndex;
               const isChosen = i === chosen;
-              const state = phase === 'answered' ? (isCorrect ? 'is-correct' : isChosen ? 'is-wrong' : 'is-dim') : '';
+              const state =
+                phase === 'answered'
+                  ? isCorrect
+                    ? 'is-correct'
+                    : isChosen
+                      ? 'is-wrong'
+                      : 'is-dim'
+                  : '';
               return (
                 <button
                   key={option}
@@ -198,21 +225,36 @@ export default function DetailblickGame({ difficulty, seed, paused, colorPattern
                   onClick={() => answer(i)}
                 >
                   <span>{option}</span>
-                  {phase === 'answered' && isCorrect ? <Icon name="check" size={20} label="richtige Antwort" /> : null}
-                  {phase === 'answered' && isChosen && !isCorrect ? <Icon name="close" size={20} label="deine Antwort, falsch" /> : null}
+                  {phase === 'answered' && isCorrect ? (
+                    <Icon name="check" size={20} label="richtige Antwort" />
+                  ) : null}
+                  {phase === 'answered' && isChosen && !isCorrect ? (
+                    <Icon name="close" size={20} label="deine Antwort, falsch" />
+                  ) : null}
                 </button>
               );
             })}
           </div>
           {phase === 'answered' ? (
-            <div className={`answer-note ${wasCorrect ? 'good' : 'bad'} feedback-pop`} role="status">
+            <div
+              className={`answer-note ${wasCorrect ? 'good' : 'bad'} feedback-pop`}
+              role="status"
+            >
               <Icon name={wasCorrect ? 'check' : 'close'} size={20} />
-              <span>{wasCorrect ? 'Richtig!' : `Leider nicht. Richtig ist: ${question.options[question.correctIndex] ?? ''}.`}</span>
+              <span>
+                {wasCorrect
+                  ? 'Richtig!'
+                  : `Leider nicht. Richtig ist: ${question.options[question.correctIndex] ?? ''}.`}
+              </span>
             </div>
           ) : null}
           {phase === 'answered' ? (
             <Button variant="primary" size="lg" block iconRight="arrow" onClick={advance}>
-              {questionIndex + 1 < round.questions.length ? 'Nächste Frage' : roundIndex + 1 < rounds.length ? 'Nächste Szene' : 'Zum Ergebnis'}
+              {questionIndex + 1 < round.questions.length
+                ? 'Nächste Frage'
+                : roundIndex + 1 < rounds.length
+                  ? 'Nächste Szene'
+                  : 'Zum Ergebnis'}
             </Button>
           ) : null}
         </div>

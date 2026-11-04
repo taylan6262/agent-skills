@@ -2,9 +2,22 @@ import { describe, expect, it } from 'vitest';
 import { createRng } from '../../lib/rng';
 import { SHAPES, COLOR_NAMES } from '../symbols';
 import { blitzbildParams, evaluateRound, generateRound, trayFor, type Board } from './blitzbild';
-import { CORNER_LABEL, detailblickParams, generateQuestions, generateScene, type Corner, type Scene } from './detailblick';
+import {
+  CORNER_LABEL,
+  detailblickParams,
+  generateQuestions,
+  generateScene,
+  type Corner,
+  type Scene,
+} from './detailblick';
 import { evaluateTrial, generateSequence, nextLength, zahlenspurParams } from './zahlenspur';
-import { comboMultiplier, createTrialStream, pointsForAnswer, tempoParams, tempoPerformance } from './tempo';
+import {
+  comboMultiplier,
+  createTrialStream,
+  pointsForAnswer,
+  tempoParams,
+  tempoPerformance,
+} from './tempo';
 import { pointsForAnswer as wissenPoints, prepareRound, wissenParams } from './wissen';
 import type { Question } from '../types';
 
@@ -26,18 +39,33 @@ describe('Blitzbild', () => {
   });
 
   it('bewertet Positionen: Treffer zählen, Fehlklicks ziehen ab', () => {
-    const round = { size: 3, board: ['quadrat', null, null, 'quadrat', null, null, null, null, 'quadrat'] as Board };
+    const round = {
+      size: 3,
+      board: ['quadrat', null, null, 'quadrat', null, null, null, null, 'quadrat'] as Board,
+    };
     const perfect = evaluateRound(round, round.board, 'positionen');
     expect(perfect).toMatchObject({ correct: 3, wrong: 0, accuracy: 1, perfect: true });
     const answer: Board = ['quadrat', 'quadrat', null, null, null, null, null, null, 'quadrat'];
-    expect(evaluateRound(round, answer, 'positionen')).toMatchObject({ correct: 2, wrong: 1, missed: 1, perfect: false });
+    expect(evaluateRound(round, answer, 'positionen')).toMatchObject({
+      correct: 2,
+      wrong: 1,
+      missed: 1,
+      perfect: false,
+    });
     expect(evaluateRound(round, answer, 'positionen').accuracy).toBeCloseTo(1 / 3);
   });
 
   it('bewertet Formen: nur die richtige Form am richtigen Ort zählt', () => {
-    const round = { size: 3, board: ['kreis', 'dreieck', null, null, null, null, null, null, null] as Board };
+    const round = {
+      size: 3,
+      board: ['kreis', 'dreieck', null, null, null, null, null, null, null] as Board,
+    };
     const swapped: Board = ['dreieck', 'kreis', null, null, null, null, null, null, null];
-    expect(evaluateRound(round, swapped, 'formen')).toMatchObject({ correct: 0, wrong: 2, accuracy: 0 });
+    expect(evaluateRound(round, swapped, 'formen')).toMatchObject({
+      correct: 0,
+      wrong: 2,
+      accuracy: 0,
+    });
     const half: Board = ['kreis', null, 'dreieck', null, null, null, null, null, null];
     expect(evaluateRound(round, half, 'formen')).toMatchObject({ correct: 1, accuracy: 0.5 });
   });
@@ -57,9 +85,16 @@ function answerFromScene(scene: Scene, text: string): string {
     const shape = Object.values(SHAPES).find((s) => s.plural === countShape[1]);
     return String(scene.objects.filter((o) => o.shape === shape?.id).length);
   }
-  const corner = (Object.keys(CORNER_LABEL) as Corner[]).find((c) => text.includes(CORNER_LABEL[c]));
+  const corner = (Object.keys(CORNER_LABEL) as Corner[]).find((c) =>
+    text.includes(CORNER_LABEL[c]),
+  );
   if (corner) {
-    const cells = { lo: 0, ro: scene.cols - 1, lu: (scene.rows - 1) * scene.cols, ru: scene.rows * scene.cols - 1 };
+    const cells = {
+      lo: 0,
+      ro: scene.cols - 1,
+      lu: (scene.rows - 1) * scene.cols,
+      ru: scene.rows * scene.cols - 1,
+    };
     const obj = scene.objects.find((o) => o.cell === cells[corner]);
     if (!obj) return '?';
     return text.startsWith('Welche Form') ? SHAPES[obj.shape].name : COLOR_NAMES[obj.color];
@@ -100,7 +135,11 @@ describe('Detailblick', () => {
       const rng = createRng(seed);
       const scene = generateScene(detailblickParams(8), rng);
       for (const q of generateQuestions(scene, 5, rng).filter((x) => x.kind === 'gesehen')) {
-        const present = scene.objects.some((o) => q.text.includes(`${SHAPES[o.shape].name} zu sehen`) && q.text.includes(COLOR_NAMES[o.color].toLowerCase()));
+        const present = scene.objects.some(
+          (o) =>
+            q.text.includes(`${SHAPES[o.shape].name} zu sehen`) &&
+            q.text.includes(COLOR_NAMES[o.color].toLowerCase()),
+        );
         expect(q.options[q.correctIndex]).toBe(present ? 'Ja' : 'Nein');
       }
     }
@@ -121,9 +160,19 @@ describe('Zahlenspur', () => {
   });
 
   it('wertet vorwärts und rückwärts aus', () => {
-    expect(evaluateTrial([1, 2, 3], 'vorwaerts', [1, 2, 3])).toMatchObject({ perfect: true, score: 45 });
-    expect(evaluateTrial([1, 2, 3], 'rueckwaerts', [3, 2, 1])).toMatchObject({ perfect: true, score: 68 });
-    expect(evaluateTrial([1, 2, 3, 4], 'vorwaerts', [1, 2, 4, 3])).toMatchObject({ positionsCorrect: 2, accuracy: 0.5, perfect: false });
+    expect(evaluateTrial([1, 2, 3], 'vorwaerts', [1, 2, 3])).toMatchObject({
+      perfect: true,
+      score: 45,
+    });
+    expect(evaluateTrial([1, 2, 3], 'rueckwaerts', [3, 2, 1])).toMatchObject({
+      perfect: true,
+      score: 68,
+    });
+    expect(evaluateTrial([1, 2, 3, 4], 'vorwaerts', [1, 2, 4, 3])).toMatchObject({
+      positionsCorrect: 2,
+      accuracy: 0.5,
+      perfect: false,
+    });
   });
 
   it('passt die Länge adaptiv an', () => {
@@ -138,15 +187,21 @@ describe('Tempo-Duell', () => {
   it('steigert Ziel und Aufgabenvielfalt mit der Stufe', () => {
     expect(tempoParams(1, createRng(1)).kinds).toHaveLength(1);
     expect(tempoParams(12, createRng(1)).kinds).toHaveLength(3);
-    expect(tempoParams(12, createRng(1)).target).toBeGreaterThan(tempoParams(1, createRng(1)).target);
+    expect(tempoParams(12, createRng(1)).target).toBeGreaterThan(
+      tempoParams(1, createRng(1)).target,
+    );
   });
 
   it('verzichtet mit Farbsehhilfe auf Farbe-Wort-Aufgaben', () => {
-    for (let s = 1; s < 20; s++) expect(tempoParams(15, createRng(s), true).kinds).not.toContain('farbwort');
+    for (let s = 1; s < 20; s++)
+      expect(tempoParams(15, createRng(s), true).kinds).not.toContain('farbwort');
   });
 
   it('liefert Aufgaben, deren „passt“ zur Darstellung stimmt', () => {
-    const params = { ...tempoParams(12, createRng(3)), kinds: ['farbwort', 'formwort', 'gleich'] as const };
+    const params = {
+      ...tempoParams(12, createRng(3)),
+      kinds: ['farbwort', 'formwort', 'gleich'] as const,
+    };
     const stream = createTrialStream({ ...params, kinds: [...params.kinds] }, createRng(5));
     let last: string | null = null;
     for (let i = 0; i < 200; i++) {
@@ -188,7 +243,10 @@ describe('Wissensrunde', () => {
   }));
 
   it('mischt Antworten, ohne Fragen doppelt zu stellen', () => {
-    const round = prepareRound(pool, {}, wissenParams(10), createRng(9), { today: '2026-11-04', categories: ['natur'] });
+    const round = prepareRound(pool, {}, wissenParams(10), createRng(9), {
+      today: '2026-11-04',
+      categories: ['natur'],
+    });
     expect(round).toHaveLength(7);
     expect(new Set(round.map((r) => r.question.id)).size).toBe(7);
     for (const r of round) {

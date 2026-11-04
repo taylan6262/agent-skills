@@ -8,6 +8,7 @@ import './styles/base.css';
 import './styles/components.css';
 import './styles/screens.css';
 import './styles/games.css';
+import './styles/pages.css';
 import './styles/motion.css';
 
 const root = document.getElementById('root');

@@ -3,7 +3,13 @@ import type { RouteProps } from '../App';
 import { dailyChallenge } from '../game/daily';
 import { effectiveDifficulty, type PlayKind } from '../game/adaptive';
 import { getLevel, getWorld, isLevelUnlocked } from '../game/levels';
-import { CATEGORY_IDS, MODE_IDS, type CategoryId, type GameResult, type ModeId } from '../game/types';
+import {
+  CATEGORY_IDS,
+  MODE_IDS,
+  type CategoryId,
+  type GameResult,
+  type ModeId,
+} from '../game/types';
 import { GAMES } from '../games/registry';
 import { toDayKey } from '../lib/date';
 import { goBack, navigate, searchParam } from '../lib/router';
@@ -54,7 +60,10 @@ function GameRunner({ config }: { config: PlayConfig }) {
 
   const onFinish = useCallback(
     (result: GameResult) => {
-      recordResult(result, { kind: config.kind, ...(config.levelId ? { levelId: config.levelId } : {}) });
+      recordResult(result, {
+        kind: config.kind,
+        ...(config.levelId ? { levelId: config.levelId } : {}),
+      });
       navigate('/ergebnis', { replace: true });
     },
     [config.kind, config.levelId],
@@ -143,7 +152,8 @@ export function PlayLevel({ params }: RouteProps) {
   const level = getLevel(params.id ?? '');
   const [seed] = useState(randomSeed);
   if (!level) return <Blocked text="Dieses Level gibt es nicht." />;
-  if (!isLevelUnlocked(level.id, save.levels)) return <Blocked text="Dieses Level ist noch gesperrt." />;
+  if (!isLevelUnlocked(level.id, save.levels))
+    return <Blocked text="Dieses Level ist noch gesperrt." />;
   const world = getWorld(level.world);
   const config: PlayConfig = {
     kind: 'level',
@@ -167,7 +177,12 @@ export function PlayTraining({ params, search }: RouteProps) {
   const categoryParam = searchParam(search, 'kategorie');
   const category = CATEGORY_IDS.find((c) => c === categoryParam);
   const reviewOnly = searchParam(search, 'wiederholen') === '1';
-  const eyebrow = mode === 'wissen' && category ? `Training · ${CATEGORY_META[category].name}` : reviewOnly ? 'Training · Wiederholen' : 'Freies Training';
+  const eyebrow =
+    mode === 'wissen' && category
+      ? `Training · ${CATEGORY_META[category].name}`
+      : reviewOnly
+        ? 'Training · Wiederholen'
+        : 'Freies Training';
   const config: PlayConfig = {
     kind: 'training',
     mode,

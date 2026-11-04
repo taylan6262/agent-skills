@@ -11,14 +11,24 @@ describe('Fragendaten', () => {
 
   it('hat in jeder Kategorie mindestens 50 Fragen', () => {
     for (const category of CATEGORY_IDS) {
-      expect(QUESTIONS.filter((q) => q.category === category).length, category).toBeGreaterThanOrEqual(50);
+      expect(
+        QUESTIONS.filter((q) => q.category === category).length,
+        category,
+      ).toBeGreaterThanOrEqual(50);
     }
   });
 
   it('vergibt eindeutige, zur Kategorie passende IDs', () => {
     const ids = QUESTIONS.map((q) => q.id);
     expect(new Set(ids).size).toBe(ids.length);
-    const prefix = { geografie: 'geo', natur: 'nat', wissenschaft: 'wis', geschichte: 'ges', sprache: 'spr', mathe: 'mat' };
+    const prefix = {
+      geografie: 'geo',
+      natur: 'nat',
+      wissenschaft: 'wis',
+      geschichte: 'ges',
+      sprache: 'spr',
+      mathe: 'mat',
+    };
     for (const q of QUESTIONS) expect(q.id.startsWith(`${prefix[q.category]}-`), q.id).toBe(true);
   });
 
@@ -46,7 +56,9 @@ describe('Fragendaten', () => {
 
   it('bietet in jeder Kategorie leichte, mittlere und schwere Fragen', () => {
     for (const category of CATEGORY_IDS) {
-      const levels = new Set(QUESTIONS.filter((q) => q.category === category).map((q) => q.difficulty));
+      const levels = new Set(
+        QUESTIONS.filter((q) => q.category === category).map((q) => q.difficulty),
+      );
       expect([...levels].sort(), category).toEqual([1, 2, 3]);
     }
   });

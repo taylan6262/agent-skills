@@ -7,7 +7,8 @@ import type { CategoryId, ModeId } from '../game/types';
 import { createRng } from '../lib/rng';
 import { CATEGORY_META } from './meta';
 
-const seconds = (ms: number): string => `${(ms / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} s`;
+const seconds = (ms: number): string =>
+  `${(ms / 1000).toLocaleString('de-DE', { maximumFractionDigits: 1 })} s`;
 
 const DIFFICULTY_NAMES = { 1: 'leicht', 2: 'mittel', 3: 'schwer' } as const;
 
@@ -19,13 +20,19 @@ export function describeParams(mode: ModeId, difficulty: number, category?: Cate
       return [
         `${p.size} × ${p.size} Raster, ${p.count} Formen`,
         `${seconds(p.showMs)} zum Einprägen`,
-        p.variant === 'positionen' ? 'Nur die Positionen zählen' : `Positionen und ${p.kinds} verschiedene Formen`,
+        p.variant === 'positionen'
+          ? 'Nur die Positionen zählen'
+          : `Positionen und ${p.kinds} verschiedene Formen`,
         `${p.rounds} Runden`,
       ];
     }
     case 'detailblick': {
       const p = detailblickParams(difficulty);
-      return [`${p.scenes} Szenen mit je ${p.count} Formen`, `${seconds(p.showMs)} zum Einprägen`, `${p.questions} Fragen pro Szene`];
+      return [
+        `${p.scenes} Szenen mit je ${p.count} Formen`,
+        `${seconds(p.showMs)} zum Einprägen`,
+        `${p.questions} Fragen pro Szene`,
+      ];
     }
     case 'zahlenspur': {
       const p = zahlenspurParams(difficulty);
@@ -41,7 +48,9 @@ export function describeParams(mode: ModeId, difficulty: number, category?: Cate
         `${p.durationMs / 1000} Sekunden gegen die Uhr`,
         `Ziel: ${p.target} richtige Antworten`,
         p.kinds.length === 1 ? 'Ein Aufgabentyp' : `${p.kinds.length} Aufgabentypen im Wechsel`,
-        p.trialLimitMs ? `Höchstens ${seconds(p.trialLimitMs)} pro Antwort` : 'Ohne Zeitlimit pro Antwort',
+        p.trialLimitMs
+          ? `Höchstens ${seconds(p.trialLimitMs)} pro Antwort`
+          : 'Ohne Zeitlimit pro Antwort',
       ];
     }
     case 'wissen': {

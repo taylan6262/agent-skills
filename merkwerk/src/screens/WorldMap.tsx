@@ -25,7 +25,17 @@ function position(index: number): { row: number; col: number } {
   return { row, col: row % 2 === 0 ? c : COLS - 1 - c };
 }
 
-function LevelNode({ level, unlocked, current, stars }: { level: LevelDef; unlocked: boolean; current: boolean; stars: 0 | 1 | 2 | 3 }) {
+function LevelNode({
+  level,
+  unlocked,
+  current,
+  stars,
+}: {
+  level: LevelDef;
+  unlocked: boolean;
+  current: boolean;
+  stars: 0 | 1 | 2 | 3;
+}) {
   const meta = MODE_META[level.mode];
   const { row, col } = position(level.index - 1);
   const style = { gridRow: row + 1, gridColumn: col + 1 };
@@ -50,7 +60,9 @@ function LevelNode({ level, unlocked, current, stars }: { level: LevelDef; unloc
     >
       <span className="node-shape" data-shape={meta.shape}>
         <Shape shape={meta.shape} color={meta.color} />
-        <span className={`node-index numeral ${meta.color === 'gelb' ? 'on-light' : 'on-dark'}`}>{level.index}</span>
+        <span className={`node-index numeral ${meta.color === 'gelb' ? 'on-light' : 'on-dark'}`}>
+          {level.index}
+        </span>
       </span>
       <StarRow stars={stars} size={14} />
     </Link>
@@ -89,7 +101,11 @@ export function WorldMap() {
           })
           .join(' ');
         return (
-          <article key={world.id} className={`world tone-${world.color} ${open ? '' : 'is-locked'}`} aria-labelledby={`welt-${world.id}`}>
+          <article
+            key={world.id}
+            className={`world tone-${world.color} ${open ? '' : 'is-locked'}`}
+            aria-labelledby={`welt-${world.id}`}
+          >
             <header className="world-head">
               <span className="world-number numeral" aria-hidden="true">
                 {String(world.id).padStart(2, '0')}
@@ -109,13 +125,20 @@ export function WorldMap() {
               <p className="world-lock">
                 <Icon name="lock" size={18} />
                 <span>
-                  Öffnet bei {world.requiredStars} Sternen – dir fehlen noch {world.requiredStars - total}.
+                  Öffnet bei {world.requiredStars} Sternen – dir fehlen noch{' '}
+                  {world.requiredStars - total}.
                 </span>
               </p>
             )}
             {open ? (
               <div className="world-path">
-                <svg className="world-line" viewBox="0 0 300 400" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+                <svg
+                  className="world-line"
+                  viewBox="0 0 300 400"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                  focusable="false"
+                >
                   <polyline points={points} />
                 </svg>
                 {levels.map((level) => (

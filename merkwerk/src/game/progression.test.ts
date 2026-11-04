@@ -5,7 +5,11 @@ const empty = { current: 0, best: 0, lastActiveDay: null };
 
 describe('Serie (Tage in Folge)', () => {
   it('startet mit dem ersten aktiven Tag bei 1', () => {
-    expect(registerActivity(empty, '2026-11-04')).toEqual({ current: 1, best: 1, lastActiveDay: '2026-11-04' });
+    expect(registerActivity(empty, '2026-11-04')).toEqual({
+      current: 1,
+      best: 1,
+      lastActiveDay: '2026-11-04',
+    });
   });
 
   it('zählt mehrere Spiele am selben Tag nur einmal', () => {

@@ -45,7 +45,11 @@ export function Home() {
           <LogoMark size={36} />
           <Wordmark />
         </span>
-        <IconButton icon="settings" label="Einstellungen" onClick={() => navigate('/einstellungen')} />
+        <IconButton
+          icon="settings"
+          label="Einstellungen"
+          onClick={() => navigate('/einstellungen')}
+        />
       </header>
 
       <section className="home-hello" aria-labelledby="home-title">
@@ -54,7 +58,12 @@ export function Home() {
         </PageTitle>
         <div className="home-level">
           <span className="label">Spielerlevel {player.level}</span>
-          <Meter value={player.current} max={player.needed} label={`Fortschritt zu Spielerlevel ${player.level + 1}`} color="yellow" />
+          <Meter
+            value={player.current}
+            max={player.needed}
+            label={`Fortschritt zu Spielerlevel ${player.level + 1}`}
+            color="yellow"
+          />
           <span className="muted small">
             {player.current} / {player.needed} XP
           </span>
@@ -64,16 +73,28 @@ export function Home() {
       <section className={`continue tone-${nextMeta.color}`} aria-labelledby="continue-title">
         <div className="continue-shape" aria-hidden="true">
           <Shape shape={nextMeta.shape} color={nextMeta.color} />
-          <span className={`numeral ${nextMeta.color === 'gelb' ? 'on-light' : 'on-dark'}`}>{next.index}</span>
+          <span className={`numeral ${nextMeta.color === 'gelb' ? 'on-light' : 'on-dark'}`}>
+            {next.index}
+          </span>
         </div>
         <div className="continue-text">
           <span className="label muted">
             Welt {next.world} · {world?.name} · Level {next.index}
           </span>
           <h2 id="continue-title">{nextMeta.name}</h2>
-          {nextStars > 0 ? <StarRow stars={nextStars} size={16} /> : <p className="muted small">{nextMeta.short}</p>}
+          {nextStars > 0 ? (
+            <StarRow stars={nextStars} size={16} />
+          ) : (
+            <p className="muted small">{nextMeta.short}</p>
+          )}
         </div>
-        <Button variant="primary" size="lg" block icon="play" onClick={() => navigate(`/level/${next.id}`)}>
+        <Button
+          variant="primary"
+          size="lg"
+          block
+          icon="play"
+          onClick={() => navigate(`/level/${next.id}`)}
+        >
           {save.player.gamesPlayed === 0 ? 'Erstes Level starten' : 'Weiterspielen'}
         </Button>
       </section>
@@ -121,11 +142,24 @@ export function Home() {
           </span>
           <h2 id="daily-title">{dailyMeta.name}</h2>
           <p className="small">
-            Stufe {daily.difficulty} · {dailyDone ? 'Heute erledigt – morgen gibt es eine neue.' : 'Mindestens 1 Stern für den Bonus von 50+ XP.'}
+            Stufe {daily.difficulty} ·{' '}
+            {dailyDone
+              ? 'Heute erledigt – morgen gibt es eine neue.'
+              : 'Mindestens 1 Stern für den Bonus von 50+ XP.'}
           </p>
         </div>
-        <Shape shape={dailyMeta.shape} color={dailyMeta.color === 'gelb' ? 'tinte' : dailyMeta.color} size={56} className="daily-shape" />
-        <Button variant={dailyDone ? 'secondary' : 'blue'} block icon={dailyDone ? 'reset' : 'play'} onClick={() => navigate('/spiel/tagesaufgabe')}>
+        <Shape
+          shape={dailyMeta.shape}
+          color={dailyMeta.color === 'gelb' ? 'tinte' : dailyMeta.color}
+          size={56}
+          className="daily-shape"
+        />
+        <Button
+          variant={dailyDone ? 'secondary' : 'blue'}
+          block
+          icon={dailyDone ? 'reset' : 'play'}
+          onClick={() => navigate('/spiel/tagesaufgabe')}
+        >
           {dailyDone ? 'Nochmal spielen' : 'Tagesaufgabe starten'}
         </Button>
       </section>

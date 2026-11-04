@@ -15,8 +15,10 @@ export interface RouteProps {
   search: string;
 }
 
-const named = <K extends string>(loader: () => Promise<Record<K, ComponentType<RouteProps>>>, name: K) =>
-  lazy(async () => ({ default: (await loader())[name] }));
+const named = <K extends string>(
+  loader: () => Promise<Record<K, ComponentType<RouteProps>>>,
+  name: K,
+) => lazy(async () => ({ default: (await loader())[name] }));
 
 const WorldMap = named(() => import('./screens/WorldMap'), 'WorldMap');
 const LevelIntro = named(() => import('./screens/LevelIntro'), 'LevelIntro');
@@ -50,7 +52,10 @@ const ROUTES: { pattern: string; component: ComponentType<RouteProps> }[] = [
   { pattern: '/datenschutz', component: Datenschutz },
 ];
 
-function resolve(pathname: string): { component: ComponentType<RouteProps>; params: Record<string, string> } {
+function resolve(pathname: string): {
+  component: ComponentType<RouteProps>;
+  params: Record<string, string>;
+} {
   for (const route of ROUTES) {
     const params = matchPath(route.pattern, pathname);
     if (params) return { component: route.component, params };

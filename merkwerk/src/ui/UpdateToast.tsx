@@ -16,10 +16,19 @@ export function UpdateToast() {
     <div className="toast" role="status">
       <span>Eine neue Version von Merkwerk ist da.</span>
       <span className="toast-actions">
-        <button type="button" className="btn btn-yellow" onClick={() => void updateServiceWorker(true)}>
+        <button
+          type="button"
+          className="btn btn-yellow"
+          onClick={() => void updateServiceWorker(true)}
+        >
           <span>Neu laden</span>
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => setNeedRefresh(false)} aria-label="Hinweis schließen">
+        <button
+          type="button"
+          className="btn btn-ghost"
+          onClick={() => setNeedRefresh(false)}
+          aria-label="Hinweis schließen"
+        >
           <span>Später</span>
         </button>
       </span>

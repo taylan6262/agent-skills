@@ -16,7 +16,8 @@ import { useTitle } from '../ui/useTitle';
 const HEADLINES = ['Knapp daneben', 'Geschafft', 'Stark', 'Meisterhaft'] as const;
 
 const TIPS: Record<string, string> = {
-  blitzbild: 'Tipp: Merke dir Muster statt einzelner Felder – etwa „Diagonale“ oder „zwei oben links“.',
+  blitzbild:
+    'Tipp: Merke dir Muster statt einzelner Felder – etwa „Diagonale“ oder „zwei oben links“.',
   detailblick: 'Tipp: Geh die Szene in fester Reihenfolge durch – erst Ecken, dann Farben zählen.',
   zahlenspur: 'Tipp: Bilde Päckchen aus zwei oder drei Ziffern, wie bei einer Telefonnummer.',
   tempo: 'Tipp: Lies bei „Farbe ↔ Wort“ nicht das Wort, sondern achte zuerst auf die Fläche.',
@@ -39,10 +40,13 @@ export function Result() {
     const timers: number[] = [];
     for (let i = 1; i <= outcome.stars; i++) {
       timers.push(
-        window.setTimeout(() => {
-          setShown(i);
-          feedback('star', i - 1);
-        }, 350 + i * 380),
+        window.setTimeout(
+          () => {
+            setShown(i);
+            feedback('star', i - 1);
+          },
+          350 + i * 380,
+        ),
       );
     }
     if (outcome.playerLevelAfter > outcome.playerLevelBefore) {
@@ -80,7 +84,13 @@ export function Result() {
   };
 
   const nextLabel =
-    outcome.kind === 'level' ? (outcome.nextLevelId ? 'Weiter' : 'Zur Karte') : outcome.kind === 'daily' ? 'Zur Startseite' : 'Zum Training';
+    outcome.kind === 'level'
+      ? outcome.nextLevelId
+        ? 'Weiter'
+        : 'Zur Karte'
+      : outcome.kind === 'daily'
+        ? 'Zur Startseite'
+        : 'Zum Training';
 
   return (
     <section className="page result" data-stars={outcome.stars}>
@@ -101,7 +111,11 @@ export function Result() {
       </div>
       {outcome.kind === 'level' && outcome.stars < 3 ? (
         <p className="result-hint muted">
-          {outcome.stars === 0 ? 'Ab 50 % Leistung gibt es den ersten Stern.' : outcome.stars === 1 ? 'Ab 75 % gibt es 2 Sterne.' : 'Ab 90 % gibt es 3 Sterne.'}
+          {outcome.stars === 0
+            ? 'Ab 50 % Leistung gibt es den ersten Stern.'
+            : outcome.stars === 1
+              ? 'Ab 75 % gibt es 2 Sterne.'
+              : 'Ab 90 % gibt es 3 Sterne.'}
         </p>
       ) : null}
 
@@ -129,7 +143,12 @@ export function Result() {
           </span>
           <span className="label">Spielerlevel {player.level}</span>
         </div>
-        <Meter value={player.current} max={player.needed} label={`Fortschritt zu Spielerlevel ${player.level + 1}`} color="yellow" />
+        <Meter
+          value={player.current}
+          max={player.needed}
+          label={`Fortschritt zu Spielerlevel ${player.level + 1}`}
+          color="yellow"
+        />
         <p className="muted small">
           {player.needed - player.current} XP bis Level {player.level + 1}
           {outcome.dailyCompleted ? ' · Tagesaufgabe erledigt' : ''}

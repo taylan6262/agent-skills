@@ -45,7 +45,11 @@ export function LevelIntro({ params }: RouteProps) {
         <div className="intro-hero">
           <div className="intro-shape">
             <Shape shape={meta.shape} color={meta.color} size="100%" />
-            <span className={`intro-number numeral ${meta.color === 'gelb' ? 'on-light' : 'on-dark'}`}>{level.index}</span>
+            <span
+              className={`intro-number numeral ${meta.color === 'gelb' ? 'on-light' : 'on-dark'}`}
+            >
+              {level.index}
+            </span>
           </div>
           <div className="intro-text">
             <span className="label muted">
@@ -74,7 +78,9 @@ export function LevelIntro({ params }: RouteProps) {
             </ul>
             {offset !== 0 ? (
               <p className="muted small">
-                {offset > 0 ? `+${offset}: an deine Leistung angepasst (schwerer).` : `${offset}: an deine Leistung angepasst (leichter).`}
+                {offset > 0
+                  ? `+${offset}: an deine Leistung angepasst (schwerer).`
+                  : `${offset}: an deine Leistung angepasst (leichter).`}
               </p>
             ) : null}
           </div>
@@ -86,7 +92,8 @@ export function LevelIntro({ params }: RouteProps) {
             <StarRow stars={stars} size={28} />
             {progress?.plays ? (
               <span className="muted small">
-                {progress.plays}× gespielt · Bestleistung {Math.round(progress.bestPerformance * 100)} %
+                {progress.plays}× gespielt · Bestleistung{' '}
+                {Math.round(progress.bestPerformance * 100)} %
               </span>
             ) : (
               <span className="muted small">Noch nicht gespielt</span>
@@ -95,19 +102,27 @@ export function LevelIntro({ params }: RouteProps) {
           <ul className="threshold-list" aria-label="Sterne-Schwellen">
             {STAR_THRESHOLDS.map((t, i) => (
               <li key={t}>
-                <StarRow stars={(i + 1) as 1 | 2 | 3} size={14} label={`${i + 1} Sterne`} /> ab {Math.round(t * 100)} %
+                <StarRow stars={(i + 1) as 1 | 2 | 3} size={14} label={`${i + 1} Sterne`} /> ab{' '}
+                {Math.round(t * 100)} %
               </li>
             ))}
           </ul>
         </div>
 
         {unlocked ? (
-          <Button variant="primary" size="lg" block icon="play" onClick={() => navigate(`/spiel/level/${level.id}`)}>
+          <Button
+            variant="primary"
+            size="lg"
+            block
+            icon="play"
+            onClick={() => navigate(`/spiel/level/${level.id}`)}
+          >
             Level starten
           </Button>
         ) : (
           <p className="locked-note">
-            <Icon name="lock" size={18} /> Bestehe zuerst das vorige Level mit mindestens einem Stern.
+            <Icon name="lock" size={18} /> Bestehe zuerst das vorige Level mit mindestens einem
+            Stern.
           </p>
         )}
       </section>

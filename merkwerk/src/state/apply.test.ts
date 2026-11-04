@@ -25,9 +25,18 @@ function fresh(): SaveData {
 
 describe('applyResult – Level', () => {
   it('vergibt Sterne, XP und öffnet das nächste Level', () => {
-    const { save, outcome } = applyResult(fresh(), result({ performance: 0.8 }), { kind: 'level', levelId: 'w1-1', now: NOW });
+    const { save, outcome } = applyResult(fresh(), result({ performance: 0.8 }), {
+      kind: 'level',
+      levelId: 'w1-1',
+      now: NOW,
+    });
     expect(outcome.stars).toBe(2);
-    expect(save.levels['w1-1']).toEqual({ stars: 2, bestScore: 200, bestPerformance: 0.8, plays: 1 });
+    expect(save.levels['w1-1']).toEqual({
+      stars: 2,
+      bestScore: 200,
+      bestPerformance: 0.8,
+      plays: 1,
+    });
     expect(outcome.xp.total).toBe(10 + 30 + 2 + 20);
     expect(save.player.xp).toBe(outcome.xp.total);
     expect(outcome.nextLevelId).toBe('w1-2');
@@ -35,8 +44,16 @@ describe('applyResult – Level', () => {
   });
 
   it('behält bei einem schlechteren Versuch die besseren Sterne', () => {
-    const first = applyResult(fresh(), result({ performance: 0.95, score: 500 }), { kind: 'level', levelId: 'w1-1', now: NOW });
-    const second = applyResult(first.save, result({ performance: 0.55, score: 100 }), { kind: 'level', levelId: 'w1-1', now: NOW });
+    const first = applyResult(fresh(), result({ performance: 0.95, score: 500 }), {
+      kind: 'level',
+      levelId: 'w1-1',
+      now: NOW,
+    });
+    const second = applyResult(first.save, result({ performance: 0.55, score: 100 }), {
+      kind: 'level',
+      levelId: 'w1-1',
+      now: NOW,
+    });
     expect(second.outcome.stars).toBe(1);
     expect(second.outcome.previousStars).toBe(3);
     expect(second.save.levels['w1-1']).toMatchObject({ stars: 3, bestScore: 500, plays: 2 });
@@ -44,14 +61,22 @@ describe('applyResult – Level', () => {
   });
 
   it('öffnet bei 0 Sternen kein neues Level', () => {
-    const { save, outcome } = applyResult(fresh(), result({ performance: 0.3 }), { kind: 'level', levelId: 'w1-1', now: NOW });
+    const { save, outcome } = applyResult(fresh(), result({ performance: 0.3 }), {
+      kind: 'level',
+      levelId: 'w1-1',
+      now: NOW,
+    });
     expect(outcome.stars).toBe(0);
     expect(outcome.nextLevelId).toBeNull();
     expect(save.levels['w1-1']?.stars).toBe(0);
   });
 
   it('zählt die Serie und schaltet „Erster Schritt“ frei', () => {
-    const { save, outcome } = applyResult(fresh(), result(), { kind: 'level', levelId: 'w1-1', now: NOW });
+    const { save, outcome } = applyResult(fresh(), result(), {
+      kind: 'level',
+      levelId: 'w1-1',
+      now: NOW,
+    });
     expect(save.streak).toEqual({ current: 1, best: 1, lastActiveDay: '2026-11-04' });
     expect(outcome.newAchievements).toContain('erster-schritt');
     expect(save.achievements['erster-schritt']).toBe('2026-11-04');
@@ -65,9 +90,14 @@ describe('applyResult – Level', () => {
 
   it('meldet eine neu freigeschaltete Welt', () => {
     const save = fresh();
-    for (let i = 1; i <= 6; i++) save.levels[`w1-${i}`] = { stars: 3, bestScore: 0, bestPerformance: 1, plays: 1 };
+    for (let i = 1; i <= 6; i++)
+      save.levels[`w1-${i}`] = { stars: 3, bestScore: 0, bestPerformance: 1, plays: 1 };
     save.levels['w1-7'] = { stars: 1, bestScore: 0, bestPerformance: 0.5, plays: 1 };
-    const { outcome } = applyResult(save, result({ performance: 0.8 }), { kind: 'level', levelId: 'w1-8', now: NOW });
+    const { outcome } = applyResult(save, result({ performance: 0.8 }), {
+      kind: 'level',
+      levelId: 'w1-8',
+      now: NOW,
+    });
     expect(outcome.unlockedWorld).toBe(2);
     expect(outcome.improvements).toContain('Welt „Linie“ freigeschaltet');
   });
@@ -84,8 +114,14 @@ describe('applyResult – Tagesaufgabe, Training, Adaptiv', () => {
   });
 
   it('passt die Trainingsstufe nach zwei sehr guten Runden an', () => {
-    const a = applyResult(fresh(), result({ mode: 'tempo', performance: 0.95 }), { kind: 'training', now: NOW });
-    const b = applyResult(a.save, result({ mode: 'tempo', performance: 0.95 }), { kind: 'training', now: NOW });
+    const a = applyResult(fresh(), result({ mode: 'tempo', performance: 0.95 }), {
+      kind: 'training',
+      now: NOW,
+    });
+    const b = applyResult(a.save, result({ mode: 'tempo', performance: 0.95 }), {
+      kind: 'training',
+      now: NOW,
+    });
     expect(b.outcome.adaptiveChange).toBe(1);
     expect(b.save.adaptive.tempo.rating).toBe(2);
     expect(b.save.adaptive.tempo.offset).toBe(0);
@@ -106,7 +142,11 @@ describe('applyResult – Tagesaufgabe, Training, Adaptiv', () => {
   });
 
   it('schreibt den Leistungsindex in die Tagesstatistik', () => {
-    const { save } = applyResult(fresh(), result({ mode: 'tempo', difficulty: 10, performance: 1 }), { kind: 'training', now: NOW });
+    const { save } = applyResult(
+      fresh(),
+      result({ mode: 'tempo', difficulty: 10, performance: 1 }),
+      { kind: 'training', now: NOW },
+    );
     expect(save.stats.days['2026-11-04']?.tempo).toEqual({ sum: 52, n: 1 });
   });
 });
@@ -150,11 +190,15 @@ describe('applyResult – Wissen und Leitner', () => {
   it('verändert den ursprünglichen Spielstand nicht', () => {
     const save = fresh();
     const snapshot = JSON.stringify(save);
-    applyResult(save, result({ mode: 'wissen', metrics: { answers: [{ questionId: 'x', correct: true }] } }), {
-      kind: 'level',
-      levelId: 'w1-4',
-      now: NOW,
-    });
+    applyResult(
+      save,
+      result({ mode: 'wissen', metrics: { answers: [{ questionId: 'x', correct: true }] } }),
+      {
+        kind: 'level',
+        levelId: 'w1-4',
+        now: NOW,
+      },
+    );
     expect(JSON.stringify(save)).toBe(snapshot);
   });
 });

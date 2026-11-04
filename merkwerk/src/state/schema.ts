@@ -3,7 +3,15 @@ import { clamp } from '../lib/math';
 import { defaultAdaptive, ADAPTIVE_RULES, type AdaptiveState } from '../game/adaptive';
 import { LEITNER_BOXES, type LeitnerCard } from '../game/leitner';
 import { getLevel } from '../game/levels';
-import { MAX_DIFFICULTY, MIN_DIFFICULTY, MODE_IDS, SKILL_IDS, type ModeId, type SkillId, type Stars } from '../game/types';
+import {
+  MAX_DIFFICULTY,
+  MIN_DIFFICULTY,
+  MODE_IDS,
+  SKILL_IDS,
+  type ModeId,
+  type SkillId,
+  type Stars,
+} from '../game/types';
 
 /** Aktuelle Version des Spielstands. Bei Schemaänderungen erhöhen und Migration ergänzen. */
 export const SAVE_VERSION = 2;
@@ -212,14 +220,18 @@ export function sanitizeSave(input: unknown, now: Date): SaveData {
     const d = day(unlocked);
     if (d && id.length <= 40) achievements[id] = d;
   }
-  const createdAt = typeof v.createdAt === 'string' && !Number.isNaN(Date.parse(v.createdAt)) ? v.createdAt : base.createdAt;
+  const createdAt =
+    typeof v.createdAt === 'string' && !Number.isNaN(Date.parse(v.createdAt))
+      ? v.createdAt
+      : base.createdAt;
   const placement = v.placementSpan;
 
   return {
     version: SAVE_VERSION,
     createdAt,
     onboardingDone: bool(v.onboardingDone, false),
-    placementSpan: typeof placement === 'number' && Number.isFinite(placement) ? int(placement, 0, 0, 20) : null,
+    placementSpan:
+      typeof placement === 'number' && Number.isFinite(placement) ? int(placement, 0, 0, 20) : null,
     settings: {
       sound: bool(settings.sound, DEFAULT_SETTINGS.sound),
       haptics: bool(settings.haptics, DEFAULT_SETTINGS.haptics),
@@ -232,10 +244,9 @@ export function sanitizeSave(input: unknown, now: Date): SaveData {
       playTimeMs: int(player.playTimeMs, 0),
     },
     levels: sanitizeLevels(v.levels),
-    adaptive: Object.fromEntries(MODE_IDS.map((mode) => [mode, sanitizeAdaptive(adaptive[mode])])) as Record<
-      ModeId,
-      AdaptiveState
-    >,
+    adaptive: Object.fromEntries(
+      MODE_IDS.map((mode) => [mode, sanitizeAdaptive(adaptive[mode])]),
+    ) as Record<ModeId, AdaptiveState>,
     streak: {
       current: int(streak.current, 0),
       best: Math.max(int(streak.best, 0), int(streak.current, 0)),
@@ -248,7 +259,9 @@ export function sanitizeSave(input: unknown, now: Date): SaveData {
     leitner: sanitizeLeitner(v.leitner),
     stats: {
       days: sanitizeDays(stats.days),
-      modeCounts: Object.fromEntries(MODE_IDS.map((mode) => [mode, int(modeCounts[mode], 0)])) as Record<ModeId, number>,
+      modeCounts: Object.fromEntries(
+        MODE_IDS.map((mode) => [mode, int(modeCounts[mode], 0)]),
+      ) as Record<ModeId, number>,
       questionsAnswered: int(stats.questionsAnswered, 0),
       questionsCorrect: int(stats.questionsCorrect, 0),
       reviewsCorrect: int(stats.reviewsCorrect, 0),
@@ -260,7 +273,12 @@ export function sanitizeSave(input: unknown, now: Date): SaveData {
       spanBackward: int(bests.spanBackward, 0, 0, 20),
       tempoCombo: int(bests.tempoCombo, 0),
       tempoScore: int(bests.tempoScore, 0),
-      tempoRtMs: typeof bests.tempoRtMs === 'number' && Number.isFinite(bests.tempoRtMs) && bests.tempoRtMs > 0 ? Math.round(bests.tempoRtMs) : null,
+      tempoRtMs:
+        typeof bests.tempoRtMs === 'number' &&
+        Number.isFinite(bests.tempoRtMs) &&
+        bests.tempoRtMs > 0
+          ? Math.round(bests.tempoRtMs)
+          : null,
     },
     achievements,
   };

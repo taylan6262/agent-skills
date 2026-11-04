@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react';
 import { getSave, useSave } from '../state/store';
 
-const query = typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
+const query =
+  typeof window !== 'undefined' ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
 function subscribe(listener: () => void): () => void {
   query?.addEventListener('change', listener);
