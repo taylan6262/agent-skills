@@ -25,12 +25,21 @@ let js = await readFile(join(dist, scriptSrc.replace(/^\//, '')), 'utf8');
 // Inline-Skript darf weder "</script" noch "<!--" enthalten.
 js = js.replaceAll('</script', '<\\/script').replaceAll('<!--', '<\\!--');
 
-const page = `<title>Merkwerk</title>
+const page = `<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Merkwerk</title>
 <meta name="description" content="Denkspiele für visuelles Gedächtnis, Tempo, Lernen und Wissen.">
 <style>${css}</style>
+</head>
+<body>
 <div id="root"></div>
 <noscript><p>Merkwerk braucht JavaScript.</p></noscript>
 <script type="module">${js}</script>
+</body>
+</html>
 `;
 await writeFile(join(dist, 'merkwerk.html'), page);
 console.log(

@@ -3,6 +3,9 @@ import { detailblickParams } from '../game/modes/detailblick';
 import { tempoParams } from '../game/modes/tempo';
 import { wissenParams } from '../game/modes/wissen';
 import { zahlenspurParams } from '../game/modes/zahlenspur';
+import { wegmarkenParams } from '../game/modes/wegmarken';
+import { rechenwaageParams } from '../game/modes/rechenwaage';
+import { zeitleisteParams } from '../game/modes/zeitleiste';
 import type { CategoryId, ModeId } from '../game/types';
 import { createRng } from '../lib/rng';
 import { CATEGORY_META } from './meta';
@@ -63,6 +66,39 @@ export function describeParams(mode: ModeId, difficulty: number, category?: Cate
         `${p.count} Fragen${category ? ` aus ${CATEGORY_META[category].name}` : ' gemischt'}`,
         `Schwierigkeit ${range}`,
         p.timeLimitMs ? `${seconds(p.timeLimitMs)} pro Frage` : 'Ohne Zeitlimit',
+      ];
+    }
+    case 'wegmarken': {
+      const p = wegmarkenParams(difficulty);
+      return [
+        `${p.size} × ${p.size} Raster, ${p.trials} Wege`,
+        `Start mit ${p.startLength} Wegmarken`,
+        `${seconds(p.stepMs)} pro Schritt`,
+        p.backwardsChance > 0 ? 'Manche Wege rückwärts nachgehen' : 'Alle Wege vorwärts',
+      ];
+    }
+    case 'rechenwaage': {
+      const p = rechenwaageParams(difficulty);
+      const ops = [
+        'Plus',
+        'Plus und Minus',
+        'Plus und Mal',
+        'Minus, Mal und Geteilt',
+        'Zweistufige Rechnungen',
+      ];
+      return [
+        `${p.durationMs / 1000} Sekunden gegen die Uhr`,
+        `Ziel: ${p.target} richtige Antworten`,
+        ops[p.tier - 1] ?? '',
+      ];
+    }
+    case 'zeitleiste': {
+      const p = zeitleisteParams(difficulty);
+      return [
+        `${p.rounds} Runden mit je ${p.count} Ereignissen`,
+        p.minGap >= 100
+          ? 'Ereignisse liegen weit auseinander'
+          : `Mindestens ${p.minGap} Jahre Abstand`,
       ];
     }
   }

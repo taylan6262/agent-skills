@@ -1,17 +1,35 @@
-export type ModeId = 'blitzbild' | 'detailblick' | 'zahlenspur' | 'tempo' | 'wissen';
+export type ModeId =
+  | 'blitzbild'
+  | 'detailblick'
+  | 'zahlenspur'
+  | 'tempo'
+  | 'wissen'
+  | 'wegmarken'
+  | 'rechenwaage'
+  | 'zeitleiste';
 export const MODE_IDS: readonly ModeId[] = [
   'blitzbild',
   'detailblick',
   'zahlenspur',
   'tempo',
   'wissen',
+  'wegmarken',
+  'rechenwaage',
+  'zeitleiste',
 ];
 
 export type SkillId = 'gedaechtnis' | 'tempo' | 'lernen' | 'wissen';
 export const SKILL_IDS: readonly SkillId[] = ['gedaechtnis', 'tempo', 'lernen', 'wissen'];
 
 export type CategoryId =
-  'geografie' | 'natur' | 'wissenschaft' | 'geschichte' | 'sprache' | 'mathe';
+  | 'geografie'
+  | 'natur'
+  | 'wissenschaft'
+  | 'geschichte'
+  | 'sprache'
+  | 'mathe'
+  | 'kultur'
+  | 'technik';
 export const CATEGORY_IDS: readonly CategoryId[] = [
   'geografie',
   'natur',
@@ -19,6 +37,8 @@ export const CATEGORY_IDS: readonly CategoryId[] = [
   'geschichte',
   'sprache',
   'mathe',
+  'kultur',
+  'technik',
 ];
 
 export type Stars = 0 | 1 | 2 | 3;
@@ -49,6 +69,12 @@ export interface GameMetrics {
   bestCombo?: number;
   medianRtMs?: number;
   answers?: AnswerRecord[];
+  /** Längster fehlerfrei nachgegangener Weg in Wegmarken. */
+  pathSpan?: number;
+  /** Richtige Antworten in einer Rechenwaage-Runde. */
+  scaleCorrect?: number;
+  /** Größte fehlerfrei geordnete Zeitleiste (Anzahl Ereignisse). */
+  timelinePerfect?: number;
 }
 
 export interface GameResult {
@@ -69,6 +95,9 @@ export const MODE_SKILL: Record<ModeId, SkillId> = {
   zahlenspur: 'gedaechtnis',
   tempo: 'tempo',
   wissen: 'wissen',
+  wegmarken: 'gedaechtnis',
+  rechenwaage: 'tempo',
+  zeitleiste: 'wissen',
 };
 
 export const MIN_DIFFICULTY = 1;

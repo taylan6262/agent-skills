@@ -20,8 +20,11 @@ export function placementFromSpan(span: number): PlacementResult {
       zahlenspur: clamp(1 + (s - 3) * 3, 1, 12),
       blitzbild: memory,
       detailblick: memory,
+      wegmarken: memory,
       tempo: 1,
       wissen: 1,
+      rechenwaage: 1,
+      zeitleiste: 1,
     },
     memoryOffset: s >= 7 ? 1 : s <= 3 ? -1 : 0,
   };

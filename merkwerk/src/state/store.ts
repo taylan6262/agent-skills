@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { MODE_IDS, type GameResult, type ModeId } from '../game/types';
+import { MODE_IDS, MODE_SKILL, type GameResult, type ModeId } from '../game/types';
 import { newlyAchieved } from '../game/achievements';
 import { toDayKey } from '../lib/date';
 import { applyResult, factsFromSave, type Outcome, type PlayContext } from './apply';
@@ -102,7 +102,7 @@ export function completeOnboarding(
       for (const mode of MODE_IDS) {
         const rating = ratings[mode];
         if (rating === undefined) continue;
-        const memory = mode === 'blitzbild' || mode === 'detailblick' || mode === 'zahlenspur';
+        const memory = MODE_SKILL[mode] === 'gedaechtnis';
         adaptive[mode] = {
           ...adaptive[mode],
           rating,

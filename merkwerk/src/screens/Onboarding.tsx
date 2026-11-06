@@ -33,11 +33,15 @@ const SKILLS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: 'eye',
     title: 'Visuelles Gedächtnis',
-    text: 'Raster, Szenen und Positionen kurz ansehen und wiedergeben.',
+    text: 'Raster, Szenen, Wege und Positionen kurz ansehen und wiedergeben.',
   },
-  { icon: 'bolt', title: 'Tempo', text: 'Schnelle Ja/Nein-Entscheidungen gegen die Uhr.' },
+  { icon: 'bolt', title: 'Tempo', text: 'Schnelle Entscheidungen und Kopfrechnen gegen die Uhr.' },
   { icon: 'reset', title: 'Lernen', text: 'Falsch beantwortete Fragen kommen gezielt wieder.' },
-  { icon: 'book', title: 'Wissen', text: 'Über 300 Fragen aus sechs Wissensgebieten.' },
+  {
+    icon: 'book',
+    title: 'Wissen',
+    text: 'Über 600 Fragen aus acht Wissensgebieten und eine Zeitleiste der Geschichte.',
+  },
 ];
 
 type TestPhase = 'intro' | 'show' | 'input' | 'feedback' | 'result';

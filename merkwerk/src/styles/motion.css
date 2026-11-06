@@ -196,3 +196,25 @@
     opacity: 1;
   }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduced']) .beam {
+    transition: transform 280ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .tilt-links .beam {
+    transform: rotate(-5deg);
+  }
+
+  :root:not([data-motion='reduced']) .tilt-rechts .beam {
+    transform: rotate(5deg);
+  }
+
+  :root:not([data-motion='reduced']) .path-cell.is-lit {
+    animation: pop 260ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .timeline-slot.is-filled .timeline-card {
+    animation: screen-in 200ms var(--ease-out);
+  }
+}

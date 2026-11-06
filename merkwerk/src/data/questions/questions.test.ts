@@ -5,8 +5,8 @@ import { QUESTIONS } from './index';
 const normalize = (text: string): string => text.toLowerCase().replace(/[^a-zäöüß0-9]/g, '');
 
 describe('Fragendaten', () => {
-  it('enthält mindestens 300 Fragen', () => {
-    expect(QUESTIONS.length).toBeGreaterThanOrEqual(300);
+  it('enthält mindestens 600 Fragen', () => {
+    expect(QUESTIONS.length).toBeGreaterThanOrEqual(600);
   });
 
   it('hat in jeder Kategorie mindestens 50 Fragen', () => {
@@ -28,6 +28,8 @@ describe('Fragendaten', () => {
       geschichte: 'ges',
       sprache: 'spr',
       mathe: 'mat',
+      kultur: 'kul',
+      technik: 'tec',
     };
     for (const q of QUESTIONS) expect(q.id.startsWith(`${prefix[q.category]}-`), q.id).toBe(true);
   });

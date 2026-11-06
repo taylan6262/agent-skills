@@ -7,6 +7,7 @@ import { formatPercent } from '../lib/math';
 import { useReducedMotion } from '../lib/motion';
 import { navigate } from '../lib/router';
 import { useLastOutcome, useSave } from '../state/store';
+import type { ModeId } from '../game/types';
 import { Button, Meter, PageTitle } from '../ui/components';
 import { Icon, StarIcon } from '../ui/icons';
 import { MODE_META } from '../ui/meta';
@@ -15,13 +16,19 @@ import { useTitle } from '../ui/useTitle';
 
 const HEADLINES = ['Knapp daneben', 'Geschafft', 'Stark', 'Meisterhaft'] as const;
 
-const TIPS: Record<string, string> = {
+const TIPS: Record<ModeId, string> = {
   blitzbild:
     'Tipp: Merke dir Muster statt einzelner Felder – etwa „Diagonale“ oder „zwei oben links“.',
   detailblick: 'Tipp: Geh die Szene in fester Reihenfolge durch – erst Ecken, dann Farben zählen.',
   zahlenspur: 'Tipp: Bilde Päckchen aus zwei oder drei Ziffern, wie bei einer Telefonnummer.',
   tempo: 'Tipp: Lies bei „Farbe ↔ Wort“ nicht das Wort, sondern achte zuerst auf die Fläche.',
   wissen: 'Tipp: Falsche Antworten kommen wieder – genau so wächst dein Wissen.',
+  wegmarken:
+    'Tipp: Sprich den Weg leise mit – „oben links, Mitte, rechts unten“ – oder zeichne ihn in Gedanken nach.',
+  rechenwaage:
+    'Tipp: Oft reicht eine Schätzung. Rechne nur genau, wenn beide Seiten nah beieinanderliegen.',
+  zeitleiste:
+    'Tipp: Ordne zuerst grob nach Epochen – Antike, Mittelalter, Neuzeit – und dann im Detail.',
 };
 
 export function Result() {

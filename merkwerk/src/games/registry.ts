@@ -8,4 +8,7 @@ export const GAMES: Record<ModeId, LazyExoticComponent<ComponentType<GameProps>>
   zahlenspur: lazy(() => import('./ZahlenspurGame')),
   tempo: lazy(() => import('./TempoGame')),
   wissen: lazy(() => import('./WissenGame')),
+  wegmarken: lazy(() => import('./WegmarkenGame')),
+  rechenwaage: lazy(() => import('./RechenwaageGame')),
+  zeitleiste: lazy(() => import('./ZeitleisteGame')),
 };

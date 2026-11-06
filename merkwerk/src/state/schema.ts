@@ -45,6 +45,9 @@ export interface Bests {
   tempoCombo: number;
   tempoScore: number;
   tempoRtMs: number | null;
+  pathSpan: number;
+  scaleCorrect: number;
+  timelinePerfect: number;
 }
 
 export interface SaveData {
@@ -86,6 +89,9 @@ export const DEFAULT_BESTS: Bests = {
   tempoCombo: 0,
   tempoScore: 0,
   tempoRtMs: null,
+  pathSpan: 0,
+  scaleCorrect: 0,
+  timelinePerfect: 0,
 };
 
 function modeRecord<T>(make: () => T): Record<ModeId, T> {
@@ -279,6 +285,9 @@ export function sanitizeSave(input: unknown, now: Date): SaveData {
         bests.tempoRtMs > 0
           ? Math.round(bests.tempoRtMs)
           : null,
+      pathSpan: int(bests.pathSpan, 0, 0, 25),
+      scaleCorrect: int(bests.scaleCorrect, 0),
+      timelinePerfect: int(bests.timelinePerfect, 0, 0, 10),
     },
     achievements,
   };

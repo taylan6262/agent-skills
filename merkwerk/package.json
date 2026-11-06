@@ -1,7 +1,7 @@
 {
   "name": "merkwerk",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Merkwerk – Denkspiele für visuelles Gedächtnis, Tempo, Lernen und Wissen. Offline-fähige PWA.",
   "type": "module",
   "engines": {

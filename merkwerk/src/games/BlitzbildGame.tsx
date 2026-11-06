@@ -237,7 +237,7 @@ export default function BlitzbildGame({
         className={`board board-${params.size} ${phase === 'feedback' && evaluation && !evaluation.perfect ? 'shake' : ''}`}
         role="group"
         aria-label={`Raster ${params.size} mal ${params.size}`}
-        style={{ gridTemplateColumns: `repeat(${params.size}, 1fr)` }}
+        style={{ gridTemplateColumns: `repeat(${params.size}, minmax(0, 1fr))` }}
       >
         {round.board.map((expected, index) => {
           const given = answer[index] ?? null;

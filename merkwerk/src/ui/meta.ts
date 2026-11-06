@@ -74,7 +74,7 @@ export const MODE_META: Record<ModeId, ModeMeta> = {
   wissen: {
     id: 'wissen',
     name: 'Wissensrunde',
-    short: 'Multiple Choice aus sechs Wissensgebieten – mit Wiederholung.',
+    short: 'Multiple Choice aus acht Wissensgebieten – mit Wiederholung.',
     skill: 'Wissen',
     icon: 'book',
     shape: 'raute',
@@ -83,6 +83,48 @@ export const MODE_META: Record<ModeId, ModeMeta> = {
       'Wähle die richtige von vier Antworten.',
       'Nach jeder Frage gibt es eine kurze Erklärung.',
       'Falsch beantwortete Fragen kommen später wieder (Leitner-System).',
+    ],
+  },
+  wegmarken: {
+    id: 'wegmarken',
+    name: 'Wegmarken',
+    short: 'Felder leuchten nacheinander auf – tippe den Weg in derselben Reihenfolge nach.',
+    skill: 'Räumliches Gedächtnis',
+    icon: 'path',
+    shape: 'viertel',
+    color: 'blau',
+    howTo: [
+      'Felder im Raster leuchten nacheinander auf.',
+      'Tippe danach dieselben Felder in derselben Reihenfolge an.',
+      'Steht „rückwärts“ da, gehst du den Weg vom Ende zum Anfang.',
+    ],
+  },
+  rechenwaage: {
+    id: 'rechenwaage',
+    name: 'Rechenwaage',
+    short: 'Welche Seite wiegt mehr? Zwei Rechnungen blitzschnell vergleichen.',
+    skill: 'Tempo',
+    icon: 'scale',
+    shape: 'kreuz',
+    color: 'tinte',
+    howTo: [
+      'Auf beiden Waagschalen liegt eine Rechnung.',
+      'Wähle die Seite mit dem größeren Ergebnis – oder „Gleich“.',
+      'Tasten: ← links, ↓ gleich, → rechts. Du hast 40 Sekunden.',
+    ],
+  },
+  zeitleiste: {
+    id: 'zeitleiste',
+    name: 'Zeitleiste',
+    short: 'Ereignisse aus der Geschichte in die richtige Reihenfolge bringen.',
+    skill: 'Wissen',
+    icon: 'timeline',
+    shape: 'ring',
+    color: 'gelb',
+    howTo: [
+      'Tippe die Ereignisse vom frühesten zum spätesten an.',
+      'Ein Tipp auf ein gelegtes Ereignis legt es zurück.',
+      'Nach dem Prüfen siehst du die Jahreszahlen.',
     ],
   },
 };
@@ -97,7 +139,7 @@ export const SKILL_META: Record<
     color: 'blau',
     shape: 'quadrat',
   },
-  tempo: { name: 'Tempo', description: 'Tempo-Duell', color: 'rot', shape: 'dreieck' },
+  tempo: { name: 'Tempo', description: 'Tempo-Duell, Rechenwaage', color: 'rot', shape: 'dreieck' },
   lernen: {
     name: 'Lernen',
     description: 'Lernstand im Leitner-System',
@@ -114,4 +156,6 @@ export const CATEGORY_META: Record<CategoryId, { name: string; icon: IconName }>
   geschichte: { name: 'Geschichte', icon: 'column' },
   sprache: { name: 'Sprache', icon: 'speech' },
   mathe: { name: 'Mathe', icon: 'sigma' },
+  kultur: { name: 'Kultur', icon: 'palette' },
+  technik: { name: 'Technik', icon: 'cog' },
 };

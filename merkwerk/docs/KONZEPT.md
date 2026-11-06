@@ -29,15 +29,19 @@ Schriften (OFL, lokal): **League Spartan** (Display, 700–900), **Atkinson Hype
 2. **Detailblick**: generierte SVG-Szene, danach Fragen (Anzahl, Ecke, Farbe, Existenz).
 3. **Zahlenspur**: Ziffernfolgen vorwärts, ab Stufe 6 auch rückwärts; Länge passt sich pro Folge an.
 4. **Tempo-Duell**: Ja/Nein gegen die Uhr (Farbe↔Wort, Form↔Wort, gleiches Symbol wie vorher), Combo ×1–×4.
-5. **Wissensrunde**: Multiple Choice in 6 Kategorien, 300+ Fragen, Leitner-System (5 Fächer).
+5. **Wissensrunde**: Multiple Choice in 8 Kategorien, 600+ Fragen, Leitner-System (5 Fächer).
+6. **Wegmarken**: Felder leuchten nacheinander auf, der Weg wird nachgetippt (räumliches Arbeitsgedächtnis), später auch rückwärts.
+7. **Rechenwaage**: Zwei Rechnungen – welche Seite wiegt mehr oder sind beide gleich? 40 Sekunden, Combo.
+8. **Zeitleiste**: Ereignisse aus der Geschichte chronologisch ordnen; danach erscheinen die Jahreszahlen.
 
 Adaptiv: zwei sehr gute Runden in Folge → +1 Stufe, zwei Fehlschläge in Folge → −1 Stufe (pro Modus).
 
 ## Progression
 
-- 6 Welten × 12 Level = 72 Level: Punkt, Linie, Fläche, Raum, Rhythmus, Komposition.
+- 6 Welten × 12 Level = 72 Level: Punkt, Linie, Fläche, Raum, Rhythmus, Komposition. In jeder Welt kommt
+  jeder der acht Modi mindestens einmal vor.
 - Sterne: 1★ ab 50 %, 2★ ab 75 %, 3★ ab 90 % Leistung. Welten öffnen über Gesamtsterne (0/20/45/70/95/120).
-- XP und Spielerlevel, Tagesaufgabe (aus dem Datum abgeleitet), Serie (Tage in Folge), 25 Erfolge.
+- XP und Spielerlevel, Tagesaufgabe (aus dem Datum abgeleitet), Serie (Tage in Folge), 30 Erfolge.
 - Statistik: Leistungsindex pro Fähigkeit über Zeit, Bestwerte, Lernstand (Leitner-Fächer).
 
 ## Screens
@@ -54,7 +58,7 @@ src/
   state/         Spielstand (Schema, Version, Migration, Speicher)
   lib/           Router, Zufall, Datum, Ton, Haptik
   ui/            Designsystem-Komponenten und eigene SVG-Icons
-  games/         React-Oberflächen der fünf Modi
+  games/         React-Oberflächen der acht Modi
   screens/       Bildschirme
 e2e/             Playwright-Tests
 ```

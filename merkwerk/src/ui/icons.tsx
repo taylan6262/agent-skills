@@ -38,7 +38,13 @@ export type IconName =
   | 'speech'
   | 'sigma'
   | 'shield'
-  | 'backspace';
+  | 'backspace'
+  | 'path'
+  | 'scale'
+  | 'timeline'
+  | 'palette'
+  | 'cog'
+  | 'undo';
 
 const PATHS: Record<IconName, ReactElement> = {
   back: <path d="M10 5 3 12l7 7M3 12h18" />,
@@ -235,6 +241,50 @@ const PATHS: Record<IconName, ReactElement> = {
     <>
       <path d="M12 3 4 6v6c0 4.5 3.5 7.5 8 9 4.5-1.5 8-4.5 8-9V6Z" />
       <path d="m8.5 12 2.5 2.5 4.5-5" />
+    </>
+  ),
+  path: (
+    <>
+      <rect x="3" y="3" width="18" height="18" />
+      <path d="M7 17V12h5V7h5" />
+      <circle cx="7" cy="17" r="2" fill="currentColor" />
+      <rect x="15.5" y="5.5" width="3" height="3" fill="currentColor" stroke="none" />
+    </>
+  ),
+  scale: (
+    <>
+      <path d="M12 4v15M4 7h16" />
+      <path d="m12 19-3.5 2h7Z" fill="currentColor" />
+      <path d="m4 7-2.5 6h5Zm16 0-2.5 6h5Z" />
+    </>
+  ),
+  timeline: (
+    <>
+      <path d="M2 12h20" />
+      <circle cx="5" cy="12" r="2" fill="currentColor" />
+      <rect x="10" y="10" width="4" height="4" fill="currentColor" stroke="none" />
+      <path d="m19 9.5 2.5 4.5h-5Z" fill="currentColor" />
+      <path d="M5 5v3M12 5v3M19 16v3" />
+    </>
+  ),
+  palette: (
+    <>
+      <path d="M12 3a9 9 0 1 0 0 18c1.5 0 2-1 2-2s-1-1.5-1-2.5S14 15 15.5 15H18a3 3 0 0 0 3-3c0-5-4-9-9-9Z" />
+      <circle cx="7.5" cy="11" r="1.4" fill="currentColor" />
+      <circle cx="10" cy="7" r="1.4" fill="currentColor" />
+      <circle cx="15" cy="7.5" r="1.4" fill="currentColor" />
+    </>
+  ),
+  cog: (
+    <>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1" />
+    </>
+  ),
+  undo: (
+    <>
+      <path d="M9 5 4 10l5 5" />
+      <path d="M4 10h10a6 6 0 0 1 0 12h-3" />
     </>
   ),
   backspace: (

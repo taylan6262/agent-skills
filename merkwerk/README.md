@@ -9,11 +9,13 @@ vollständig im Browser, ist installierbar und offline spielbar – ohne Konto, 
 
 ## Inhalt
 
-- 5 Spielmodi: **Blitzbild**, **Detailblick**, **Zahlenspur**, **Tempo-Duell**, **Wissensrunde**
+- 8 Spielmodi: **Blitzbild**, **Detailblick**, **Zahlenspur**, **Wegmarken** (Gedächtnis), **Tempo-Duell**,
+  **Rechenwaage** (Tempo), **Wissensrunde**, **Zeitleiste** (Wissen)
 - 6 Welten × 12 Level = **72 Level**, 1–3 Sterne pro Level, Welten öffnen über Sterne
 - Adaptive Schwierigkeit pro Modus, XP und Spielerlevel, Tagesaufgabe, Serie (Tage in Folge)
-- **326 Wissensfragen** in 6 Kategorien mit Erklärung, Wiederholung nach dem Leitner-System (5 Fächer)
-- **27 Erfolge**, Statistik mit Verlauf pro Fähigkeit, Bestwerten und Lernstand
+- **617 Wissensfragen** in 8 Kategorien mit Erklärung, Wiederholung nach dem Leitner-System (5 Fächer),
+  dazu 81 datierte Ereignisse für die Zeitleiste
+- **30 Erfolge**, Statistik mit Verlauf pro Fähigkeit, Bestwerten und Lernstand
 - Freies Training, Onboarding mit Einstufungstest, Einstellungen (Ton, Haptik, Animationen, Farbmuster)
 
 Gestaltung: Bauhaus-Formenlehre auf Papier – fünf Farben, lokale Schriften (League Spartan, Atkinson
@@ -50,7 +52,7 @@ npm run test:e2e
 ```
 
 Die E2E-Tests bauen die App, starten `vite preview` mit denselben Sicherheits-Headern wie beim Hosting und prüfen
-unter anderem: Onboarding → Level 1 → Ergebnis → Fortschritt nach Neuladen, Offline-Start, alle fünf Modi bis zum
+unter anderem: Onboarding → Level 1 → Ergebnis → Fortschritt nach Neuladen, Offline-Start, alle acht Modi bis zum
 Ergebnis ohne Konsolenfehler, Zurück-Navigation, kein horizontales Scrollen bei 360 px und defekte Spielstände.
 
 ## Bauen
@@ -113,10 +115,11 @@ Nach dem Ausfüllen den Hinweis „Vorlage: …“ (`legal-note`) entfernen. Die
 ## Fragen ergänzen
 
 Fragen liegen als Datendateien je Kategorie in [`src/data/questions/`](src/data/questions):
-`geografie.ts`, `natur.ts`, `wissenschaft.ts`, `geschichte.ts`, `sprache.ts`, `mathe.ts`.
+`geografie.ts`, `natur.ts`, `wissenschaft.ts`, `geschichte.ts`, `sprache.ts`, `mathe.ts`, `kultur.ts`, `technik.ts`.
+Ereignisse für die Zeitleiste stehen in [`src/data/events.ts`](src/data/events.ts) (Jahr, Text, ggf. `approx` für „um …“).
 
 ```ts
-q(56, 2, 'Wie heißt die Hauptstadt von Portugal?', ['Lissabon', 'Porto', 'Faro', 'Coimbra'], 'Lissabon liegt an der Mündung des Tejo.'),
+q(86, 2, 'Wie heißt die Hauptstadt von Schweden?', ['Stockholm', 'Göteborg', 'Malmö', 'Uppsala'], 'Stockholm ist über 14 Inseln verteilt.'),
 ```
 
 - 1. Wert: fortlaufende Nummer. **Nummern nie ändern oder wiederverwenden** – der Lernstand hängt an der ID.
@@ -124,7 +127,7 @@ q(56, 2, 'Wie heißt die Hauptstadt von Portugal?', ['Lissabon', 'Porto', 'Faro'
 - Antworten: **die richtige zuerst**, dann drei falsche – die Reihenfolge wird im Spiel gemischt.
 - Erklärung: ein bis zwei Sätze.
 
-`npm test` prüft automatisch: mindestens 300 Fragen, je Kategorie mindestens 50, eindeutige IDs, keine doppelten
+`npm test` prüft automatisch: mindestens 600 Fragen, je Kategorie mindestens 50, eindeutige IDs, keine doppelten
 Fragen, vier verschiedene Antworten, Fragezeichen am Ende und eine Erklärung.
 
 ## Projektstruktur
@@ -134,7 +137,7 @@ src/
   game/            Spiellogik ohne React: Wertung, Sterne, adaptive Schwierigkeit, Leitner, Level, Erfolge, Modi
   data/questions/  Wissensfragen je Kategorie
   state/           Spielstand: Schema, Versionsnummer, Migration, Speichern/Laden, Ergebnisverrechnung
-  games/           Oberflächen der fünf Spielmodi
+  games/           Oberflächen der acht Spielmodi
   screens/         Bildschirme (Start, Karte, Level-Intro, Spiel, Ergebnis, Statistik, …)
   ui/              Designsystem-Komponenten, eigene Icons, Diagramm
   lib/             Router, Zufall, Datum, Ton/Haptik

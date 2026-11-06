@@ -1,4 +1,5 @@
 import type { PaletteColor } from './levels';
+import { MODE_IDS } from './types';
 import type { ShapeId } from './symbols';
 
 /** Kennzahlen, aus denen Erfolge abgeleitet werden (unabhängig vom Speicherformat). */
@@ -14,6 +15,9 @@ export interface AchievementFacts {
   spanForward: number;
   spanBackward: number;
   tempoCombo: number;
+  pathSpan: number;
+  scaleCorrect: number;
+  timelinePerfect: number;
   questionsAnswered: number;
   mastered: number;
   reviewsCorrect: number;
@@ -236,10 +240,10 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
   {
     id: 'allrounder',
     title: 'Allrounder',
-    description: 'Spiele jeden der fünf Modi mindestens einmal.',
+    description: `Spiele jeden der ${MODE_IDS.length} Modi mindestens einmal.`,
     shape: 'kreuz',
     color: 'rot',
-    progress: goal((f) => f.modesPlayed, 5),
+    progress: goal((f) => f.modesPlayed, MODE_IDS.length),
   },
   {
     id: 'aufsteiger',
@@ -256,6 +260,30 @@ export const ACHIEVEMENTS: readonly AchievementDef[] = [
     shape: 'ring',
     color: 'gelb',
     progress: goal((f) => f.gamesPlayed, 100),
+  },
+  {
+    id: 'wegfinder',
+    title: 'Wegfinder',
+    description: 'Gehe einen Weg aus 6 Wegmarken fehlerfrei nach.',
+    shape: 'viertel',
+    color: 'blau',
+    progress: goal((f) => f.pathSpan, 6),
+  },
+  {
+    id: 'waagemeister',
+    title: 'Waagemeister',
+    description: 'Beantworte in einer Rechenwaage-Runde 20 Aufgaben richtig.',
+    shape: 'kreuz',
+    color: 'gelb',
+    progress: goal((f) => f.scaleCorrect, 20),
+  },
+  {
+    id: 'chronist',
+    title: 'Chronist',
+    description: 'Ordne eine Zeitleiste mit 5 Ereignissen fehlerfrei.',
+    shape: 'ring',
+    color: 'tinte',
+    progress: goal((f) => f.timelinePerfect, 5),
   },
 ];
 

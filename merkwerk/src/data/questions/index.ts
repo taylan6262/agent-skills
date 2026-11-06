@@ -1,9 +1,11 @@
 import type { CategoryId, Question } from '../../game/types';
 import { GEOGRAFIE } from './geografie';
 import { GESCHICHTE } from './geschichte';
+import { KULTUR } from './kultur';
 import { MATHE } from './mathe';
 import { NATUR } from './natur';
 import { SPRACHE } from './sprache';
+import { TECHNIK } from './technik';
 import { WISSENSCHAFT } from './wissenschaft';
 
 /**
@@ -17,6 +19,8 @@ export const QUESTIONS: readonly Question[] = [
   ...GESCHICHTE,
   ...SPRACHE,
   ...MATHE,
+  ...KULTUR,
+  ...TECHNIK,
 ];
 
 export function questionsByCategory(category: CategoryId): Question[] {

@@ -153,7 +153,7 @@ test('Offline: nach dem ersten Besuch startet die App ohne Netz mit Spielstand',
   expect(problems.filter((p) => !p.includes('net::ERR_INTERNET_DISCONNECTED'))).toEqual([]);
 });
 
-test('Alle fünf Modi lassen sich bis zum Ergebnis spielen – ohne Konsolenfehler', async ({
+test('Die fünf Grundmodi lassen sich bis zum Ergebnis spielen – ohne Konsolenfehler', async ({
   page,
 }) => {
   const problems = watchConsole(page);
@@ -215,6 +215,64 @@ test('Alle fünf Modi lassen sich bis zum Ergebnis spielen – ohne Konsolenfehl
   expect(problems).toEqual([]);
 });
 
+test('Wegmarken, Rechenwaage und Zeitleiste lassen sich bis zum Ergebnis spielen', async ({
+  page,
+}) => {
+  const problems = watchConsole(page);
+  await page.clock.install();
+  await seedSave(page, { version: 2, onboardingDone: true });
+  await page.goto('/');
+  await waitForSplash(page);
+
+  // Wegmarken: aufleuchtende Felder mitschreiben und fehlerfrei nachtippen
+  await page.goto('/spiel/training/wegmarken');
+  for (let trial = 0; trial < 5; trial++) {
+    await page.locator('.wegmarken[data-phase="show"]').waitFor({ timeout: 10000 });
+    const order: number[] = [];
+    while ((await page.locator('.wegmarken[data-phase="show"]').count()) > 0) {
+      const lit = await page
+        .locator('.path-cell')
+        .evaluateAll((cells) => cells.findIndex((c) => c.classList.contains('is-lit')));
+      if (lit >= 0 && order[order.length - 1] !== lit) order.push(lit);
+      await page.waitForTimeout(40);
+    }
+    const backwards = (await page.locator('.direction-chip.is-back').count()) > 0;
+    for (const cell of backwards ? [...order].reverse() : order) {
+      await page.locator('.path-cell').nth(cell).click();
+    }
+    await page.getByRole('button', { name: 'Prüfen' }).click();
+    await page.getByRole('button', { name: /Nächster Weg|Zum Ergebnis/ }).click();
+  }
+  await expect(page).toHaveURL(/\/ergebnis$/);
+  await expect(page.getByRole('heading', { level: 1, name: 'Meisterhaft' })).toBeVisible();
+
+  // Rechenwaage: einige Antworten, dann die Uhr vorspulen
+  await page.goto('/spiel/training/rechenwaage');
+  await page.locator('.rechenwaage[data-phase="running"]').waitFor({ timeout: 10000 });
+  for (const key of ['ArrowLeft', 'ArrowDown', 'ArrowRight']) {
+    await page.keyboard.press(key);
+    await page.waitForTimeout(800);
+  }
+  await page.clock.fastForward(41_000);
+  await expect(page).toHaveURL(/\/ergebnis$/, { timeout: 10000 });
+
+  // Zeitleiste: Ereignisse in beliebiger Reihenfolge legen und prüfen
+  await page.goto('/spiel/training/zeitleiste');
+  for (let round = 0; round < 4; round++) {
+    await page.locator('.event-card').first().waitFor();
+    while ((await page.locator('.event-card').count()) > 0) {
+      await page.locator('.event-card').first().click();
+    }
+    await page.getByRole('button', { name: 'Prüfen' }).click();
+    await expect(page.locator('.timeline-year').first()).toBeVisible();
+    await page.getByRole('button', { name: /Nächste Runde|Zum Ergebnis/ }).click();
+  }
+  await expect(page).toHaveURL(/\/ergebnis$/);
+  await expect(page.getByText('Zeitleiste · Stufe')).toBeVisible();
+
+  expect(problems).toEqual([]);
+});
+
 test('Zurück-Navigation funktioniert mit App-Knopf und Browser-Zurück', async ({ page }) => {
   await seedSave(page, { version: 2, onboardingDone: true });
   await page.goto('/');
@@ -259,6 +317,7 @@ test('Bei 360 px Breite gibt es auf keinem Bildschirm horizontales Scrollen', as
     '/datenschutz',
     '/willkommen?schritt=3',
     '/spiel/training/zahlenspur',
+    '/spiel/training/zeitleiste',
   ];
   for (const route of routes) {
     await page.goto(route);

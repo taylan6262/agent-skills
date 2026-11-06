@@ -76,6 +76,9 @@ export function factsFromSave(save: SaveData): AchievementFacts {
     spanForward: save.bests.spanForward,
     spanBackward: save.bests.spanBackward,
     tempoCombo: save.bests.tempoCombo,
+    pathSpan: save.bests.pathSpan,
+    scaleCorrect: save.bests.scaleCorrect,
+    timelinePerfect: save.bests.timelinePerfect,
     questionsAnswered: save.stats.questionsAnswered,
     mastered: Object.values(save.leitner).filter((c) => c.box >= MASTERED_BOX).length,
     reviewsCorrect: save.stats.reviewsCorrect,
@@ -248,6 +251,24 @@ export function applyResult(
       }
       b.tempoRtMs = Math.round(m.medianRtMs);
     }
+  }
+
+  if (m.pathSpan !== undefined && m.pathSpan > b.pathSpan) {
+    if (b.pathSpan > 0)
+      improvements.push(`Neuer Rekord: Weg aus ${m.pathSpan} Wegmarken (vorher ${b.pathSpan})`);
+    b.pathSpan = m.pathSpan;
+  }
+  if (m.scaleCorrect !== undefined && m.scaleCorrect > b.scaleCorrect) {
+    if (b.scaleCorrect > 0)
+      improvements.push(
+        `Rechenwaage-Rekord: ${m.scaleCorrect} richtige Antworten (vorher ${b.scaleCorrect})`,
+      );
+    b.scaleCorrect = m.scaleCorrect;
+  }
+  if (m.timelinePerfect !== undefined && m.timelinePerfect > b.timelinePerfect) {
+    if (b.timelinePerfect > 0)
+      improvements.push(`Zeitleiste mit ${m.timelinePerfect} Ereignissen fehlerfrei geordnet`);
+    b.timelinePerfect = m.timelinePerfect;
   }
 
   // Statistik pro Fähigkeit

@@ -72,15 +72,27 @@ export const WORLDS: readonly World[] = [
   },
 ];
 
-/** Reihenfolge, in der die Modi in Welt 1 eingeführt werden; spätere Welten verschieben sie. */
-const MODE_ORDER: readonly ModeId[] = ['blitzbild', 'zahlenspur', 'tempo', 'wissen', 'detailblick'];
+/**
+ * Reihenfolge, in der die Modi in Welt 1 eingeführt werden; spätere Welten verschieben sie um drei
+ * Plätze. Bei 12 Leveln und 8 Modi kommt in jeder Welt jeder Modus mindestens einmal vor.
+ */
+const MODE_ORDER: readonly ModeId[] = [
+  'blitzbild',
+  'zahlenspur',
+  'tempo',
+  'wissen',
+  'detailblick',
+  'wegmarken',
+  'rechenwaage',
+  'zeitleiste',
+];
 
 function buildLevels(): LevelDef[] {
   const levels: LevelDef[] = [];
   let wissenCount = 0;
   for (const world of WORLDS) {
     for (let index = 1; index <= LEVELS_PER_WORLD; index++) {
-      const mode = MODE_ORDER[(index - 1 + (world.id - 1) * 2) % MODE_ORDER.length] as ModeId;
+      const mode = MODE_ORDER[(index - 1 + (world.id - 1) * 3) % MODE_ORDER.length] as ModeId;
       const master = index === LEVELS_PER_WORLD;
       const baseDifficulty =
         1 + (world.id - 1) * 3 + Math.floor((index - 1) / 4) + (master ? 1 : 0);

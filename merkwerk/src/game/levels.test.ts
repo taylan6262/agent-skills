@@ -34,7 +34,7 @@ describe('Level-Struktur', () => {
     LEVELS.forEach((level, i) => expect(level.number).toBe(i + 1));
   });
 
-  it('mischt in jeder Welt alle fünf Modi', () => {
+  it('mischt in jeder Welt alle Modi', () => {
     for (const world of WORLDS) {
       const modes = new Set(levelsOfWorld(world.id).map((l) => l.mode));
       expect([...modes].sort()).toEqual([...MODE_IDS].sort());
