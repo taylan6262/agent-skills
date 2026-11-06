@@ -1,0 +1,220 @@
+/*
+ * Alle dekorativen Bewegungen an einer Stelle. Sie laufen nur, wenn weder das System
+ * („Bewegung reduzieren“) noch die App-Einstellung „Animationen reduzieren“ aktiv ist.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduced']) .screen {
+    animation: screen-in 260ms var(--ease-out) both;
+  }
+
+  :root:not([data-motion='reduced']) .btn {
+    transition:
+      transform 80ms ease,
+      box-shadow 80ms ease;
+  }
+
+  :root:not([data-motion='reduced']) .splash-circle {
+    animation: drop-in 520ms var(--ease-spring) 60ms both;
+  }
+
+  :root:not([data-motion='reduced']) .splash-square {
+    animation: slide-in 480ms var(--ease-out) 200ms both;
+  }
+
+  :root:not([data-motion='reduced']) .splash-triangle {
+    animation: spin-in 560ms var(--ease-spring) 340ms both;
+    transform-origin: 46px 50px;
+  }
+
+  :root:not([data-motion='reduced']) .splash-word,
+  :root:not([data-motion='reduced']) .splash-claim {
+    animation: screen-in 400ms var(--ease-out) 560ms both;
+  }
+
+  :root:not([data-motion='reduced']) .shake {
+    animation: shake 380ms ease-in-out;
+  }
+
+  :root:not([data-motion='reduced']) .cell-correct .cell-shape {
+    animation: pop 320ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .result-star.is-on svg {
+    animation: star-pop 520ms var(--ease-spring) both;
+  }
+
+  :root:not([data-motion='reduced']) .node.is-current .node-shape::after {
+    animation: ring-pulse 1800ms ease-in-out infinite;
+  }
+
+  :root:not([data-motion='reduced']) .badge-item.is-new {
+    animation: screen-in 420ms var(--ease-out) 900ms both;
+  }
+
+  :root:not([data-motion='reduced']) .loading-shapes > span {
+    animation: bounce 900ms ease-in-out infinite;
+  }
+
+  :root:not([data-motion='reduced']) .loading-shapes > span:nth-child(2) {
+    animation-delay: 120ms;
+  }
+
+  :root:not([data-motion='reduced']) .loading-shapes > span:nth-child(3) {
+    animation-delay: 240ms;
+  }
+
+  :root:not([data-motion='reduced']) .meter-fill {
+    transition: width 600ms var(--ease-out);
+  }
+
+  :root:not([data-motion='reduced']) .feedback-pop {
+    animation: pop 300ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .digit-show {
+    animation: digit-in 220ms var(--ease-out);
+  }
+
+  :root:not([data-motion='reduced']) .combo-bump {
+    animation: pop 260ms var(--ease-spring);
+  }
+}
+
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes drop-in {
+  from {
+    transform: translateY(-40px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-36px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes spin-in {
+  from {
+    transform: rotate(-120deg) scale(0.3);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  20% {
+    transform: translateX(-8px);
+  }
+  40% {
+    transform: translateX(7px);
+  }
+  60% {
+    transform: translateX(-5px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes star-pop {
+  0% {
+    transform: scale(0.2) rotate(-40deg);
+  }
+  70% {
+    transform: scale(1.15) rotate(6deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@keyframes ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.55;
+  }
+}
+
+@keyframes bounce {
+  0%,
+  100% {
+    transform: none;
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes digit-in {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  :root:not([data-motion='reduced']) .beam {
+    transition: transform 280ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .tilt-links .beam {
+    transform: rotate(-5deg);
+  }
+
+  :root:not([data-motion='reduced']) .tilt-rechts .beam {
+    transform: rotate(5deg);
+  }
+
+  :root:not([data-motion='reduced']) .path-cell.is-lit {
+    animation: pop 260ms var(--ease-spring);
+  }
+
+  :root:not([data-motion='reduced']) .timeline-slot.is-filled .timeline-card {
+    animation: screen-in 200ms var(--ease-out);
+  }
+}

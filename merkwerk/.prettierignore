@@ -1,0 +1,9 @@
+dist
+dist-artifact
+dev-dist
+coverage
+node_modules
+test-results
+playwright-report
+public/icons
+package-lock.json
